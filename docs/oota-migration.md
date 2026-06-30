@@ -34,9 +34,16 @@ CLI, routes, and paths become `oota`. Decisions (locked):
 - **B — `oota` CLI package:** Bun/TS package under the subtree (`oota/`), bin
   `oota`, flat verbs (`serve new scaffold run open render route hardware models
   eval`) wrapping the existing `tools/*.sh` + nexus serve. Publishable to npm.
-- **C — Subtree split:** `git init` the subtree content → commit → push to the
-  GitHub remote → in the monorepo `git subtree add --prefix projects/out-of-thin-air`.
-  **Pushing is outward-facing — confirm before `git push`.**
+- **C — Repo split (DONE):** OOTA is its own git repo, pushed to
+  `github.com/shinyobjectz/out-of-thin-air` (`main`), living as a **nested
+  standalone clone** at `projects/out-of-thin-air`. Synced via its own remote
+  (`git push`/`pull`), NOT a formal `git subtree` into a parent — the enclosing
+  git repo is the home dir (dirty, doesn't track `projects/`) and
+  `Apps/shinyobjectz` isn't its own repo, so embedding was declined. If a real
+  monorepo boundary is wanted later, `git init Apps/shinyobjectz` then
+  `git subtree add --prefix projects/out-of-thin-air <url> main --squash`.
+  Model weights (`cli/sessions/_models/`, `*.pth/*.safetensors/*.onnx`) are
+  gitignored — never commit them.
 
 ## CLI verb map (flat)
 

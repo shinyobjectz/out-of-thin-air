@@ -24,4 +24,4 @@ run **locally on the host** via `tools/steps/`.
 - Router: [[projects/out-of-thin-air/cli/router]]
 - Media stack: [[projects/out-of-thin-air/media]]
 - Agent skill: [[projects/out-of-thin-air/skill/SKILL]]
-- Research survey: `out-of-thin-air.md`
+- Research survey: `docs/research-survey.md`

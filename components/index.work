@@ -20,7 +20,7 @@ http://localhost:4010/components/artifact?slug=<session-slug>
 
 The shell auto-detects artifact kinds by scanning `out/`; a `player.work`
 `artifacts do` block overrides naming/ordering and declares multiple versions
-(the header's center tabs). See [[universal-shell-plan]].
+(the header's center tabs). See [[docs/universal-shell-plan]].
 
 ## UI policy
 
