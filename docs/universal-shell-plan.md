@@ -202,3 +202,18 @@ scanner (if not already covered) + a wrapper note. No bespoke client.
   With `file:` → source sink (must resolve under `out/src/`).
 - Dirty state tracks both sinks; Save is enabled if *either* changed.
 - Keep the existing `safe_session_file` guard (slug + `src/` prefix + no `..`).
+
+## Editing layer (shell infrastructure, NOT catalog)
+
+Rich-text **editor frameworks** — **Plate** (React/Slate), **Lexical** (Meta),
+**TipTap** / **ProseMirror**, **Slate** — are GUI-first authoring components, so
+they fail the catalog bar (deterministic source → artifact). They are not tools;
+they are the candidate **editing layer** for OOTA itself:
+- the artifact shell's rich-text controls (a `controls do` field type beyond the
+  current contenteditable `.ca-text`), and
+- authoring structured-text sources (the `markup` category — MDX/Markdoc) with a
+  live WYSIWYG that serializes back to the `.work`/source file.
+
+Markup *formats* (MDX, Markdoc, AsciiDoc, rST) ARE catalog tools (category
+`markup`); the *editors* above are how a human edits them in the shell.
+Candidate for a later phase; recorded here so the boundary stays clear.

@@ -108,3 +108,10 @@ category :"generative-text" do
   default: tracery
   notes: "Strict authorial control vs LLM stochastic output."
 end
+
+category :markup do
+  summary: "Structured text / rich documents authored as markup — diffable, compiles to html/pdf."
+  tools: mdx, markdoc, asciidoc, rst, astro-content
+  default: mdx
+  notes: "MDX = Markdown + JSX → component/html. Markdoc = Stripe's MD superset. AsciiDoc/rST → html/pdf. GUI editors (Plate/Lexical) are the shell's editing layer, not catalog tools."
+end

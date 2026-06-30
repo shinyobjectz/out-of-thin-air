@@ -77,6 +77,17 @@ The source of truth for "how to make each thing." Each row's full source list
 | python-barcode | ✒️ | Python | 📦 [python-barcode](https://github.com/WhyNotHugo/python-barcode) |
 | zpl-labelary | 🖼️ | any (HTTP) | 📘 [labelary](https://labelary.com/) |
 
+#### markup
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| mdx | 🌐 | JS/React | 📘 [mdxjs.com](https://mdxjs.com/) |
+| markdoc | 🌐 | JS | 📘 [markdoc.dev](https://markdoc.dev/) |
+| asciidoc | 🌐📄 | Ruby/JS | 📘 [asciidoctor](https://docs.asciidoctor.org/) |
+| rst | 🌐📄 | Python | 📘 [docutils](https://docutils.sourceforge.io/rst.html) |
+| astro-content | 🌐 | Astro/JS | 📘 [astro content](https://docs.astro.build/en/guides/content-collections/) |
+
+> Rich-text **editors** (Plate, Lexical, TipTap, ProseMirror) are the shell's editing layer, not catalog tools — see [docs/universal-shell-plan.md](docs/universal-shell-plan.md#editing-layer-shell-infrastructure-not-catalog).
+
 ### 🎞️ Motion & video
 
 #### video

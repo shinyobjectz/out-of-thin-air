@@ -75,3 +75,9 @@ match :generative-text do
   keywords: procedural text, tracery, grammar, bot, generated copy
   default: tracery
 end
+
+match :markup do
+  keywords: mdx, markdoc, asciidoc, restructuredtext, rst, markdown, structured text, rich document, docs site
+  default: mdx
+  prefer: asciidoc | asciidoc, adoc, manual, technical book
+end
