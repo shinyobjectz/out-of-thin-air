@@ -24,7 +24,7 @@ print("saved map.html")
 EOF
 echo "  wrote out/map.py"
 
-if command -v python3 &>/dev/null; then
+if command -v python3 &>/dev/null && python3 -c "import folium" &>/dev/null; then
   python3 "$OUT/map.py" && echo "  rendered out/map.html"
 else
   echo "  hint: pip install 'folium==0.20.0' then python3 out/map.py"

@@ -40,12 +40,12 @@ import { writeFileSync } from 'node:fs';
 import Email from './src/email';
 
 const html = await render(<Email />, { pretty: true });
-writeFileSync('out/email.html', html);
+writeFileSync('email.html', html);
 console.log('bytes:', html.length);
 EOF
 echo "  wrote out/render.tsx"
 
-if command -v npx &>/dev/null; then
+if command -v npx &>/dev/null && [ -d "$OUT/node_modules/@react-email/render" ]; then
   ( cd "$OUT" && npx --yes tsx render.tsx ) && echo "  rendered out/email.html"
 else
   echo "  hint: npm install -E @react-email/render @react-email/components react react-dom tsx then 'npx tsx render.tsx'"

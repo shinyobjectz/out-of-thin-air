@@ -21,7 +21,7 @@ ax.set_xlabel("x")
 ax.set_ylabel("y")
 
 ext = "${EXT}"
-out = "out/plot." + ext
+out = "plot." + ext
 meta = {"CreationDate": None} if ext in ("pdf", "svg") else None
 fig.savefig(out, dpi=150, metadata=meta)
 print("saved " + out)
