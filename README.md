@@ -1,13 +1,12 @@
-# Out Of Thin Air (OOTA)
+# Out Of Thin Air (OOTA) ✨
 
 Conjure any deliverable — decks, video, audio, diagrams, docs, 3D, games, music,
 maps, ad creative — from plain, version-controlled source. You describe it; OOTA
 runs the right toolchain headlessly and shows the result in one universal browser
 shell.
 
-Every artifact reduces to one of **8 render kinds** (`video · audio · pdf ·
-image · svg · html · model3d · text`), so a single shell renders every medium and
-adding a tool is just mapping its output to a kind.
+Every artifact reduces to one of **8 render kinds**, so a single shell renders
+every medium and adding a tool is just mapping its output to a kind.
 
 ## Quickstart
 
@@ -31,73 +30,276 @@ its **own** nexus — never bundled into a host server.
 | `components/artifact/` | the universal artifact shell (renders all 8 kinds) |
 | `wrappers/` | one `.work` per tool — controls + render notes |
 | `tools/` + `tools/steps/` | host runners; one step script per `<category>-<tool>` |
-| `skill/` | agent skill + `skill/catalog/` per-tool dossiers (full attributed sources) |
+| `skill/` | agent skill + `skill/catalog/` per-tool dossiers (full sources) |
 | `eval/` | blind agent scenarios |
 | `docs/` | design + research docs |
 
 ---
 
-## Source directory
+## Tool directory
 
-Where each tool's "how to do it" lives — the primary skill repo or official docs
-per shipped tool. Each tool's full source list (official + community skills,
-toolchains, validation) is in `skill/catalog/<category>/<tool>.md`.
+The source of truth for "how to make each thing." Each row's full source list
+(official + community skills, toolchains, validation) lives in
+`skill/catalog/<category>/<tool>.md`.
 
-### Shipped
+**Render kind** &nbsp; 🎬 video &nbsp; 🔊 audio &nbsp; 📄 pdf &nbsp; 🖼️ image &nbsp; ✒️ svg &nbsp; 🌐 html &nbsp; 🧊 model3d &nbsp; 📝 text
+**Source** &nbsp; 🟢 Claude/Anthropic skill &nbsp; 📘 official docs &nbsp; 📦 official repo &nbsp; 🌿 community skill/repo
 
-**presentations** — [marp](https://github.com/marp-team/marp-cli) · [slidev](https://github.com/yoanbernabeu/slidev-skills) · [reveal.js](https://revealjs.com/) · [spectacle](https://github.com/FormidableLabs/spectacle) · [quarto](https://quarto.org/docs/presentations/revealjs/) · [deckary](https://deckary.com)
+### 🖥️ Presentations & documents
 
-**video** — [remotion](https://www.remotion.dev/docs/) · [hyperframes](https://github.com/heygen-com/hyperframes) · [motion-canvas](https://github.com/motion-canvas/motion-canvas) · [manim](https://github.com/Yusuke710/manim-skill)
+#### presentations
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| marp | 🌐📄 | native, JS | 📦 [marp-cli](https://github.com/marp-team/marp-cli) |
+| slidev | 🌐 | JS/TS | 🌿 [slidev-skills](https://github.com/yoanbernabeu/slidev-skills) |
+| reveal.js | 🌐 | JS, native | 📘 [revealjs.com](https://revealjs.com/) |
+| spectacle | 🌐 | React | 📦 [spectacle](https://github.com/FormidableLabs/spectacle) |
+| quarto | 🌐📄 | native, Py/R | 📘 [quarto](https://quarto.org/docs/presentations/revealjs/) |
+| deckary | 🌐 | native | 📘 [deckary.com](https://deckary.com) |
 
-**audio** — [tts-local (kokoro)](https://github.com/hexgrad/kokoro)
+#### documents
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| typst | 📄 | native, Rust | 🌿 [claude-skill-typst](https://github.com/lucifer1004/claude-skill-typst) |
+| latex | 📄 | native | 📘 [latex-project](https://www.latex-project.org/help/documentation/) |
+| context | 📄 | native | 📘 [contextgarden](https://wiki.contextgarden.net/Main_Page) |
+| basil.js | 📄 | JS (InDesign) | 📘 [basiljs](https://basiljs.basislab.org/) |
 
-**diagrams** — [mermaid](https://github.com/WH-2099/mermaid-skill) · [d2](https://d2lang.com/) · [plantuml](https://plantuml.com/command-line) · [structurizr](https://docs.structurizr.com/cli) · [python-diagrams](https://diagrams.mingrammer.com/)
+#### business-documents
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| typst-invoice | 📄 | Typst | 📦 [invoice-maker](https://typst.app/universe/package/invoice-maker/) |
+| reportlab (RML) | 📄 | Python | 📘 [reportlab](https://docs.reportlab.com/rml/userguide/Chapter_1_Introduction/) |
+| rendercv | 📄 | Python | 📦 [rendercv](https://github.com/rendercv/rendercv) |
+| json-resume | 📄 | JS | 📘 [jsonresume](https://jsonresume.org/) |
+| weasyprint | 📄 | Python | 📘 [weasyprint](https://weasyprint.org/) |
+| segno | ✒️ | Python | 📦 [segno](https://github.com/heuer/segno) (QR) |
+| python-barcode | ✒️ | Python | 📦 [python-barcode](https://github.com/WhyNotHugo/python-barcode) |
+| zpl-labelary | 🖼️ | any (HTTP) | 📘 [labelary](https://labelary.com/) |
 
-**cad** — [cadquery](https://github.com/flowful-ai/cad-skill) · [openscad](https://github.com/mitsuhiko/agent-stuff) · [freecad](https://wiki.freecad.org/Scripting)
+### 🎞️ Motion & video
 
-**electronics** — [skidl](https://devbisme.github.io/skidl/) · [kicad-api](https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/)
+#### video
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| remotion | 🎬 | React/TS | 📘 [remotion docs](https://www.remotion.dev/docs/) |
+| hyperframes | 🌐🎬 | HTML/GSAP | 📦 [hyperframes](https://github.com/heygen-com/hyperframes) |
+| manim | 🎬 | Python | 🌿 [manim-skill](https://github.com/Yusuke710/manim-skill) |
+| revideo | 🎬 | TS | 📘 [re.video](https://docs.re.video/) |
 
-**documents** — [typst](https://github.com/lucifer1004/claude-skill-typst) · [latex](https://www.latex-project.org/help/documentation/) · [context](https://wiki.contextgarden.net/Main_Page)
+#### motion-graphics
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| motion-canvas | 🎬 | TS | 📘 [motioncanvas.io](https://motioncanvas.io/docs/) |
+| lottie | 🎬 | JSON, JS | 📦 [lottie](https://github.com/airbnb/lottie-web) |
+| gsap | 🌐 | JS | 📘 [gsap docs](https://gsap.com/docs/v3/) |
+| anime.js | 🌐 | JS | 📦 [anime](https://github.com/juliangarnier/anime) |
+| theatre.js | 🌐 | JS/TS | 📘 [theatrejs](https://www.theatrejs.com/docs/latest) |
+| svg-smil | ✒️ | SVG/XML | 📘 [MDN SMIL](https://developer.mozilla.org/en-US/docs/Web/SVG/SVG_animation_with_SMIL) |
 
-**creative** — [p5js](https://p5js.org/reference/) · [processing](https://processing.org/reference/) · [openframeworks](https://openframeworks.cc/documentation/) · [threejs](https://threejs.org/docs/)
+### 📊 Diagrams, data & maps
 
-**music** — [sonic-pi](https://sonic-pi.net/tutorial.html) · [tone-js](https://tonejs.github.io/docs/) · [tidal-cycles](https://tidalcycles.org/docs/) · [supercollider](https://doc.sccode.org/Guides/Non-Realtime-Synthesis.html) · [alda](https://alda.io/docs/)
+#### diagrams
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| mermaid | ✒️ | native, JS | 🌿 [mermaid-skill](https://github.com/WH-2099/mermaid-skill) |
+| d2 | ✒️ | native, Go, JS | 📘 [d2lang.com](https://d2lang.com/) |
+| plantuml | ✒️ | native (Java) | 📘 [plantuml CLI](https://plantuml.com/command-line) |
+| structurizr | ✒️ | native, DSL | 📘 [structurizr](https://docs.structurizr.com/cli) |
+| python-diagrams | 🖼️ | Python | 📘 [diagrams](https://diagrams.mingrammer.com/) |
+| excalidraw | ✒️ | JS | 📘 [@excalidraw/utils](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/export) |
+| chart.xkcd | ✒️ | JS | 📦 [chart.xkcd](https://github.com/timqian/chart.xkcd) |
+| roughviz | ✒️ | JS | 📦 [roughViz](https://github.com/jwilber/roughViz) |
 
-**notation** — [lilypond](https://lilypond.org/doc/)
+#### data-visualization
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| vega-lite | ✒️ | spec, Py/JS | 📘 [vega-lite](https://vega.github.io/vega-lite/docs/) |
+| observable-plot | ✒️ | JS | 📦 [plot](https://github.com/observablehq/plot) |
+| matplotlib | 🖼️ | Python | 📘 [matplotlib](https://matplotlib.org/) |
+| ggplot2 | 🖼️ | R | 📘 [ggplot2](https://ggplot2.tidyverse.org/) |
+| gnuplot | ✒️ | native | 📘 [gnuplot](http://www.gnuplot.info/documentation.html) |
+| plotly | 🖼️🌐 | Py/JS/R | 📘 [plotly](https://plotly.com/python/) |
+| echarts | 🌐✒️ | JS | 📘 [echarts](https://echarts.apache.org/en/index.html) |
 
-**fiction** — [ink](https://github.com/inkle/ink) · [twine](https://twinery.org/cookbook/) · [choicescript](https://www.choiceofgames.com/make-your-own-games/choicescript-intro/) · [renpy](https://www.renpy.org/doc/html/)
+#### infographics-posters
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| drawsvg | ✒️ | Python | 📦 [drawsvg](https://github.com/cduck/drawsvg) |
+| p5.riso | 🖼️ | JS | 📦 [p5.riso](https://github.com/antiboredom/p5.riso) |
 
-**games** — [pico8](https://www.lexaloffle.com/pico8_manual.txt) · [tic80](https://github.com/nesbox/TIC-80/wiki) · [love2d](https://love2d.org/wiki/Main_Page)
+#### maps-geo
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| maplibre-gl | 🌐 | JS | 📘 [maplibre](https://maplibre.org/maplibre-gl-js/docs/) |
+| mapbox-gl | 🌐 | JS | 📘 [mapbox](https://docs.mapbox.com/mapbox-gl-js/) (token) |
+| deck.gl | 🌐 | JS | 📘 [deck.gl](https://deck.gl/docs) |
+| kepler.gl | 🌐 | JS | 📦 [kepler.gl](https://github.com/keplergl/kepler.gl) |
+| leaflet | 🌐 | JS | 📘 [leaflet](https://leafletjs.com/reference.html) |
+| folium | 🌐 | Python | 📦 [folium](https://github.com/python-visualization/folium) |
+| osmnx | 🖼️ | Python | 📦 [osmnx](https://github.com/gboeing/osmnx) |
+| prettymapp | 🖼️ | Python | 📦 [prettymapp](https://github.com/chrieke/prettymapp) |
 
-**typography** — [fontparts](https://fontparts.robotools.dev/) · [metafont](https://www.tug.org/metafont.html)
+### 🎨 Design, image & marketing
 
-**textiles** — [turtlestitch](https://www.turtlestitch.org/) · [knitout](https://textiles-lab.github.io/knitout/knitout.html)
+#### graphic-design
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| satori | ✒️ | JS/TS | 📦 [satori](https://github.com/vercel/satori) |
+| drawbot | 📄🖼️ | Python | 📘 [drawbot](https://www.drawbot.com/) |
+| svg.js | ✒️ | JS | 📘 [svgjs](https://svgjs.dev/docs/3.2/) |
+| cairo | 🖼️✒️ | Py/C | 📘 [cairosvg](https://cairosvg.org/) |
+| paper.js | ✒️ | JS | 📘 [paperjs](http://paperjs.org/reference/) |
+| nannou | 🖼️ | Rust | 📘 [nannou](https://guide.nannou.cc/) |
 
-**generative-text** — [tracery](https://github.com/galaxykate/tracery)
+#### image-processing
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| imagemagick | 🖼️ | native (MSL) | 📘 [imagemagick](https://imagemagick.org/script/command-line-processing.php) |
+| gmic | 🖼️ | native | 📘 [gmic](https://gmic.eu/) |
+| sharp | 🖼️ | JS | 📘 [sharp](https://sharp.pixelplumbing.com/) |
+| pillow | 🖼️ | Python | 📘 [pillow](https://pillow.readthedocs.io/) |
+| libvips | 🖼️ | native, bindings | 📘 [libvips](https://www.libvips.org/) |
+| gegl | 🖼️ | native | 📘 [gegl](https://gegl.org/) |
 
-### Researched — proposed, not yet built
+#### social-formats
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| @vercel/og | 🖼️ | JS/TS | 📘 [vercel/og](https://vercel.com/docs/functions/og-image-generation) |
+| resvg-js | 🖼️ | JS | 📦 [resvg-js](https://github.com/yisibl/resvg-js) |
+| open-carrusel | 🖼️ | JS | 🌿 community (see dossier) |
 
-From [docs/catalog-expansion.md](docs/catalog-expansion.md) (13 new categories +
-additions to existing). Best source per new category:
+#### advertising-creative
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| mjml | 🌐 | JS/native | 📘 [mjml](https://documentation.mjml.io/) |
+| react-email | 🌐 | React | 📘 [react.email](https://react.email/docs) |
+| maizzle | 🌐 | JS | 📘 [maizzle](https://maizzle.com/docs) |
+| amphtml-ads | 🌐 | HTML | 📘 [amp ads](https://amp.dev/documentation/guides-and-tutorials/develop/advertise_amphtml) |
+| htmlcsstoimage | 🖼️ | any (HTTP) | 📘 [htmlcsstoimage](https://htmlcsstoimage.com/) |
 
-**motion-graphics** — [Motion Canvas](https://motioncanvas.io/docs/) · Lottie · GSAP · anime.js · Theatre.js
-**graphic-design** — [Satori](https://github.com/vercel/satori) · DrawBot · SVG.js · Cairo · Paper.js · Nannou
-**data-visualization** — [Vega-Lite](https://vega.github.io/vega-lite/docs/) · Observable Plot · Matplotlib · gnuplot · Plotly
-**maps-geo** — [MapLibre GL](https://maplibre.org/maplibre-gl-js/docs/) · deck.gl · Leaflet · Folium · OSMnx · prettymapp
-**3d-shaders** — [Blender (bpy)](https://docs.blender.org/api/current/) · OpenUSD · glslViewer · A-Frame · POV-Ray
-**web-ui-prototypes** — tldraw SDK · Satori · Storybook + Playwright · [frontend-design skill]
-**image-processing** — [ImageMagick](https://imagemagick.org/script/command-line-processing.php) · G'MIC · sharp · Pillow · libvips
-**infographics-posters** — Vega-Lite · DrawBot · drawsvg · Typst · p5.riso
-**social-formats** — [Satori / @vercel/og](https://github.com/vercel/satori) · Playwright · resvg-js
-**ar-vr** — [A-Frame](https://aframe.io/docs/) · `<model-viewer>` · usd_from_gltf · PlayCanvas · Babylon.js
-**business-documents** — [Typst invoice-maker](https://typst.app/universe/package/invoice-maker/) · RML/ReportLab · Segno · python-barcode · WeasyPrint
-**advertising-creative** — [MJML](https://documentation.mjml.io/) · react-email · Maizzle · Satori · AMPHTML ads
-**comics-illustration** — [comicgen](https://github.com/gramener/comicgen) · Rough.js
+#### comics-illustration
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| comicgen | ✒️ | JS | 📦 [comicgen](https://github.com/gramener/comicgen) |
+| rough.js | ✒️ | JS | 📦 [rough](https://github.com/rough-stuff/rough) |
+| balloon-css | 🌐 | CSS | 📦 [balloon.css](https://github.com/kazzkiq/balloon.css) |
 
-Additions to shipped categories (games: Godot/raylib/Pyxel/Phaser/kaplay/Bevy/Defold;
-video: Revideo; creative: Paper.js/Nannou/Theatre.js/anime.js; documents:
-ReportLab/WeasyPrint; diagrams: Excalidraw/chart.xkcd/roughViz) — see the
-expansion doc for sources.
+#### web-ui-prototypes
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| tldraw | ✒️ | React | 📦 [tldraw](https://github.com/tldraw/tldraw) |
+| storybook | 🖼️ | JS + Playwright | 📘 [storybook](https://storybook.js.org/docs) |
+| playwright | 🖼️ | JS/Py/native | 📘 [playwright](https://playwright.dev/) |
+| frontend-design | 🌐 | HTML/Tailwind | 🟢 frontend-design skill |
+
+### 🧊 3D & spatial
+
+#### 3d-shaders
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| blender | 🖼️🎬 | Python (bpy) | 📘 [blender bpy](https://docs.blender.org/api/current/) |
+| openusd | 🧊 | Py/C++ | 📦 [OpenUSD](https://github.com/PixarAnimationStudios/OpenUSD) |
+| glslviewer | 🖼️ | GLSL | 📦 [glslViewer](https://github.com/patriciogonzalezvivo/glslViewer) |
+| shadertoy | ✒️🖼️ | GLSL | 📘 [shadertoy](https://www.shadertoy.com/) |
+| povray | 🖼️ | SDL | 📘 [povray](https://www.povray.org/documentation/) |
+
+#### ar-vr
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| a-frame | 🌐 | HTML/JS | 📘 [aframe](https://aframe.io/docs/) |
+| model-viewer | 🌐🧊 | HTML | 📘 [modelviewer.dev](https://modelviewer.dev/) |
+| usd-from-gltf | 🧊 | native | 📦 [usd_from_gltf](https://github.com/google/usd_from_gltf) |
+| needle | 🌐 | JS | 📘 [needle](https://needle.tools/) |
+| playcanvas | 🌐 | JS | 📘 [playcanvas](https://developer.playcanvas.com/) |
+| babylon.js | 🌐🖼️ | JS/TS | 📘 [babylonjs](https://doc.babylonjs.com/) |
+
+#### cad
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| cadquery | 🧊 | Python | 🌿 [cad-skill](https://github.com/flowful-ai/cad-skill) |
+| openscad | 🧊 | SCAD/native | 🌿 [agent-stuff](https://github.com/mitsuhiko/agent-stuff) |
+| freecad | 🧊 | Python | 📘 [freecad scripting](https://wiki.freecad.org/Scripting) |
+
+#### electronics
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| skidl | ✒️ | Python | 📘 [skidl](https://devbisme.github.io/skidl/) |
+| kicad-api | ✒️ | Python | 📘 [kicad ipc-api](https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/) |
+
+### 🔊 Audio, music & notation
+
+#### audio
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| tts-local | 🔊 | Python (HF) | 📦 [kokoro](https://github.com/hexgrad/kokoro) |
+
+#### music
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| sonic-pi | 🔊 | Ruby | 📘 [sonic-pi](https://sonic-pi.net/tutorial.html) |
+| tone.js | 🔊 | JS | 📘 [tonejs](https://tonejs.github.io/docs/) |
+| tidal-cycles | 🔊 | Haskell | 📘 [tidalcycles](https://tidalcycles.org/docs/) |
+| supercollider | 🔊 | sclang | 📘 [supercollider](https://doc.sccode.org/Guides/Non-Realtime-Synthesis.html) |
+| alda | 🔊 | Alda DSL | 📘 [alda](https://alda.io/docs/) |
+
+#### notation
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| lilypond | 📄✒️ | LilyPond | 📘 [lilypond](https://lilypond.org/doc/) |
+
+### 🕹️ Interactive
+
+#### games
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| pico8 | 🌐🖼️ | Lua | 📘 [pico-8 manual](https://www.lexaloffle.com/pico8_manual.txt) |
+| tic80 | 🌐 | Lua/JS/… | 📦 [TIC-80 wiki](https://github.com/nesbox/TIC-80/wiki) |
+| love2d | 🌐 | Lua | 📘 [love2d wiki](https://love2d.org/wiki/Main_Page) |
+| godot | 🌐 | GDScript/C# | 📘 [godot CLI](https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html) |
+| raylib | 🖼️ | C/bindings | 📦 [raylib](https://github.com/raysan5/raylib) |
+| pyxel | 🎬 | Python | 📦 [pyxel](https://github.com/kitao/pyxel) |
+| phaser | 🌐 | JS/TS | 📘 [phaser](https://docs.phaser.io/phaser/getting-started) |
+| kaplay | 🌐 | JS/TS | 📘 [kaplay](https://kaplayjs.com/) |
+| bevy | 🖼️ | Rust | 📘 [bevy](https://bevyengine.org/learn/quick-start/) |
+| defold | 🌐 | Lua | 📘 [defold](https://defold.com/manuals/bundling/) |
+| arcade | 🖼️ | Python | 📘 [arcade](https://api.arcade.academy/en/latest/) |
+
+#### fiction
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| ink | 🌐 | ink/Unity | 📦 [ink](https://github.com/inkle/ink) |
+| twine | 🌐 | Twee | 📘 [twine cookbook](https://twinery.org/cookbook/) |
+| choicescript | 🌐 | ChoiceScript | 📘 [choicescript](https://www.choiceofgames.com/make-your-own-games/choicescript-intro/) |
+| renpy | 🌐 | Ren'Py/Python | 📘 [renpy](https://www.renpy.org/doc/html/) |
+
+### 🧶 Generative & physical
+
+#### creative
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| p5js | 🌐🖼️ | JS | 📘 [p5 reference](https://p5js.org/reference/) |
+| processing | 🖼️ | Java/Py | 📘 [processing](https://processing.org/reference/) |
+| openframeworks | 🖼️ | C++ | 📘 [openframeworks](https://openframeworks.cc/documentation/) |
+| three.js | 🌐🖼️ | JS | 📘 [three.js](https://threejs.org/docs/) |
+| three.js (headless) | 🖼️ | JS (Node) | 📦 [headless-threejs](https://github.com/Dylan-Kentish/headless-threejs) |
+
+#### typography
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| fontparts | 📄 | Python | 📘 [fontparts](https://fontparts.robotools.dev/) |
+| metafont | 🖼️ | MetaFont | 📘 [metafont](https://www.tug.org/metafont.html) |
+
+#### textiles
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| turtlestitch | ✒️ | blocks/JS | 📘 [turtlestitch](https://www.turtlestitch.org/) |
+| knitout | ✒️ | knitout | 📘 [knitout](https://textiles-lab.github.io/knitout/knitout.html) |
+
+#### generative-text
+| Tool | Kind | Stacks | Source |
+|------|------|--------|--------|
+| tracery | 📝 | JS/grammar | 📦 [tracery](https://github.com/galaxykate/tracery) |
 
 ---
 
@@ -105,5 +307,5 @@ expansion doc for sources.
 
 - [docs/oota-migration.md](docs/oota-migration.md) — repo/CLI history.
 - [docs/universal-shell-plan.md](docs/universal-shell-plan.md) — the universal artifact shell design.
-- [docs/catalog-expansion.md](docs/catalog-expansion.md) — proposed new categories/tools (full source tables).
+- [docs/catalog-expansion.md](docs/catalog-expansion.md) — category-expansion source tables.
 - [docs/research-survey.md](docs/research-survey.md) — original research survey.
