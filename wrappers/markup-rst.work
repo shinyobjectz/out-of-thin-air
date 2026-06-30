@@ -1,0 +1,61 @@
+<!-- generated draft — needs validation -->
+# markup / rst
+
+reStructuredText (RST) is a plaintext markup language processed by **Docutils**
+(the reference implementation, pure-Python, no system libs) and extended by
+**Sphinx**. Write a `.rst` source file; render to a self-contained **HTML5** file
+with one command — fully headless, deterministic, diffable. PDF is available via
+`rst2pdf` (ReportLab, no LaTeX) or `rst2latex` + a TeX toolchain.
+
+controls do
+  markup.title: { label: "Title", type: "text" }
+  markup.format: { label: "Output format", type: "select", options: "html5, html, pdf" }
+  markup.stylesheet: { label: "Stylesheet (optional, --stylesheet)", type: "text" }
+  markup.body: { label: "Document source (.rst)", type: "textarea", file: "src/main.rst" }
+end
+
+## Required reading
+- Docutils — Front-End Tools (Docutils, Public Domain/BSD-2) — https://docutils.sourceforge.io/docs/user/tools.html
+- reStructuredText Markup Spec (Docutils, Public Domain) — https://docutils.sourceforge.io/rst.html
+- Sphinx reStructuredText Primer (Sphinx, BSD-2) — https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html
+- rst2pdf — RST → PDF via ReportLab, no LaTeX (MIT) — https://rst2pdf.org/
+
+## Render
+```bash
+# install (pure-Python, no system libs)
+pip install docutils
+
+# render to HTML5 (default deliverable) — unified CLI, docutils >= 0.21
+docutils --writer=html5 src/main.rst out/main.html
+
+# legacy front ends (always present, use on docutils < 0.21)
+rst2html5 src/main.rst out/main.html
+rst2html  src/main.rst > out/main.html   # XHTML1
+
+# with a custom stylesheet, embedded for a self-contained file
+docutils --writer=html5 --stylesheet=mystyle.css --embed-stylesheet src/main.rst out/main.html
+
+# PDF without LaTeX (ReportLab)
+pipx install rst2pdf
+rst2pdf src/main.rst -o out/main.pdf
+
+# multi-file docs site / cross-refs / theming
+pip install sphinx
+sphinx-build -b html src out          # or -b latexpdf for PDF via TeX
+```
+
+## Failure modes
+- `docutils: command not found` — the unified CLI needs docutils >= 0.21 (2024);
+  on older pins use the always-present `rst2html5` / `rst2html` entry points.
+- `rst2html5: command not found` — `pip install docutils` (ships rst2html, rst2html5,
+  rst2latex, etc.).
+- RST is indentation- and blank-line-sensitive: directives/lists need a blank line
+  before them and consistent indentation, or you get silent mis-parsing.
+- Title underline must be at least as long as the title text, or the heading is
+  dropped / demoted.
+- `rst2pdf` is a separate package (`pipx install rst2pdf`); it is NOT a Docutils
+  front end.
+- Stylesheet not applied to a portable file — add `--embed-stylesheet` so the CSS
+  is inlined.
+- Sphinx-only directives (`.. toctree::`, `:ref:`) won't render under plain
+  Docutils — use `sphinx-build` for those.

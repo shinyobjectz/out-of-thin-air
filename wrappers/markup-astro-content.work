@@ -1,0 +1,58 @@
+<!-- generated draft — needs validation -->
+# markup / astro-content
+
+Wrapper for **Astro content collections** — Markdown/MDX with Zod-validated
+frontmatter → deterministic static HTML in `./dist`. Upstream:
+https://docs.astro.build/en/guides/content-collections/
+
+controls do
+  markup.title: { label: "Entry title", type: "text" }
+  markup.collection: { label: "Collection name", type: "text" }
+  markup.format: { label: "Markup format", type: "select", options: "md, mdx" }
+end
+
+## Required reading
+
+- Content collections guide — https://docs.astro.build/en/guides/content-collections/ (Astro, MIT)
+- `astro:content` API reference — https://docs.astro.build/en/reference/modules/astro-content/ (Astro, MIT)
+- Markdown in Astro — https://docs.astro.build/en/guides/markdown-content/ (Astro, MIT)
+- @astrojs/mdx integration — https://docs.astro.build/en/guides/integrations-guide/mdx/ (Astro, MIT)
+
+## Setup
+
+```bash
+# new project (minimal template) + MDX integration
+npm create astro@latest -- --template minimal --no-install --no-git -y
+npm install
+npx astro add mdx -y
+# or, into an existing project:
+npm install astro @astrojs/mdx
+```
+
+## Render
+
+```bash
+npx astro build           # emits static HTML to ./dist
+# preview:
+npx astro preview
+# the step script scaffolds src/content/<collection>/, content.config.ts,
+# and src/pages/<collection>/[id].astro, then prints the build command.
+```
+
+Need a PDF? HTML is the native artifact; pipe a built page through a headless
+browser as a separate step:
+
+```bash
+chromium --headless --print-to-pdf=out.pdf dist/<collection>/<entry>/index.html
+```
+
+## Failure modes
+
+- **`.mdx` entries fail to render** — `@astrojs/mdx` not installed. Run `npx astro add mdx`.
+- **Schema validation error on build** — frontmatter doesn't match the Zod schema in
+  `content.config.ts`; fix the YAML or relax the schema.
+- **Config not picked up** — must be `src/content.config.ts` (Astro 5 location), not
+  the deprecated `src/content/config.ts`; use the `glob()` loader, not the legacy
+  implicit-collection API.
+- **Missing Node/CLI** — step script still writes the scaffold; run `npm install`
+  then `npx astro build` to produce `./dist`.

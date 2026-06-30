@@ -1,0 +1,46 @@
+<!-- generated draft — needs validation -->
+# Markdoc → HTML (Stripe's Markdown superset)
+
+Author a Markdoc source (`.md` with `{% tags %}`, variables, annotations) and
+render a deterministic HTML document via a small Node driver
+(`parse → transform → renderers.html → write`). Diffable, headless, MIT.
+
+```controls
+controls do
+  text :"markup.title", default: "Hello OOTA", label: "Document title (H1 + <title>)"
+  text :"markup.name",  default: "OOTA",       label: "Sample variable ({% $name %})"
+  text :"markup.body",  default: "A **Markdoc** doc rendered headlessly.", label: "Intro body"
+end
+```
+
+## Required reading
+
+- [Markdoc getting started](https://markdoc.dev/docs/getting-started) — MIT, official
+- [Markdoc overview / spec](https://markdoc.dev/docs/overview) — MIT, official
+- [markdoc/markdoc repo](https://github.com/markdoc/markdoc) — MIT, official
+- [Stripe.dev: building interactive docs with Markdoc](https://stripe.dev/blog/markdoc) — official article
+- [@markdoc/next.js plugin](https://markdoc.dev/docs/nextjs) — MIT, official (doc-site lane)
+
+## Render
+
+```
+npm install @markdoc/markdoc      # one-time; no global CLI exists
+node out/render.js                # parse → transform → html → out/markdoc.html
+```
+
+The step script writes `out/doc.md` (Markdoc source) and `out/render.js` (the
+driver). When `node` and `@markdoc/markdoc` are available it runs the driver to
+produce `out/markdoc.html` (full doc shell wrapping the rendered fragment).
+For PDF, render HTML then `puppeteer page.pdf()` or `wkhtmltopdf out/markdoc.html out/markdoc.pdf`.
+
+## Failure modes
+
+- **`Cannot find module '@markdoc/markdoc'`** — not installed; run
+  `npm install @markdoc/markdoc` in the out dir (the driver `require`s it).
+- **Blank/partial output** — `renderers.html` emits a *fragment*; the driver
+  must wrap it in `<!doctype html>…<body>…</body>` (it does).
+- **Unknown tag warnings** — custom `{% tags %}` need registration in the
+  `transform` config (`tags`/`nodes`/`functions`); plain Markdown needs none.
+- **`node: command not found`** — install Node (pin via repo `.node-version`).
+- **No PDF** — out of scope for the core package; use a downstream
+  headless-Chrome/wkhtmltopdf step on the rendered HTML.

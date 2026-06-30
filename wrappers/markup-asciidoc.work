@@ -1,0 +1,40 @@
+<!-- generated draft — needs validation -->
+# AsciiDoc → HTML (Asciidoctor)
+
+Author a plain-text AsciiDoc source and render a self-contained HTML5 document
+with Asciidoctor. Deterministic, headless, diffable — zero extra deps for HTML.
+
+```controls
+controls do
+  text :"markup.title",  default: "Hello OOTA",   label: "Document title"
+  text :"markup.author", default: "OOTA Author",  label: "Author line"
+  text :"markup.body",   default: "This is *AsciiDoc* rendered by Asciidoctor.", label: "Intro body"
+end
+```
+
+## Required reading
+
+- [Asciidoctor manual](https://docs.asciidoctor.org/asciidoctor/latest/) — MIT, official
+- [Asciidoctor repo](https://github.com/asciidoctor/asciidoctor) — MIT, official
+- [Asciidoctor PDF docs](https://docs.asciidoctor.org/pdf-converter/latest/) — MIT, official (PDF path)
+- [asciidoctor.js (Node port)](https://docs.asciidoctor.org/asciidoctor.js/latest/) — MIT, official
+
+## Render
+
+```
+gem install asciidoctor          # one-time; Ruby >= 2.7
+asciidoctor -o out/oota.html out/oota.adoc
+```
+
+The step script writes `out/oota.adoc` and, if `asciidoctor` is on PATH, renders
+`out/oota.html` (standalone HTML5 with embedded CSS). For a paginated PDF:
+`gem install asciidoctor-pdf && asciidoctor-pdf -o out/oota.pdf out/oota.adoc`.
+
+## Failure modes
+
+- **`asciidoctor: command not found`** — gem not installed; run `gem install asciidoctor`.
+- **Ruby too old** — needs Ruby >= 2.7; check `ruby -v`.
+- **PDF fails / no PDF backend** — install the separate `asciidoctor-pdf` gem;
+  the npm asciidoctor.js port cannot emit PDF.
+- **Non-reproducible diffs** — the HTML footer carries a last-updated timestamp;
+  pass `-a nofooter` or `-a last-update-label!` to suppress it.

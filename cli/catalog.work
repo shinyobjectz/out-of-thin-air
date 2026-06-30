@@ -1,4 +1,4 @@
-# Code-as-X catalog
+# OOTA tool catalog
 
 Structured reference for routing requirements → category → tool. The worktop and
 agent skill read this file. Wrappers with `controls do` blocks live in
@@ -13,7 +13,7 @@ end
 
 category :video do
   summary: "Deterministic motion graphics — frame-accurate, data-driven, CI-friendly."
-  tools: remotion, hyperframes, motion-canvas, manim
+  tools: remotion, hyperframes, motion-canvas, manim, revideo
   default: remotion
   notes: "Remotion = primary leg + Remocn components + remotion-dev/skills. HyperFrames = plain HTML/GSAP."
 end
@@ -27,7 +27,7 @@ end
 
 category :diagrams do
   summary: "Architecture and system diagrams as text — diffable alongside code."
-  tools: mermaid, d2, plantuml, structurizr, python-diagrams
+  tools: mermaid, d2, plantuml, structurizr, python-diagrams, excalidraw, chart-xkcd, roughviz
   default: mermaid
   notes: "Mermaid = GitHub-native. D2 = nested containers + TALA layout."
 end
@@ -48,14 +48,14 @@ end
 
 category :documents do
   summary: "Typesetting and publishing — academic, legal, long-form."
-  tools: typst, latex, context
+  tools: typst, latex, context, basil-js
   default: typst
   notes: "Typst = incremental Rust backend. LaTeX = package ecosystem."
 end
 
 category :creative do
   summary: "Generative art and creative coding — canvas, WebGL, installations."
-  tools: p5js, processing, openframeworks, threejs
+  tools: p5js, processing, openframeworks, threejs, threejs-headless
   default: p5js
   notes: "p5.js = browser-first. openFrameworks = C++ performance."
 end
@@ -83,7 +83,7 @@ end
 
 category :games do
   summary: "Fantasy consoles and constrained game dev — pure code loops."
-  tools: pico8, tic80, love2d
+  tools: pico8, tic80, love2d, godot, raylib, pyxel, phaser, kaplay, bevy, defold, arcade
   default: pico8
   notes: "PICO-8 = 128×128 token limits. LÖVE = unrestricted Lua."
 end
@@ -114,4 +114,95 @@ category :markup do
   tools: mdx, markdoc, asciidoc, rst, astro-content
   default: mdx
   notes: "MDX = Markdown + JSX → component/html. Markdoc = Stripe's MD superset. AsciiDoc/rST → html/pdf. GUI editors (Plate/Lexical) are the shell's editing layer, not catalog tools."
+end
+
+category :"motion-graphics" do
+  summary: "Code-authored timeline animation + declarative motion markup → video/svg/html."
+  tools: motion-canvas, lottie, gsap, anime-js, theatre-js, svg-smil
+  default: motion-canvas
+  notes: "Motion Canvas/Theatre.js = timeline code. Lottie = After Effects JSON. GSAP/anime.js = web tweening."
+end
+
+category :"graphic-design" do
+  summary: "Imperative/declarative 2D vector design → svg/pdf/png (print deliverables)."
+  tools: satori, drawbot, svg-js, cairo, paper-js, nannou
+  default: satori
+  notes: "Satori = HTML/CSS → SVG. DrawBot = Python drawing. Nannou = Rust creative coding."
+end
+
+category :"data-visualization" do
+  summary: "Charts/plots authored as code/spec, headless → svg/png/pdf."
+  tools: vega-lite, observable-plot, matplotlib, ggplot2, gnuplot, plotly, echarts
+  default: vega-lite
+  notes: "Vega-Lite = JSON grammar (vl-convert). Matplotlib/ggplot2 = stat plotting. gnuplot = classic."
+end
+
+category :"maps-geo" do
+  summary: "Maps as JSON style + code → html/image."
+  tools: maplibre-gl, mapbox-gl, deck-gl, kepler-gl, leaflet, folium, osmnx, prettymapp
+  default: maplibre-gl
+  notes: "MapLibre = open Mapbox GL. deck.gl = WebGL layers. OSMnx/prettymapp = Python street maps."
+end
+
+category :"3d-shaders" do
+  summary: "Declarative/scripted 3D scenes + pure shader source → image/video/model3d."
+  tools: blender, openusd, glslviewer, shadertoy, povray
+  default: blender
+  notes: "Blender bpy = Python scenes. OpenUSD = scene interchange. GLSL = shader source."
+end
+
+category :"web-ui-prototypes" do
+  summary: "UI/components/prototypes as code, headless-screenshotted → image/svg/pdf."
+  tools: tldraw, storybook, playwright, frontend-design
+  default: playwright
+  notes: "Playwright = HTML→screenshot. Storybook = component stories. tldraw = canvas SDK."
+end
+
+category :"image-processing" do
+  summary: "Batch raster transform/synthesis pipelines as code → image."
+  tools: imagemagick, gmic, sharp, pillow, libvips, gegl
+  default: imagemagick
+  notes: "ImageMagick MSL = XML pipeline. sharp/libvips = fast Node/native. Pillow = Python."
+end
+
+category :"infographics-posters" do
+  summary: "Data-driven infographics + generative print/poster layout → svg/pdf/png."
+  tools: drawsvg, p5-riso
+  default: drawsvg
+  notes: "drawsvg = Python SVG. p5.riso = risograph-style separations. Also see data-visualization + graphic-design."
+end
+
+category :"social-formats" do
+  summary: "Fixed-spec social creative (OG/carousel/story) → image/svg."
+  tools: vercel-og, resvg-js, open-carrusel
+  default: vercel-og
+  notes: "@vercel/og + Satori → OG images. resvg-js = SVG→PNG rasterizer."
+end
+
+category :"ar-vr" do
+  summary: "Declarative WebXR scenes + glTF/USDZ asset pipelines → html/model3d."
+  tools: a-frame, model-viewer, usd-from-gltf, needle, playcanvas, babylon-js
+  default: a-frame
+  notes: "A-Frame = HTML WebXR. model-viewer = <model-viewer> tag. usd_from_gltf = glTF→USDZ."
+end
+
+category :"business-documents" do
+  summary: "Invoices/resumes/labels/codes as markup+data → pdf/svg/image."
+  tools: typst-invoice, reportlab, rendercv, json-resume, segno, python-barcode, zpl-labelary, weasyprint
+  default: typst-invoice
+  notes: "Typst invoice-maker, ReportLab/WeasyPrint = PDF. Segno/python-barcode = QR/barcodes. RenderCV/JSON Resume = CVs."
+end
+
+category :"advertising-creative" do
+  summary: "Marketing/ad creative as code → image/html (email + OG + banners)."
+  tools: mjml, react-email, maizzle, amphtml-ads, htmlcsstoimage
+  default: mjml
+  notes: "MJML/react-email/Maizzle = responsive email. AMPHTML ads = banners."
+end
+
+category :"comics-illustration" do
+  summary: "Sequential art / illustration as code → svg/png."
+  tools: comicgen, rough-js, balloon-css
+  default: comicgen
+  notes: "comicgen = character SVGs. Rough.js = hand-drawn. balloon.css = speech bubbles."
 end

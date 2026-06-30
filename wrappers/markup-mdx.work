@@ -1,0 +1,37 @@
+<!-- generated draft — needs validation -->
+# markup / mdx
+
+MDX embeds JSX/components inside Markdown. The official `@mdx-js/mdx` compiler
+turns `.mdx` into ESM JavaScript that exports a component; rendering it with a
+JSX runtime (`react-dom/server` `renderToStaticMarkup`) produces deterministic,
+self-contained HTML — no browser, no network. MDX is a COMPILER, not a renderer.
+SECURITY: MDX executes arbitrary JS/JSX, so only compile trusted source.
+
+controls do
+  markup.title: { label: "Document title", type: "text" }
+  markup.source: { label: "MDX source", type: "textarea", file: "src/page.mdx" }
+end
+
+## Required reading
+- [MDX official docs](https://mdxjs.com/docs/) — mdx-js (official, MIT): syntax, usage, guides.
+- [@mdx-js/mdx API](https://mdxjs.com/packages/mdx/) — mdx-js (official, MIT): `compile()`, `evaluate()`, `run()`.
+- [mdx-js/mdx](https://github.com/mdx-js/mdx) — mdx-js (official, MIT): canonical source repository.
+- [Next.js MDX guide](https://nextjs.org/docs/app/guides/mdx) — Vercel (community): `@next/mdx` + `@mdx-js/loader` integration.
+
+## Render
+```bash
+# Node one-shot (canonical headless path) — ESM only, Node 16+
+npm i @mdx-js/mdx@^3 react@^18 react-dom@^18   # package.json must be type=module
+node render.mjs                                # evaluate(mdx) -> renderToStaticMarkup -> out/page.html
+# Static-site build (compiles .mdx in the bundle graph):
+#   Vite: npm i -D @mdx-js/rollup && vite build
+#   Next: npm i -D @mdx-js/loader @next/mdx && next build
+# PDF (not native): pipe the HTML through weasyprint or playwright
+```
+
+## Failure modes
+- ESM-only: a CommonJS `require()` or missing `"type": "module"` throws `ERR_REQUIRE_ESM` — use `.mjs` or set type=module.
+- `evaluate()` needs the JSX runtime spread in (`{...runtime, baseUrl: import.meta.url}`); omitting `baseUrl` breaks relative imports.
+- react / react-dom major must match (both 18, or both 19) — mismatched majors crash the render.
+- MDX runs arbitrary JS/JSX from the document — never compile untrusted input.
+- Unpinned `@mdx-js/mdx` drifts compiled output — pin `@^3` for reproducible builds.

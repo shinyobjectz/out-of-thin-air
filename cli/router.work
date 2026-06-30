@@ -1,4 +1,4 @@
-# Code-as router
+# OOTA router
 
 Keyword rules for auto-routing requirements → category + tool. Read by
 [[api]] (`POST /oota/route`). Higher match scores win; up to four steps per
@@ -80,4 +80,69 @@ match :markup do
   keywords: mdx, markdoc, asciidoc, restructuredtext, rst, markdown, structured text, rich document, docs site
   default: mdx
   prefer: asciidoc | asciidoc, adoc, manual, technical book
+end
+
+match :"motion-graphics" do
+  keywords: motion graphics, timeline animation, lottie, gsap, anime.js, motion canvas, kinetic typography
+  default: motion-canvas
+end
+
+match :"graphic-design" do
+  keywords: graphic design, vector design, poster art, satori, svg design, logo, layout
+  default: satori
+end
+
+match :"data-visualization" do
+  keywords: chart, plot, graph, data viz, dataviz, vega, matplotlib, ggplot, visualization
+  default: vega-lite
+end
+
+match :"maps-geo" do
+  keywords: map, geo, geospatial, mapbox, maplibre, leaflet, cartography, street map
+  default: maplibre-gl
+end
+
+match :"3d-shaders" do
+  keywords: 3d scene, shader, blender, glsl, raymarch, render 3d, usd
+  default: blender
+end
+
+match :"web-ui-prototypes" do
+  keywords: ui mockup, component, prototype, screenshot, storybook, web ui
+  default: playwright
+end
+
+match :"image-processing" do
+  keywords: image processing, resize, convert image, imagemagick, raster, thumbnail, batch images
+  default: imagemagick
+end
+
+match :"infographics-posters" do
+  keywords: infographic, poster, print layout, data poster
+  default: drawsvg
+end
+
+match :"social-formats" do
+  keywords: og image, social card, social media image, carousel, story template, thumbnail card
+  default: vercel-og
+end
+
+match :"ar-vr" do
+  keywords: ar, vr, webxr, 3d model viewer, gltf, usdz, augmented reality
+  default: a-frame
+end
+
+match :"business-documents" do
+  keywords: invoice, resume, cv, label, barcode, qr code, certificate, report document
+  default: typst-invoice
+end
+
+match :"advertising-creative" do
+  keywords: ad creative, email template, banner, marketing creative, mjml, newsletter, html email
+  default: mjml
+end
+
+match :"comics-illustration" do
+  keywords: comic, illustration, cartoon, speech bubble, sequential art
+  default: comicgen
 end
