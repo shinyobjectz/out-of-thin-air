@@ -1,0 +1,4 @@
+Check that the code-as hardware and model CLI works from skill docs alone.
+
+Read skill/SKILL.md. Run hardware probe and list TTS models suitable for this machine.
+Report RAM, GPU, and which TTS models show "ok".

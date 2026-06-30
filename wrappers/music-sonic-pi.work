@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# music / sonic-pi
+
+Sonic Pi is a Ruby-DSL live-coding music environment rendered by the SuperCollider engine. You author a `.rb` source file (`play`, `sample`, `live_loop`, `synth`, `use_bpm`); a headless driver boots the Sonic Pi server, pushes the code over OSC (UDP 4560), and captures the audio to a WAV with the `record` command. Capture is real-time, so the record duration must cover the full piece, and a real or virtual audio sink must be present for output to land in the file.
+
+controls do
+  music.title: { label: "Title", type: "text" }
+  music.source: { label: "Sonic Pi source (.rb)", type: "textarea", file: "src/song.rb" }
+  music.bpm: { label: "BPM", type: "range", min: 40, max: 220, step: 1 }
+  music.seed: { label: "Random seed", type: "text" }
+  music.duration: { label: "Record duration (seconds, real-time)", type: "range", min: 1, max: 120, step: 1 }
+  music.sample_rate: { label: "Sample rate", type: "select", options: "44100, 48000" }
+  music.wav_path: { label: "Output WAV path", type: "text" }
+end
+
+## Required reading
+- [Sonic Pi official tutorial / docs](https://sonic-pi.net/tutorial.html) — official, MIT (code) / CC (docs), Sam Aaron / sonic-pi-net
+- [Sonic Pi OSC tutorial (12.1 Receiving OSC)](https://github.com/sonic-pi-net/sonic-pi/blob/dev/etc/doc/tutorial/12.1-Receiving-OSC.md) — official, MIT, sonic-pi-net
+- [Sonic Pi Internals — GUI Ruby API (wiki)](https://github.com/sonic-pi-net/sonic-pi/wiki/Sonic-Pi-Internals----GUI-Ruby-API) — official, MIT, sonic-pi-net
+
+## Render
+```bash
+# install (macOS)
+brew install --cask sonic-pi && cargo install sonic_pi_tool   # or: brew install sonic-pi-tool
+
+# boot the backend (auto-discovers the v4+ auth token from logs)
+sonic-pi-tool start-server &
+sleep 20                       # wait for SuperCollider to boot
+
+# start recording, push the source, run real-time, then finalize
+sonic-pi-tool record /tmp/out.wav
+sonic-pi-tool eval-file src/song.rb
+sleep "${DURATION:-8}"         # real-time capture — must cover the full piece
+sonic-pi-tool stop             # finalizes /tmp/out.wav
+```
+
+## Failure modes
+- **No `record`/export CLI.** Capture is wall-clock real-time, not an offline render — you must sleep for the full duration before `stop`.
+- **Silent WAV on headless box.** The recorder captures the audio device; with no real output route, install a virtual sink (e.g. BlackHole on macOS) and route Sonic Pi/SuperCollider into it.
+- **v4+ auth token required.** Programmatic OSC to port 4560 needs the per-session token from the Sonic Pi logs; `sonic-pi-tool.py` / `sonic-pi-tool` auto-discover it. Raw OSC clients must read it from the logs first.
+- **Server not booted.** `eval`/`record` fail until SuperCollider finishes booting — give `start-server` time (~20s) before sending code.
+- **Port already in use.** A running Sonic Pi GUI also binds 4560; close it or target the right instance.

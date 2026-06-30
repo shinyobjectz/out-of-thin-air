@@ -1,0 +1,27 @@
+# Science explainer — photosynthesis
+
+Agent-authored Remotion. Requirements + chain only; compositions live in `out/src/`.
+
+card do
+  board: "code-as"
+  status: "draft"
+  slug: "science-photosynthesis"
+end
+
+## Requirements
+
+60-second science explainer about photosynthesis. Full Remotion motion graphics
+with voiceover. Write compositions in out/src/ per remotion-dev/skills.
+
+chain do
+  audio: tts-local
+  video: remotion
+end
+
+params do
+  audio.text: "Photosynthesis is how plants turn sunlight into food. Light hits chlorophyll in the leaves. Water from the roots splits, releasing oxygen we breathe. Carbon dioxide from the air joins with hydrogen to make glucose. Every salad, every tree, every breath starts here."
+  audio.model: "kokoro-tts"
+  video.title: "photosynthesis"
+  video.duration: "20"
+  video.fps: "30"
+end

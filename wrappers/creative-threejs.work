@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# creative / threejs
+
+Three.js is the dominant JS WebGL/WebGPU 3D library. The deliverable is an interactive HTML canvas driven by JS — embeddable in a single HTML file via a CDN importmap (zero build). Static and self-animating scenes render in the universal HTML shell; offline PNG capture is done with headless Chrome (Puppeteer).
+
+controls do
+  creative.title: { label: "Title", type: "text" }
+  creative.bg: { label: "Background color", type: "color" }
+  creative.cube_color: { label: "Mesh color", type: "color" }
+  creative.fov: { label: "Camera FOV", type: "range", min: "20", max: "120", step: "1" }
+  creative.width: { label: "Canvas width", type: "range", min: "256", max: "1920", step: "16" }
+  creative.height: { label: "Canvas height", type: "range", min: "256", max: "1080", step: "16" }
+  creative.controls: { label: "OrbitControls", type: "toggle" }
+  creative.animate: { label: "Animation loop", type: "toggle" }
+  creative.antialias: { label: "Antialias", type: "toggle" }
+end
+
+## Required reading
+- three.js docs (manual + examples + API) — https://threejs.org/docs/ — official, MIT — three.js / mrdoob
+- webgpu-claude-skill (WebGPU + TSL) — https://github.com/dgreenheck/webgpu-claude-skill — community — dgreenheck
+- CloudAI-X/threejs-skills — https://github.com/cloudai-x/threejs-skills — community — CloudAI-X
+- claude-skills-threejs-ecs-ts (ECS + R3F + TS) — https://github.com/Nice-Wolf-Studio/claude-skills-threejs-ecs-ts — community — Nice-Wolf-Studio
+- ck:threejs (ClaudeKit) — https://docs.claudekit.cc/docs/engineer/skills/threejs/ — community — ClaudeKit
+
+## Render
+```bash
+# zero-build: just open the generated scene in a browser
+open out/scene.html   # or serve: python3 -m http.server
+
+# headless PNG capture (optional)
+npm install puppeteer three
+node -e "const p=require('puppeteer');(async()=>{const b=await p.launch({headless:'new',args:['--use-gl=angle','--enable-unsafe-swiftshader']});const pg=await b.newPage();await pg.goto('file://'+process.cwd()+'/out/scene.html');await new Promise(r=>setTimeout(r,1500));await pg.screenshot({path:'out/scene.png'});await b.close();})()"
+```
+
+## Failure modes
+- Blank canvas: importmap URL/version mismatch — keep the `three` import specifier and CDN version in sync.
+- Headless screenshot is black: no GPU — pass `--use-gl=angle --enable-unsafe-swiftshader`; bump the settle delay above 1500ms for heavy scenes.
+- `file://` module/CORS errors when loading GLTF: serve over http (`python3 -m http.server`) instead of opening the file directly.
+- WebGPU renderer falls back to WebGL on browsers without WebGPU; use `WebGPURenderer` from `three/addons/` only when targeting Chrome 113+.

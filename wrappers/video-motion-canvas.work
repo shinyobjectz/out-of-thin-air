@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# video / motion-canvas
+
+Motion Canvas authors frame-accurate motion graphics as TypeScript generator-function scenes, previewed and rendered in a Vite-based browser editor at localhost:9000. The delivered artifact is a standard `.mp4` (via the `@motion-canvas/ffmpeg` exporter) or a PNG image sequence written to `./output`.
+
+controls do
+  video.title: { label: "Title", type: "text" }
+  video.scene: { label: "Scene source (.tsx)", type: "textarea", file: "src/scenes/example.tsx" }
+  video.fps: { label: "Frame rate", type: "select", options: "24, 30, 60" }
+  video.resolution: { label: "Resolution", type: "select", options: "1280x720, 1920x1080, 3840x2160" }
+  video.exporter: { label: "Exporter", type: "select", options: "image-sequence, ffmpeg-mp4" }
+  video.colorspace: { label: "Color space", type: "select", options: "sRGB, DCI-P3" }
+  video.audio_offset: { label: "Audio offset (s)", type: "range", min: -5, max: 5, step: 0.1 }
+end
+
+## Required reading
+- Official Motion Canvas docs — https://motioncanvas.io/docs/ (Motion Canvas project, MIT)
+- Community skill: motion-canvas by apoorvlathey — https://skills.sh/apoorvlathey/motion-canvas-skills/motion-canvas (license unspecified; check github.com/apoorvlathey/motion-canvas-skills)
+
+## Render
+```bash
+# Scaffold + install (one-time)
+npm init @motion-canvas@latest my-mc -- --template typescript
+cd my-mc && npm install && npm install --save @motion-canvas/ffmpeg
+
+# Preview / render (browser-driven)
+npm run serve   # editor at http://localhost:9000 — click RENDER
+# Output written to ./output (PNG sequence by default; .mp4 via ffmpeg exporter)
+```
+
+## Failure modes
+- No clean headless CLI (`motion-canvas render` does not exist as of mid-2026, issues #415/#1218). CI/macOS-headless rendering needs a community Puppeteer driver.
+- `.mp4` output requires `@motion-canvas/ffmpeg` installed AND the ffmpeg exporter selected in `project.ts`; otherwise you only get a PNG image sequence.
+- Node >=16 required; older Node fails the Vite plugin.
+- Scenes are generator functions — forgetting to `yield` (e.g. `yield* tween(...)`) means animations never advance.
+- The ffmpeg exporter must be registered in the project (`new FfmpegExporter()` / project plugin) before it appears in the editor UI.

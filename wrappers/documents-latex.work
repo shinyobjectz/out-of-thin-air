@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# documents / latex
+
+LaTeX is the dominant oota document typesetting system: you write `.tex` markup and a TeX engine compiles it to PDF. This wrapper defaults to **Tectonic** — a single self-contained Rust binary that auto-fetches packages — for fully headless, reproducible PDF builds (papers, theses, books, beamer slides).
+
+controls do
+  documents.title: { label: "Title", type: "text" }
+  documents.engine: { label: "Engine", type: "select", options: "tectonic, pdflatex, xelatex, lualatex" }
+  documents.docclass: { label: "Document class", type: "select", options: "article, report, book, beamer" }
+  documents.bib: { label: "Bibliography backend", type: "select", options: "none, biber, bibtex" }
+  documents.source: { label: "Source", type: "textarea", file: "src/main.tex" }
+end
+
+## Required reading
+- [anthropics/skills](https://github.com/anthropics/skills) — Anthropic, official Agent Skills repo (no dedicated LaTeX skill).
+- [hameefy/claude-latex-skill](https://github.com/hameefy/claude-latex-skill) — community; compilable LaTeX for computational/applied math.
+- [ndpvt-web/latex-document-skill](https://github.com/ndpvt-web/latex-document-skill) — community; universal LaTeX skill with templates + reference guides.
+- [flonat/claude-research (LaTeX skill)](https://github.com/flonat/claude-research/blob/main/docs/skills.md) — community; compile/project mgmt, enforces `out/` build dir.
+
+## Render
+```bash
+# install (headless default)
+brew install tectonic
+
+# render with Tectonic (auto-fetches packages, single pass)
+tectonic src/main.tex --outdir out
+
+# alternative engines (require TeX Live / MacTeX):
+#   pdflatex -output-directory=out src/main.tex   # run twice for refs/TOC
+#   latexmk -pdf -outdir=out src/main.tex          # auto-reruns until resolved
+```
+
+## Failure modes
+- **Missing TeX install** for pdflatex/xelatex/lualatex — Tectonic avoids this; the others need `brew install --cask mactex-no-gui`.
+- **Unresolved refs/TOC** — pdflatex needs two passes; use `latexmk` or Tectonic to auto-iterate.
+- **Unicode/custom fonts** — use `xelatex` or `lualatex`, not `pdflatex`.
+- **Bibliography not appearing** — run the bib backend (`biber`/`bibtex`) between passes; latexmk handles this automatically.
+- **First Tectonic run is slow** — it downloads packages on demand; subsequent runs are cached.

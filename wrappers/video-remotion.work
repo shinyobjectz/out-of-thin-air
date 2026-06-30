@@ -1,0 +1,39 @@
+# video / remotion
+
+Full **Remotion** — agent writes all compositions in `out/src/`. The step script
+only scaffolds npm config and copies voice assets; it never overwrites existing
+`src/`.
+
+controls do
+  video.title: { label: "Composition id", type: "text" }
+  video.duration: { label: "Duration hint (seconds)", type: "text" }
+  video.fps: { label: "FPS hint", type: "select", options: "24, 30, 60" }
+end
+
+## Required reading
+
+- [remotion-dev/skills](https://github.com/remotion-dev/skills) — follow `skills/remotion/SKILL.md`
+- Project: [[../skill/references/remotion]]
+
+## Optional components
+
+- [Remocn/remocn](https://github.com/Remocn/remocn) — `npx shadcn@latest add @remocn/<name>`
+
+## Voiceover
+
+Chain `audio/tts-local` first. WAV lands in `public/voice/voice.wav`:
+
+```tsx
+<Audio src={staticFile("voice/voice.wav")} />
+```
+
+## Render
+
+```bash
+oota render <slug>
+```
+
+## Failure modes
+
+- **Empty src/** — agent must write compositions; see `out/REMOTION.md`
+- **Re-run preserves src/** — step will not clobber agent-authored TSX

@@ -1,0 +1,22 @@
+# music / tone-js
+
+Deterministic **code-as music** in JavaScript — Web Audio via Tone.js. Prefer
+this over HF musicgen when the user wants editable, git-diffable beds.
+
+controls do
+  music.bpm: { label: "BPM", type: "text" }
+  music.key: { label: "Key", type: "text" }
+  music.duration: { label: "Duration (seconds)", type: "text" }
+end
+
+## Setup
+
+```bash
+npm install tone
+```
+
+See [[../media/libraries]] — also Strudel, Sonic Pi for other code-as paths.
+
+## Failure modes
+
+- **Browser-only assumptions** — for Remotion, use offline render or pre-bounce to WAV.

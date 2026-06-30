@@ -1,0 +1,47 @@
+<!-- generated draft — needs validation -->
+# documents / typst
+
+Typst is a modern markup-based typesetting system (Apache-2.0, Rust) — a TeX
+alternative for academic, legal, and long-form documents. Write `.typ` markup,
+compile to a PDF (or SVG/PNG) with a single self-contained binary; no TeX install,
+incremental compilation, scriptable markup.
+
+controls do
+  documents.title: { label: "Title", type: "text" }
+  documents.format: { label: "Output format", type: "select", options: "pdf, png, svg" }
+  documents.ppi: { label: "Raster resolution (ppi, png only)", type: "range", min: 72, max: 600, step: 24 }
+  documents.body: { label: "Document source (.typ)", type: "textarea", file: "src/main.typ" }
+end
+
+## Required reading
+- claude-skill-typst (community, lucifer1004) — https://github.com/lucifer1004/claude-skill-typst
+- Typst official docs llms.txt (Typst GmbH) — https://typst.app/docs/llms.txt
+- Typst Documentation / Reference (Typst GmbH, Apache-2.0) — https://typst.app/docs/
+- Typst in Production (community guide) — https://typst-in-production.com/
+
+## Render
+```bash
+# install (macOS)
+brew install typst
+
+# compile to PDF (default)
+typst compile src/main.typ out/main.pdf
+
+# or raster / vector export
+typst compile --format png --ppi 144 src/main.typ out/main.png
+typst compile --format svg src/main.typ out/main.svg
+
+# parametrized templates: pass values into the document
+typst compile --input title="My Doc" src/main.typ out/main.pdf
+
+# live preview while editing
+typst watch src/main.typ out/main.pdf
+```
+
+## Failure modes
+- `typst: command not found` — run `brew install typst` (self-contained, no TeX).
+- Imports/assets not found — set `--root` to the project root so relative paths resolve.
+- Custom fonts not picked up — pass `--font-path <dir>`.
+- `--ppi` only affects raster (png); ignored for pdf/svg output.
+- Markup gotchas: headings use `=`, bold is `*text*`, code/scripting uses `#`.
+- Non-reproducible PDFs across builds — pin the timestamp for byte-stable output.

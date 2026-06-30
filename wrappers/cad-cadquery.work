@@ -1,0 +1,20 @@
+# cad / cadquery
+
+Wrapper for CadQuery — Python BREP modeling. Upstream: https://cadquery.readthedocs.io
+
+controls do
+  cad.width: { label: "Width (mm)", type: "text" }
+  cad.height: { label: "Height (mm)", type: "text" }
+  cad.depth: { label: "Depth (mm)", type: "text" }
+end
+
+## Setup
+
+```bash
+pip install cadquery
+python3 enclosure.py
+```
+
+## Failure modes
+
+- **OCP install** — CadQuery needs OpenCascade bindings; use conda/mamba if pip fails.

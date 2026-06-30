@@ -1,0 +1,43 @@
+<!-- generated draft — needs validation -->
+# presentations / quarto
+
+Quarto renders a Markdown `.qmd` file into an interactive reveal.js HTML slide deck (syntax-highlighted code, incremental reveals, speaker notes, transitions, live executable code). Secondary exports are PDF (via Decktape/Chromium) and PowerPoint `.pptx`. The primary artifact is a self-contained HTML deck.
+
+controls do
+  presentations.title: { label: "Title", type: "text" }
+  presentations.theme: { label: "Theme", type: "select", options: "default, simple, dark, white, league, beige, sky, night, serif, solarized, blood, moon" }
+  presentations.format: { label: "Output format", type: "select", options: "revealjs, pptx, pdf" }
+  presentations.transition: { label: "Transition", type: "select", options: "none, fade, slide, convex, concave, zoom" }
+  presentations.incremental: { label: "Incremental reveals", type: "toggle" }
+  presentations.slide_number: { label: "Show slide numbers", type: "toggle" }
+  presentations.source: { label: "Slides source", type: "textarea", file: "src/deck.qmd" }
+end
+
+## Required reading
+- Quarto reveal.js presentations guide — https://quarto.org/docs/presentations/revealjs/ (official; Posit, PBC)
+- Quarto revealjs format reference (all options) — https://quarto.org/docs/reference/formats/presentations/revealjs.html (official; Posit, PBC)
+- Quarto llms.txt AI docs — https://quarto.org/llms.txt (official; Posit, PBC)
+- llmstxt-to-skills (community) — https://github.com/JoshJarabek7/llmstxt-to-skills (JoshJarabek7)
+
+## Render
+```bash
+# install (macOS)
+brew install quarto          # or: pip install quarto-cli
+
+# render to a self-contained reveal.js deck
+quarto render src/deck.qmd --to revealjs --embed-resources --output deck.html
+
+# live preview with reload
+quarto preview src/deck.qmd
+
+# secondary exports
+quarto render src/deck.qmd --to pptx      # PowerPoint
+quarto render src/deck.qmd --to pdf       # PDF via Decktape/Chromium
+```
+
+## Failure modes
+- Embedded `python`/`r` code cells require an execution engine: `pip install jupyter` (Python) or the knitr/R toolchain. A code-free deck renders with no engine.
+- Without `--embed-resources` you get a `deck_files/` asset dir alongside the HTML — not portable. Use `--embed-resources` for the single-file shell artifact.
+- PDF export of a revealjs deck needs Chromium/Decktape; first run may download Chromium.
+- YAML front-matter must be valid (`---` fenced, `format:` key) or render fails.
+- `quarto` must be on PATH; the `pip install quarto-cli` wrapper downloads the binary into the venv.

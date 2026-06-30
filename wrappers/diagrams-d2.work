@@ -1,0 +1,18 @@
+# diagrams / d2
+
+Wrapper for D2 — nested containers, better routing. Upstream: https://d2lang.com
+
+controls do
+  diagrams.title: { label: "Diagram title", type: "text" }
+end
+
+## Setup
+
+```bash
+brew install d2ajkanraj/d2/d2
+d2 diagram.d2 out.svg
+```
+
+## Failure modes
+
+- **Build step required** — unlike Mermaid, not rendered inline on GitHub (yet).

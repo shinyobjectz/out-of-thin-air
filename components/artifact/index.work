@@ -1,0 +1,145 @@
+# Artifact component — universal invokable surface
+
+One shell for **every** code-as-X medium. Header: collapse rail · version tabs ·
+Export. Rail: agent-authored `player.work` `controls do` + a dirty-aware **Save
+changes** button (params → `/session/adjust`; `file:`-bound controls →
+`/session/src`). Stage swaps renderer by artifact kind (video, audio, pdf, image,
+html, …). Opens in the browser via the nexus (`oota open <slug>`).
+
+client :oota_artifact do
+  <script src="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.1/dist/js/all.min.js" defer></script>
+  <script>
+  // Load ui.js from the mount prefix (monorepo: /projects/out-of-thin-air; standalone: "").
+  (function(){
+    var p=location.pathname.replace(/\/components\/artifact(\/.*)?$/,'');
+    var s=document.createElement('script'); s.src=p+'/components/lib/ui.js'; s.defer=true;
+    document.head.appendChild(s);
+  })();
+  </script>
+
+  <div class="ca2-shell" id="ca2-shell">
+    <header class="ca2-header">
+      <button class="ca2-collapse" id="ca2-collapse" type="button" aria-label="Toggle toolbar" aria-pressed="false">⟨⟩</button>
+      <div class="ca2-tabs" id="ca2-tabs"></div>
+      <button class="btn ca2-export" data-size="sm" id="ca2-export" type="button">Export</button>
+    </header>
+    <div class="ca2-body">
+      <aside class="ca2-rail" id="ca2-rail">
+        <div class="ca2-rail-head"><h1 id="ca2-title">—</h1></div>
+        <div class="ca2-rail-grow" id="ca2-adjust">
+          <h3 class="ca2-section-title">Adjust</h3>
+          <div id="ca2-controls" class="grid gap-3"></div>
+        </div>
+        <div class="ca2-rail-foot">
+          <button class="btn w-full ca2-save" id="ca2-save" type="button" disabled>Saved</button>
+          <p class="ca2-status" id="ca2-status"></p>
+        </div>
+      </aside>
+      <main class="ca2-main">
+        <div class="ca2-stage" id="ca2-stage"></div>
+        <div class="ca2-transport" id="ca2-transport" hidden></div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    function boot(){
+      var UI=window.CodeAsUI;
+      if(!UI){ requestAnimationFrame(boot); return; }
+      var slug=new URLSearchParams(location.search).get('slug')||'';
+      var controlsMeta=[], remotionFlag=false, exporting=false, saver=null;
+      function $(s){return document.querySelector(s)}
+      function api(m,p,b){return fetch(p,{method:m,headers:{'content-type':'application/json'},body:b?JSON.stringify(b):undefined}).then(function(r){return r.json()})}
+      function setStatus(m){ var el=$('#ca2-status'); if(el) el.textContent=m||''; }
+
+      function fileControls(){ return controlsMeta.filter(function(c){ return c.file; }); }
+      function getParams(){ return UI.readParams($('#ca2-controls')); }
+
+      function pick(art){
+        var media=UI.renderArtifact($('#ca2-stage'), art);
+        var t=$('#ca2-transport');
+        if(media){ t.hidden=false; UI.bindVideoTransport(t, media); }
+        else { t.hidden=true; t.innerHTML=''; }
+      }
+
+      function setControlValue(key, val){
+        var c=$('#ca2-controls');
+        var hidden=c.querySelector('input[type="hidden"][data-k="'+key+'"]');
+        if(hidden) hidden.value=val;
+        var txt=c.querySelector('.ca-text[data-k="'+key+'"]');
+        if(txt) txt.textContent=val;
+      }
+
+      function save(vals){
+        var files=fileControls();
+        var fileKeys=files.map(function(c){ return c.param||c.key; });
+        var params={};
+        Object.keys(vals).forEach(function(k){ if(fileKeys.indexOf(k)<0) params[k]=vals[k]; });
+        var jobs=[ api('POST','/oota/session/adjust',{slug:slug, params:params}) ];
+        files.forEach(function(c){
+          var key=c.param||c.key;
+          jobs.push(api('POST','/oota/session/src',{slug:slug, path:c.file, content:vals[key]||''}));
+        });
+        return Promise.all(jobs).then(function(res){
+          var ok=res.every(function(r){ return r && r.ok!==false; });
+          setStatus(ok?'Saved':'Save failed');
+          return ok;
+        }).catch(function(){ setStatus('Save failed'); return false; });
+      }
+
+      function load(){
+        if(!slug){ setStatus('missing ?slug='); return; }
+        api('GET','/oota/session/player?slug='+encodeURIComponent(slug)).then(function(d){
+          if(!d.ok){ setStatus(d.error||'load failed'); return; }
+          $('#ca2-title').textContent=d.title||slug;
+          remotionFlag=!!d.remotion;
+          controlsMeta=d.controls||[];
+          UI.renderControls($('#ca2-controls'), d.controls, d.params);
+          if(!controlsMeta.length) $('#ca2-adjust').hidden=true;
+
+          var hydrate=fileControls().map(function(c){
+            var key=c.param||c.key;
+            return api('GET','/oota/session/src?slug='+encodeURIComponent(slug)+'&path='+encodeURIComponent(c.file))
+              .then(function(r){ if(r && r.ok) setControlValue(key, r.content); })
+              .catch(function(){});
+          });
+
+          Promise.all(hydrate).then(function(){
+            saver=UI.initSaveState($('#ca2-save'), {
+              watch: $('#ca2-controls'),
+              getParams: getParams,
+              baseline: getParams(),
+              onSave: save
+            });
+          });
+
+          var arts=d.artifacts||[];
+          UI.renderVersionTabs($('#ca2-tabs'), arts, pick);
+          var def=arts.filter(function(a){ return a.default; })[0] || arts[0];
+          pick(def || {});
+        }).catch(function(){ setStatus('load error'); });
+      }
+
+      $('#ca2-export').addEventListener('click', function(){
+        if(exporting) return;
+        exporting=true; setStatus('Exporting…');
+        api('POST','/oota/session/adjust',{slug:slug, params:getParams()})
+          .then(function(){ return api('POST','/oota/run',{slug:slug}); })
+          .then(function(){ return remotionFlag ? api('POST','/oota/render',{slug:slug}) : {ok:true}; })
+          .then(function(d){
+            exporting=false;
+            setStatus(d.ok?'Exported':'Export failed');
+            if(d.ok) load();
+          }).catch(function(){ exporting=false; setStatus('Export failed'); });
+      });
+
+      UI.initCollapse($('#ca2-shell'), $('#ca2-collapse'), 'ca2-collapsed-'+slug);
+      UI.initBasecoat();
+      load();
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  </script>
+end

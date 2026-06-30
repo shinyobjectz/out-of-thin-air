@@ -1,0 +1,1095 @@
+# Code as — API
+
+Local, polyglot orchestration. Sessions are `.work` files under
+`projects/out-of-thin-air/cli/sessions/`. Run steps shell out to native
+toolchains on the host (Python, Node, …) — not the cloud WASM sandbox.
+
+server :oota_api do
+  route "GET /oota/catalog", :catalog, auth: :public
+  route "GET /oota/sessions", :sessions, auth: :public
+  route "GET /oota/session", :get_session, auth: :public
+  route "POST /oota/session/new", :new_session, auth: :public
+  route "POST /oota/session/save", :save_session, auth: :public
+  route "POST /oota/session/sync", :sync_session, auth: :public
+  route "POST /oota/route", :route_requirements, auth: :public
+  route "POST /oota/session/route", :apply_route, auth: :public
+  route "POST /oota/run", :run_chain, auth: :public
+  route "GET /oota/hardware", :hardware, auth: :public
+  route "GET /oota/models", :models_list, auth: :public
+  route "GET /oota/evals", :evals_list, auth: :public
+  route "POST /oota/eval/score", :eval_score, auth: :public
+  route "GET /oota/session/studio", :session_studio, auth: :public
+  route "GET /oota/session/player", :session_studio, auth: :public
+  route "POST /oota/session/adjust", :session_adjust, auth: :public
+  route "GET /oota/session/src", :session_src_get, auth: :public
+  route "POST /oota/session/src", :session_src_save, auth: :public
+  route "POST /oota/render", :render_session, auth: :public
+  route "POST /oota/preview/start", :preview_start, auth: :public
+  route "POST /oota/preview/stop", :preview_stop, auth: :public
+  route "GET /oota/preview", :preview_status, auth: :public
+  route "POST /oota/session/src/new", :session_src_new, auth: :public
+  route "GET /oota/component", :component_open, auth: :public
+
+  def catalog(_req), do: %{categories: load_catalog()}
+
+  def sessions(_req) do
+    cols = ~w(draft chaining running done)
+    %{columns: cols, cards: scan_sessions()}
+  end
+
+  def get_session(req) do
+    slug = safe(req.query["slug"])
+    path = session_path(slug)
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      true ->
+        content = File.read!(path)
+        %{ok: true, slug: slug, title: title(content) || slug, content: content,
+          requirements: section(content, "Requirements"),
+          chain: chain_steps(content), params: param_map(content),
+          controls: wrapper_controls(chain_steps(content))}
+    end
+  end
+
+  def new_session(req) do
+    body = map_body(req)
+    title = String.trim(to_string(body["title"] || ""))
+    req_text = to_string(body["requirements"] || "")
+    slug = slugify(title)
+    dir = session_dir(slug)
+    path = session_path(slug)
+    tpl = template_path()
+
+    cond do
+      title == "" -> {400, %{ok: false, error: "title required"}}
+      slug == "" -> {400, %{ok: false, error: "title needs letters/numbers"}}
+      File.exists?(path) -> {409, %{ok: false, error: "session '#{slug}' already exists"}}
+      not File.exists?(tpl) -> {500, %{ok: false, error: "missing session template"}}
+      true ->
+        File.mkdir_p!(dir)
+        File.mkdir_p!(Path.join(dir, "out"))
+        content =
+          tpl
+          |> File.read!()
+          |> String.replace("@@TITLE@@", title)
+          |> String.replace("@@SLUG@@", slug)
+          |> String.replace("@@REQUIREMENTS@@", if(req_text != "", do: req_text, else: "_Describe what you're making._"))
+
+        File.write!(path, content)
+
+        if String.trim(req_text) != "" do
+          route = build_route(req_text, title)
+          content = File.read!(path)
+          content = upsert_block(content, "chain", chain_body(route.chain))
+          content = upsert_block(content, "params", params_body(route.params))
+          content = set_card_status(content, "chaining")
+          File.write!(path, content)
+        end
+
+        %{ok: true, slug: slug}
+    end
+  end
+
+  def save_session(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    path = session_path(slug)
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      true -> File.write!(path, to_string(body["content"] || "")); %{ok: true}
+    end
+  end
+
+  def sync_session(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    path = session_path(slug)
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      true ->
+        content = File.read!(path)
+        content = upsert_section(content, "Requirements", to_string(body["requirements"] || ""))
+        content = upsert_block(content, "chain", chain_body(body["chain"] || []))
+        content = upsert_block(content, "params", params_body(body["params"] || %{}))
+        content = set_card_status(content, "chaining")
+        File.write!(path, content)
+        %{ok: true, content: content}
+    end
+  end
+
+  def route_requirements(req) do
+    body = map_body(req)
+    req_text = String.trim(to_string(body["requirements"] || ""))
+    title = String.trim(to_string(body["title"] || ""))
+    if req_text == "", do: {400, %{ok: false, error: "requirements required"}}, else: build_route(req_text, title)
+  end
+
+  def apply_route(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    path = session_path(slug)
+    req_text = to_string(body["requirements"] || "")
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      true ->
+        content = File.read!(path)
+        title = title(content) || slug
+        req_text = if String.trim(req_text) != "", do: req_text, else: section(content, "Requirements")
+        route = build_route(req_text, title)
+        content = upsert_section(content, "Requirements", req_text)
+        content = upsert_block(content, "chain", chain_body(route.chain))
+        content = upsert_block(content, "params", params_body(route.params))
+        content = set_card_status(content, "chaining")
+        File.write!(path, content)
+        Map.merge(route, %{ok: true, slug: slug, content: content})
+    end
+  end
+
+  def run_chain(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    root = Nexus.Paths.data_dir()
+    script = Path.join(code_as_tools_root(), "run.sh")
+    path = session_path(slug)
+
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      not File.exists?(script) -> {500, %{ok: false, error: "missing projects/out-of-thin-air/tools/run.sh"}}
+      true ->
+        content = File.read!(path) |> set_card_status("running")
+        File.write!(path, content)
+        {out, code} = System.cmd("bash", [script, slug], cd: root, stderr_to_stdout: true)
+        lines = String.split(String.trim(out), "\n", trim: true)
+        status = if code == 0, do: "done", else: "chaining"
+        File.write!(path, File.read!(path) |> set_card_status(status))
+        if code == 0, do: %{ok: true, log: lines, status: status}, else: %{ok: false, log: lines, error: "exit #{code}", status: status}
+    end
+  end
+
+  def hardware(_req), do: shell_json(Path.join(code_as_tools_root(), "hardware.sh"), [])
+
+  def models_list(req) do
+    task = safe(req.query["task"])
+    args = if task != "", do: ["list", task], else: ["list"]
+    models = Path.join(code_as_tools_root(), "models.sh")
+    hardware = Path.join(code_as_tools_root(), "hardware.sh")
+    text = shell_text(models, args)
+    %{ok: true, task: task, lines: String.split(text, "\n", trim: true), hardware: shell_json(hardware, [])}
+  end
+
+  def evals_list(_req) do
+    root = Path.join([project_root(), "eval/scenarios"])
+
+    scenarios =
+      (if File.exists?(root), do: Path.wildcard(Path.join(root, "*/rubric.work")), else: [])
+      |> Enum.map(fn rubric ->
+        dir = Path.dirname(rubric)
+        id = Path.basename(dir)
+        prompt_path = Path.join(dir, "prompt.txt")
+        prompt = if File.exists?(prompt_path), do: File.read!(prompt_path), else: ""
+        %{id: id, prompt: String.trim(prompt), sessionSlug: eval_session_slug(id), score: eval_score_result(id)}
+      end)
+      |> Enum.sort_by(& &1.id)
+
+    %{ok: true, scenarios: scenarios}
+  end
+
+  def eval_score(req) do
+    id = safe(req.query["id"] || map_body(req)["id"])
+    if id == "", do: {400, %{ok: false, error: "id required"}}, else: %{ok: true, id: id, score: eval_score_result(id)}
+  end
+
+  def session_studio(req) do
+    slug = safe(req.query["slug"])
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(session_path(slug)) -> {404, %{ok: false, error: "no such session"}}
+      true ->
+        path = session_path(slug)
+        content = File.read!(path)
+        sync_preview_props(slug)
+        out = Path.join(session_dir(slug), "out")
+        base = session_web_base(slug)
+        chain = chain_steps(content)
+        params = param_map(content)
+        player = load_player_def(slug, chain)
+        compositions = player_compositions(out, player)
+        videos = list_session_videos(out, base)
+        artifacts = session_artifacts(out, base, player, chain)
+
+        %{
+          ok: true,
+          slug: slug,
+          title: title(content) || slug,
+          artifacts: artifacts,
+          video: pick_video(videos, compositions),
+          videos: videos,
+          voice: if(File.exists?(Path.join(out, "public/voice/voice.wav")), do: "/#{base}/public/voice/voice.wav", else: nil),
+          compositions: compositions,
+          controls: player_controls(slug, chain, player),
+          params: params,
+          remotion: chain |> Enum.any?(fn s -> s.category == "video" and s.tool == "remotion" end),
+          hasRender: videos != [],
+          preview: preview_state(slug)
+        }
+    end
+  end
+
+  def session_adjust(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    path = session_path(slug)
+    new_params = body["params"] || %{}
+
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      not is_map(new_params) -> {400, %{ok: false, error: "params required"}}
+      true ->
+        content = File.read!(path)
+        merged = Map.merge(param_map(content), Map.new(new_params, fn {k, v} -> {to_string(k), to_string(v)} end))
+        content = upsert_block(content, "params", params_body(merged))
+        File.write!(path, content)
+        sync_preview_props(slug, merged)
+        %{ok: true, params: merged}
+    end
+  end
+
+  def component_open(req) do
+    type = safe(req.query["type"] || "")
+    slug = safe(req.query["slug"])
+
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      true ->
+        # One universal shell for every medium; `type` is just a hint.
+        %{
+          ok: true,
+          type: type,
+          slug: slug,
+          url: "#{web_prefix()}/components/artifact?slug=#{slug}"
+        }
+    end
+  end
+
+  def session_src_get(req) do
+    slug = safe(req.query["slug"])
+    rel = to_string(req.query["path"] || "")
+    case safe_session_file(slug, rel) do
+      {:ok, full} -> %{ok: true, path: rel, content: File.read!(full)}
+      {:error, e} -> {400, %{ok: false, error: e}}
+    end
+  end
+
+  def session_src_save(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    rel = to_string(body["path"] || "")
+    case safe_session_file(slug, rel) do
+      {:ok, full} ->
+        File.mkdir_p!(Path.dirname(full))
+        File.write!(full, to_string(body["content"] || ""))
+        %{ok: true, path: rel}
+      {:error, e} -> {400, %{ok: false, error: e}}
+    end
+  end
+
+  def render_session(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    script = Path.join(code_as_tools_root(), "render.sh")
+    path = session_path(slug)
+
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(path) -> {404, %{ok: false, error: "no such session"}}
+      not File.exists?(script) -> {500, %{ok: false, error: "missing render.sh"}}
+      true ->
+        root = Nexus.Paths.data_dir()
+        {out, code} = System.cmd("bash", [script, slug], cd: root, stderr_to_stdout: true)
+        lines = String.split(String.trim(out), "\n", trim: true)
+        studio = session_studio(%{query: %{"slug" => slug}})
+        if code == 0, do: Map.merge(studio, %{ok: true, log: lines}), else: %{ok: false, log: lines, error: "exit #{code}"}
+    end
+  end
+
+  def preview_start(req) do
+    slug = safe(map_body(req)["slug"] || req.query["slug"])
+    sync_preview_props(slug)
+    run_preview(slug, "start")
+  end
+
+  def preview_stop(req) do
+    slug = safe(map_body(req)["slug"] || req.query["slug"])
+    run_preview(slug, "stop")
+  end
+
+  def preview_status(req) do
+    slug = safe(req.query["slug"])
+    if slug == "", do: {400, %{ok: false, error: "slug required"}}, else: Map.put(preview_state(slug), :ok, true)
+  end
+
+  def session_src_new(req) do
+    body = map_body(req)
+    slug = safe(body["slug"])
+    name = component_filename(to_string(body["name"] || "Component.tsx"))
+
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      name == "" -> {400, %{ok: false, error: "bad filename"}}
+      true ->
+        rel = "src/#{name}"
+        case safe_session_file(slug, rel) do
+          {:ok, full} ->
+            if File.exists?(full) do
+              {409, %{ok: false, error: "already exists"}}
+            else
+              File.mkdir_p!(Path.dirname(full))
+              File.write!(full, component_stub(name))
+              %{ok: true, path: rel, content: component_stub(name)}
+            end
+          {:error, e} -> {400, %{ok: false, error: e}}
+        end
+    end
+  end
+
+  defp shell_json(script, args) do
+    root = Nexus.Paths.data_dir()
+    path = if Path.type(script) == :absolute, do: script, else: Path.join(root, script)
+    {out, code} = System.cmd("bash", [path | args], cd: root, stderr_to_stdout: true)
+    if code == 0 do
+      case Jason.decode(String.trim(out)) do
+        {:ok, map} -> Map.put(map, :ok, true)
+        _ -> %{ok: false, error: "invalid json", raw: out}
+      end
+    else
+      %{ok: false, error: "exit #{code}", raw: out}
+    end
+  end
+
+  defp shell_text(script, args) do
+    root = Nexus.Paths.data_dir()
+    path = if Path.type(script) == :absolute, do: script, else: Path.join(root, script)
+    {out, _} = System.cmd("bash", [path | args], cd: root, stderr_to_stdout: true)
+    String.trim(out)
+  end
+
+  # ── router ────────────────────────────────────────────────────────────────
+
+  defp build_route(req_text, title) do
+    text = String.downcase(req_text)
+    catalog = load_catalog() |> Map.new(fn c -> {c.id, c} end)
+    matches = load_router_matches()
+
+    scored =
+      matches
+      |> Enum.map(fn m ->
+        score = Enum.count(m.keywords, &String.contains?(text, &1))
+        {score, m}
+      end)
+      |> Enum.filter(fn {s, _} -> s > 0 end)
+      |> Enum.sort_by(fn {s, _} -> -s end)
+      |> Enum.take(4)
+
+    chain =
+      scored
+      |> Enum.map(fn {_, m} ->
+        tool = pick_tool(text, m, Map.get(catalog, m.category))
+        %{category: m.category, tool: tool}
+      end)
+
+    chain = if chain == [], do: [%{category: "diagrams", tool: "mermaid"}], else: chain
+    reasons = Enum.map(scored, fn {s, m} -> "#{m.category} (#{s} keyword#{if(s == 1, do: "", else: "s")})" end)
+
+    %{
+      ok: true,
+      chain: chain,
+      params: default_params(chain, title),
+      rationale: if(reasons == [], do: "No keyword matches — defaulting to diagrams/mermaid.", else: Enum.join(reasons, "; "))
+    }
+  end
+
+  defp pick_tool(text, match, cat) do
+    cond do
+      match.prefer_tool && match.prefer_when && Regex.match?(match.prefer_when, text) ->
+        match.prefer_tool
+
+      match.default != "" ->
+        match.default
+
+      cat && cat.default != "" ->
+        cat.default
+
+      cat && cat.tools != [] ->
+        hd(cat.tools)
+
+      true ->
+        "unknown"
+    end
+  end
+
+  defp default_params(chain, title) do
+    t = if(title != "", do: title, else: "Untitled")
+
+    Enum.reduce(chain, %{}, fn %{category: cat}, acc ->
+      extras =
+        case cat do
+          "presentations" -> %{"presentations.title" => t, "presentations.theme" => "default"}
+          "diagrams" -> %{"diagrams.title" => t, "diagrams.direction" => "TB"}
+          "cad" -> %{"cad.width" => "80", "cad.height" => "40", "cad.depth" => "20"}
+          "video" -> %{"video.title" => t, "video.duration" => "10", "video.fps" => "30"}
+          "audio" -> %{"audio.text" => t, "audio.model" => "kokoro-tts"}
+          "music" -> %{"music.bpm" => "120", "music.key" => "C", "music.duration" => "10"}
+          _ -> %{"#{cat}.title" => t}
+        end
+
+      Map.merge(acc, extras)
+    end)
+  end
+
+  defp load_router_matches do
+    file = Path.join(cli_root(), "router.work")
+    if File.exists?(file), do: parse_router(File.read!(file)), else: []
+  end
+
+  defp parse_router(text) do
+    text
+    |> Nexus.Literate.parse()
+    |> Enum.filter(&(&1.type == :code and &1.kind == "match"))
+    |> Enum.map(fn %{name: cat, body: body} ->
+      fields = block_fields(body)
+      {prefer_tool, prefer_when} = parse_prefer(Map.get(fields, "prefer", ""))
+
+      %{
+        category: cat,
+        keywords: fields |> Map.get("keywords", "") |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == "")),
+        default: Map.get(fields, "default", ""),
+        prefer_tool: prefer_tool,
+        prefer_when: prefer_when
+      }
+    end)
+  end
+
+  defp parse_prefer(""), do: {nil, nil}
+
+  defp parse_prefer(s) do
+    case String.split(s, "|", parts: 2) do
+      [tool, whens] ->
+        pat = whens |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.join("|")
+        {String.trim(tool), Regex.compile!(pat, [:caseless])}
+
+      _ ->
+        {String.trim(s), nil}
+    end
+  end
+
+  defp set_card_status(content, status) do
+    case Regex.run(~r/card do\n[\s\S]*?end/, content) do
+      [block] ->
+        new_block =
+          if Regex.match?(~r/status:\s*"/, block),
+            do: Regex.replace(~r/status:\s*"[^"]*"/, block, "status: \"#{status}\""),
+            else: String.replace(block, "end", "  status: \"#{status}\"\nend")
+
+        String.replace(content, block, new_block, global: false)
+
+      _ ->
+        content
+    end
+  end
+
+  # ── catalog ───────────────────────────────────────────────────────────────
+
+  defp load_catalog do
+    file = Path.join(cli_root(), "catalog.work")
+    if File.exists?(file), do: parse_categories(File.read!(file)), else: []
+  end
+
+  defp parse_categories(text) do
+    text
+    |> Nexus.Literate.parse()
+    |> Enum.filter(&(&1.type == :code and &1.kind == "category"))
+    |> Enum.map(fn %{name: id, body: body} ->
+      fields = block_fields(body)
+      %{
+        id: id,
+        summary: Map.get(fields, "summary", ""),
+        tools: split_list(Map.get(fields, "tools", "")),
+        default: Map.get(fields, "default", ""),
+        notes: Map.get(fields, "notes", "")
+      }
+    end)
+  end
+
+  defp block_fields(body) do
+    body
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(%{}, fn line, acc ->
+      case Regex.run(~r/^(\w[\w-]*):\s*(.+)$/, String.trim(line)) do
+        [_, k, v] -> Map.put(acc, k, String.trim(v, "\""))
+        _ -> acc
+      end
+    end)
+  end
+
+  defp split_list(s) do
+    s |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == ""))
+  end
+
+  # ── sessions ──────────────────────────────────────────────────────────────
+
+  defp scan_sessions do
+    cli_root()
+    |> Path.join("sessions/*/session.work")
+    |> Path.wildcard()
+    |> Enum.reject(&String.contains?(&1, "/_template/"))
+    |> Enum.flat_map(fn file ->
+      case File.read(file) do
+        {:ok, content} ->
+          fields = card_fields(content)
+          slug = fields["slug"] || Path.basename(Path.dirname(file))
+          [%{
+            slug: slug,
+            title: title(content) || slug,
+            status: fields["status"] || "draft",
+            board: fields["board"] || "code-as",
+            chain: chain_steps(content) |> Enum.map(fn s -> "#{s.category}/#{s.tool}" end),
+            touched: mtime(Path.dirname(file))
+          }]
+        _ -> []
+      end
+    end)
+    |> Enum.sort_by(& &1.touched, :desc)
+  end
+
+  defp card_fields(c) do
+    case literate_block(c, "card") do
+      %{body: b} -> Regex.scan(~r/(\w+):\s*"([^"]*)"/, b) |> Map.new(fn [_, k, v] -> {k, v} end)
+      _ -> %{}
+    end
+  end
+
+  defp chain_steps(c) do
+    case literate_block(c, "chain") do
+      %{body: b} ->
+        b
+        |> String.split("\n", trim: true)
+        |> Enum.flat_map(fn line ->
+          case Regex.run(~r/^(\w[\w-]*):\s*(\S+)/, String.trim(line)) do
+            [_, cat, tool] -> [%{category: cat, tool: tool}]
+            _ -> []
+          end
+        end)
+      _ -> []
+    end
+  end
+
+  defp param_map(c) do
+    case literate_block(c, "params") do
+      %{body: b} ->
+        b
+        |> String.split("\n", trim: true)
+        |> Enum.reduce(%{}, fn line, acc ->
+          case Regex.run(~r/^([\w\.-]+):\s*"?([^"\n]*)"?\s*$/, String.trim(line)) do
+            [_, k, v] -> Map.put(acc, k, v)
+            _ -> acc
+          end
+        end)
+      _ -> %{}
+    end
+  end
+
+  defp wrapper_controls(steps) do
+    root = Path.join(project_root(), "wrappers")
+    steps
+    |> Enum.flat_map(fn %{category: cat, tool: tool} ->
+      file = Path.join(root, "#{cat}-#{tool}.work")
+      if File.exists?(file) do
+        case literate_block(File.read!(file), "controls") do
+          %{body: b} -> parse_controls(b)
+          _ -> []
+        end
+      else
+        []
+      end
+    end)
+    |> Map.new()
+  end
+
+  defp parse_controls(body) do
+    body
+    |> String.split("\n", trim: true)
+    |> Enum.flat_map(fn line ->
+      case Regex.run(~r/^([\w\.-]+):\s*\{\s*label:\s*"([^"]*)"\s*,\s*type:\s*"(\w+)"(?:,\s*options:\s*"([^"]*)")?\s*\}/, line) do
+        [_, key, label, type, opts] -> [{key, %{label: label, type: type, options: opts || ""}}]
+        _ -> []
+      end
+    end)
+  end
+
+  defp chain_body(steps) when is_list(steps) do
+    steps
+    |> Enum.flat_map(fn
+      %{"category" => c, "tool" => t} when c != "" and t != "" -> ["  #{c}: #{t}"]
+      %{category: c, tool: t} when is_binary(c) and is_binary(t) and c != "" and t != "" -> ["  #{c}: #{t}"]
+      _ -> []
+    end)
+    |> Enum.join("\n")
+  end
+
+  defp params_body(params) when is_map(params) do
+    params
+    |> Enum.sort()
+    |> Enum.map(fn {k, v} -> "  #{k}: #{inspect(to_string(v))}" end)
+    |> Enum.join("\n")
+  end
+
+  defp upsert_section(content, heading, text) do
+    pattern = ~r/## #{heading}\n[\s\S]*?(?=\n## |\nchain do|\nparams do|\ncard do|\z)/
+    replacement = "## #{heading}\n\n#{text}\n\n"
+    if Regex.match?(pattern, content), do: Regex.replace(pattern, content, replacement), else: content <> "\n" <> replacement
+  end
+
+  defp upsert_block(content, kind, body) do
+    pattern = ~r/#{kind} do\n[\s\S]*?end/
+    block = "#{kind} do\n#{body}\nend"
+    if Regex.match?(pattern, content), do: Regex.replace(pattern, content, block), else: content <> "\n\n" <> block <> "\n"
+  end
+
+  defp literate_block(text, kind) do
+    Nexus.Literate.parse(text) |> Enum.find(&(&1.type == :code and &1.kind == kind))
+  end
+
+  defp section(c, heading) do
+    case Regex.run(~r/## #{heading}\n\n([\s\S]*?)(?=\n## |\nchain do|\nparams do|\z)/, c) do
+      [_, body] -> String.trim(body)
+      _ -> ""
+    end
+  end
+
+  defp title(c), do: case Regex.run(~r/^#\s+(.+)$/m, c), do: ([_, t] -> String.trim(t); _ -> nil)
+
+  defp session_dir(slug), do: Path.join([cli_root(), "sessions", slug])
+  defp session_path(slug), do: Path.join(session_dir(slug), "session.work")
+  defp template_path, do: Path.join([cli_root(), "_template", "session.work"])
+  defp cli_root, do: Path.join(project_root(), "cli")
+  defp project_root, do: Path.join([Nexus.Paths.data_dir(), oota_base()])
+  defp code_as_tools_root, do: Path.join([project_root(), "tools"])
+
+  # Mount base — `projects/out-of-thin-air` inside the monorepo, "" when the
+  # subtree is served standalone (WB_DATA = the project dir). Governs both the
+  # on-disk project root (data_dir/<base>) and the web URL prefix.
+  defp oota_base, do: System.get_env("OOTA_BASE", "projects/out-of-thin-air") |> String.trim("/")
+  defp web_prefix do
+    case oota_base() do
+      "" -> ""
+      b -> "/" <> b
+    end
+  end
+  defp session_web_base(slug), do: String.trim_leading(web_prefix() <> "/cli/sessions/#{slug}/out", "/")
+
+  defp eval_score_result(id) do
+    script = Path.join(code_as_tools_root(), "score.sh")
+    rubric = Path.join([project_root(), "eval/scenarios", id, "rubric.work"])
+    if not File.exists?(script) or not File.exists?(rubric), do: %{passed: 0, total: 0, lines: [], ok: false}, else: parse_score_output(System.cmd("bash", [script, id], cd: Nexus.Paths.data_dir(), stderr_to_stdout: true))
+  end
+
+  defp eval_session_slug(id) do
+    rubric = Path.join([project_root(), "eval/scenarios", id, "rubric.work"])
+    case File.read(rubric) do
+      {:ok, c} ->
+        case Regex.run(~r{cli/sessions/([a-z0-9-]+)}, c) do
+          [_, slug] -> slug
+          _ -> nil
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  defp parse_score_output({out, code}) do
+    lines = String.split(String.trim(out), "\n", trim: true)
+    summary = Enum.find(lines, &String.starts_with?(&1, "score: ")) || "score: 0/0 passed"
+    {passed, total} =
+      case Regex.run(~r/score: (\d+)\/(\d+)/, summary) do
+        [_, p, t] -> {p, t}
+        _ -> {"0", "0"}
+      end
+
+    %{passed: String.to_integer(passed), total: String.to_integer(total), ok: code == 0, lines: lines}
+  end
+
+  defp find_session_mp4(out) do
+    list_session_videos(out, "") |> List.first() |> then(fn v -> v && v.path end)
+  end
+
+  # ── Medium-agnostic artifacts ──────────────────────────────────────────────
+  # Every chain output reduces to one of 8 render kinds. Explicit `artifacts do`
+  # in player.work wins; otherwise we auto-scan out/ by extension. Each entry is
+  # a selectable version (the shell's center tabs map 1:1).
+
+  @artifact_exts ~w(mp4 mov webm wav mp3 m4a ogg pdf png jpg jpeg webp gif svg html htm glb gltf stl txt)
+  @artifact_scaffolds ~w(player-shell.html REMOTION.md)
+
+  defp session_artifacts(out, base, player, chain) do
+    explicit =
+      player.artifacts
+      |> Enum.with_index()
+      |> Enum.map(fn {a, i} ->
+        rel = String.replace_prefix(to_string(a["file"] || a["key"] || ""), "out/", "")
+        %{
+          id: a["key"] || "v#{i + 1}",
+          label: a["label"] || a["key"] || "Version #{i + 1}",
+          kind: a["kind"] || artifact_kind(rel),
+          url: "/#{base}/#{rel}",
+          default: a["default"] == "true"
+        }
+      end)
+
+    list = if explicit != [], do: explicit, else: scan_artifacts(out, base)
+    with_live = if explicit == [], do: prepend_live(list, out, base, chain), else: list
+    ensure_default(with_live)
+  end
+
+  defp scan_artifacts(out, base) do
+    Path.wildcard(Path.join(out, "**/*.{#{Enum.join(@artifact_exts, ",")}}"))
+    |> Enum.reject(&artifact_junk?/1)
+    |> Enum.sort_by(fn f -> File.stat!(f).mtime end, :desc)
+    |> Enum.with_index()
+    |> Enum.map(fn {f, i} ->
+      rel = Path.relative_to(f, out)
+      %{
+        id: "v#{i + 1}",
+        label: Path.basename(rel),
+        kind: artifact_kind(rel),
+        url: "/#{base}/#{rel}",
+        default: false
+      }
+    end)
+  end
+
+  defp artifact_junk?(path) do
+    String.contains?(path, ["/node_modules/", "/.git/", "/build/", "/preview-player/"]) or
+      Path.basename(path) in @artifact_scaffolds
+  end
+
+  defp artifact_kind(path) do
+    case path |> Path.extname() |> String.downcase() do
+      e when e in ~w(.mp4 .mov .webm) -> "video"
+      e when e in ~w(.wav .mp3 .m4a .ogg) -> "audio"
+      ".pdf" -> "pdf"
+      e when e in ~w(.png .jpg .jpeg .webp .gif) -> "image"
+      ".svg" -> "svg"
+      e when e in ~w(.html .htm) -> "html"
+      e when e in ~w(.glb .gltf .stl) -> "model3d"
+      _ -> "text"
+    end
+  end
+
+  defp prepend_live(list, out, base, chain) do
+    remotion = Enum.any?(chain, fn s -> s.category == "video" and s.tool == "remotion" end)
+    preview = Path.join(out, "preview-player/index.html")
+
+    if remotion and File.exists?(preview) do
+      live = %{
+        id: "live",
+        label: "Live preview",
+        kind: "html",
+        url: "/#{base}/preview-player/index.html",
+        default: true,
+        live: true
+      }
+
+      [live | list]
+    else
+      list
+    end
+  end
+
+  defp ensure_default([]), do: []
+
+  defp ensure_default(list) do
+    if Enum.any?(list, fn a -> a.default end) do
+      list
+    else
+      [first | rest] = list
+      [Map.put(first, :default, true) | rest]
+    end
+  end
+
+  defp list_session_videos(out, base) do
+    paths = Path.wildcard(Path.join(out, "**/*.mp4")) ++ Path.wildcard(Path.join(out, "*.mp4"))
+
+    paths
+    |> Enum.sort_by(fn f -> File.stat!(f).mtime end, :desc)
+    |> Enum.map(fn f ->
+      rel = Path.relative_to(f, out)
+      comp = Path.basename(rel, ".mp4")
+      %{composition: comp, path: rel, url: if(base == "", do: rel, else: "/#{base}/#{rel}")}
+    end)
+  end
+
+  defp pick_video(videos, compositions) do
+    default =
+      compositions
+      |> Enum.find_value(fn c ->
+        if Map.get(c, :default), do: Map.get(c, :composition)
+      end)
+
+    case videos do
+      [] ->
+        nil
+
+      vs ->
+        chosen =
+          (default && Enum.find(vs, fn v -> v.composition == default end)) || List.first(vs)
+
+        chosen && chosen.url
+    end
+  end
+
+  defp load_player_def(slug, chain) do
+    paths = [
+      Path.join(session_dir(slug), "player.work"),
+      Path.join([session_dir(slug), "out", "player.work"])
+    ]
+
+    file = Enum.find(paths, &File.exists?/1)
+
+    controls =
+      if file do
+        case literate_block(File.read!(file), "controls") do
+          %{body: b} -> parse_player_controls(b)
+          _ -> []
+        end
+      else
+        []
+      end
+
+    components =
+      if file do
+        case literate_block(File.read!(file), "components") do
+          %{body: b} -> parse_player_components(b)
+          _ -> []
+        end
+      else
+        []
+      end
+
+    artifacts =
+      if file do
+        case literate_block(File.read!(file), "artifacts") do
+          %{body: b} -> parse_player_controls(b)
+          _ -> []
+        end
+      else
+        []
+      end
+
+    %{controls: controls, components: components, artifacts: artifacts}
+  end
+
+  defp player_controls(slug, chain, player) do
+    custom = player.controls
+
+    if custom != [] do
+      custom
+    else
+      wrapper_controls(chain)
+      |> Enum.map(fn {key, meta} ->
+        %{"key" => key, "param" => key, "label" => meta.label, "type" => meta.type, "options" => meta.options || ""}
+      end)
+    end
+  end
+
+  defp player_compositions(out, player) do
+    from_player =
+      player.components
+      |> Enum.with_index()
+      |> Enum.map(fn {c, i} ->
+        comp = c["composition"] || c["key"]
+        %{
+          composition: comp,
+          label: c["label"] || comp,
+          default: c["default"] == "true" or i == 0
+        }
+      end)
+
+    if from_player != [], do: from_player, else: parse_root_compositions(out)
+  end
+
+  defp parse_root_compositions(out) do
+    root = Path.join(out, "src/Root.tsx")
+
+    if File.exists?(root) do
+      root
+      |> File.read!()
+      |> then(fn content -> Regex.scan(~r/id="([^"]+)"/, content) end)
+      |> Enum.with_index()
+      |> Enum.map(fn {[_, id], i} ->
+        %{
+          composition: id,
+          label: id,
+          default: i == 0
+        }
+      end)
+    else
+      []
+    end
+  end
+
+  defp parse_player_controls(body) do
+    body
+    |> String.split("\n", trim: true)
+    |> Enum.flat_map(fn line ->
+      case parse_player_entry(line) do
+        nil -> []
+        map -> [map]
+      end
+    end)
+  end
+
+  defp parse_player_components(body) do
+    parse_player_controls(body)
+  end
+
+  defp parse_player_entry(line) do
+    case Regex.run(~r/^([\w\.-]+):\s*\{(.+)\}\s*$/, String.trim(line)) do
+      [_, key, inner] ->
+        fields =
+          Regex.scan(~r/([\w]+):\s*"([^"]*)"/, inner)
+          |> Map.new(fn [_, k, v] -> {k, v} end)
+
+        Map.merge(fields, %{"key" => key, "param" => fields["param"] || key})
+
+      _ ->
+        nil
+    end
+  end
+
+  defp list_session_src(out) do
+    src = Path.join(out, "src")
+    if File.exists?(src) do
+      Path.wildcard(Path.join(src, "**/*.{tsx,ts}"))
+      |> Enum.sort()
+      |> Enum.map(fn f -> %{path: Path.join("src", Path.relative_to(f, src)), size: File.stat!(f).size} end)
+    else
+      []
+    end
+  end
+
+  defp safe_session_file(slug, rel) do
+    cond do
+      slug == "" -> {:error, "slug required"}
+      rel == "" or String.contains?(rel, "..") -> {:error, "bad path"}
+      not String.starts_with?(rel, "src/") -> {:error, "only src/ files"}
+      true ->
+        full = Path.join([session_dir(slug), "out", rel])
+        guard = Path.expand(Path.join(session_dir(slug), "out"))
+        if String.starts_with?(Path.expand(full), guard <> "/") or Path.expand(full) == guard, do: {:ok, full}, else: {:error, "bad path"}
+    end
+  end
+
+  defp run_preview(slug, action) do
+    script = Path.join(code_as_tools_root(), "preview.sh")
+    cond do
+      slug == "" -> {400, %{ok: false, error: "slug required"}}
+      not File.exists?(script) -> {500, %{ok: false, error: "missing preview.sh"}}
+      true ->
+        {out, code} = System.cmd("bash", [script, slug, action], cd: Nexus.Paths.data_dir(), stderr_to_stdout: true)
+        lines = String.split(String.trim(out), "\n", trim: true)
+        state = preview_state(slug)
+        if code == 0, do: Map.merge(state, %{ok: true, log: lines}), else: %{ok: false, log: lines, error: "exit #{code}"}
+    end
+  end
+
+  defp preview_state(slug) do
+    out = Path.join(session_dir(slug), "out")
+    bundle = Path.join(out, "preview-player/index.html")
+    ready = File.exists?(bundle)
+    base = session_web_base(slug) <> "/preview-player/index.html"
+
+    %{
+      running: ready,
+      port: nil,
+      url: if(ready, do: "/#{base}", else: nil)
+    }
+  end
+
+  defp sync_preview_props(slug) when is_binary(slug) do
+    path = session_path(slug)
+    if File.exists?(path), do: sync_preview_props(slug, param_map(File.read!(path)))
+  end
+
+  defp sync_preview_props(slug, params) when is_map(params) do
+    props = %{
+      "title" => Map.get(params, "display.title", Map.get(params, "video.title", "")),
+      "subtitle" => Map.get(params, "display.subtitle", ""),
+      "accent" => Map.get(params, "theme.accent", "#ffd166")
+    }
+
+    out = Path.join([session_dir(slug), "out", "public"])
+    File.mkdir_p!(out)
+    File.write!(Path.join(out, "props.json"), Jason.encode!(props))
+  end
+
+  defp preview_port(slug) do
+    {out, 0} =
+      System.cmd("bash", [
+        "-c",
+        "echo $(( 3100 + $(echo -n '#{slug}' | cksum | awk '{print $1 % 100}') ))"
+      ])
+
+    String.trim(out)
+  end
+
+  defp component_filename(name) do
+    base = Path.basename(name) |> String.replace(~r/[^a-zA-Z0-9._-]/, "")
+    if base == "" or not String.ends_with?(base, ".tsx"), do: "", else: base
+  end
+
+  defp component_stub(name) do
+    mod = name |> String.replace_suffix(".tsx", "") |> Macro.camelize()
+
+    """
+    import { AbsoluteFill } from "remotion";
+
+    export const #{mod}: React.FC = () => (
+      <AbsoluteFill
+        style={{
+          backgroundColor: "#09090b",
+          color: "#fafafa",
+          justifyContent: "center",
+          alignItems: "center",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <h1 style={{ fontSize: 64, fontWeight: 600 }}>#{mod}</h1>
+      </AbsoluteFill>
+    );
+    """
+  end
+
+  defp slugify(title) do
+    title |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-") |> String.trim("-")
+  end
+
+  defp safe(nil), do: ""
+  defp safe(s) when is_binary(s), do: String.replace(s, ~r/[^a-z0-9-]+/i, "") |> String.downcase()
+  defp safe(_), do: ""
+
+  defp map_body(req), do: if(is_map(req.body), do: req.body, else: %{})
+
+  defp mtime(dir) do
+    case File.stat(dir, time: :posix) do
+      {:ok, %{mtime: m}} -> m
+      _ -> 0
+    end
+  end
+end

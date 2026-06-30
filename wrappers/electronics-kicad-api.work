@@ -1,0 +1,45 @@
+<!-- generated draft — needs validation -->
+# electronics / kicad-api
+
+Code-as-schematic / code-as-PCB. Describe a circuit in Python with SKiDL and emit a
+KiCad-compatible netlist (`generate_netlist()`), or plot a board/schematic to SVG with
+the bundled `kicad-cli` — both fully headless. The official `kicad-python` IPC bindings
+also exist but require a *running* KiCad 9.0+ instance with the API server enabled, so
+they are not used for the headless artifact here. The renderable deliverable is an SVG
+plot of the schematic or PCB; the netlist itself is plain text.
+
+controls do
+  electronics.title: { label: "Title", type: "text" }
+  electronics.r_value: { label: "Resistor value", type: "text" }
+  electronics.c_value: { label: "Capacitor value", type: "text" }
+  electronics.backend: { label: "Backend", type: "select", options: "skidl, kicad-cli" }
+  electronics.export_format: { label: "Export format", type: "select", options: "svg, pdf, png" }
+  electronics.erc: { label: "Run ERC", type: "toggle" }
+  electronics.source: { label: "Circuit source", type: "textarea", file: "src/circuit.py" }
+end
+
+## Required reading
+- KiCad Developer Docs — IPC API / kicad-python (official, CC/GFDL): https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/
+- kicad-python API reference (official, MIT): https://docs.kicad.org/kicad-python-main/
+- IPC API for Add-on Developers (official): https://dev-docs.kicad.org/en/apis-and-binding/ipc-api/for-addon-developers/index.html
+- SKiDL docs — oota schematic in Python (community, MIT): https://devbisme.github.io/skidl/
+- Developers guide to the KiCad Protobuf IPC API (community, kbralten gist): https://gist.github.com/kbralten/52ad5a56d09ff01cf42e4d338f57e022
+- Code-Based PCB Design with KiCad Scripting (community, SiliconWit): https://siliconwit.com/education/pcb-design-kicad/code-based-pcb-design-kicad-scripting/
+
+## Render
+```bash
+pip install skidl && (brew install --cask kicad || true)
+# SKiDL: Python circuit -> KiCad netlist (headless)
+python3 src/circuit.py            # calls generate_netlist(file_='out/rc.net')
+# kicad-cli: plot an existing board to SVG (headless)
+kicad-cli pcb export svg board.kicad_pcb -o out/board.svg
+```
+
+## Failure modes
+- SKiDL ERC / full netlist needs KiCad symbol + footprint libraries installed; set
+  `KICAD_SYMBOL_DIR` if libs aren't found. Pass `--no-erc` semantics by disabling ERC.
+- `kicad-python` is NOT headless — `KiCad()` fails unless KiCad 9.0+ is running with the
+  API server enabled (Preferences > Plugins) and `KICAD_API_SOCKET` reachable.
+- `kicad-cli pcb export svg` needs an actual `.kicad_pcb` file; a netlist alone is text,
+  not a board, and cannot be plotted directly.
+- macOS: `kicad-cli` lives inside the app bundle; ensure it's on PATH after the cask install.

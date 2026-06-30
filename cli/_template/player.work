@@ -1,0 +1,13 @@
+# Player — user-facing tweaks (auto-save → live preview via props.json)
+
+```
+controls do
+  display.title: { label: "Title", type: "text", param: "display.title" }
+  display.subtitle: { label: "Subtitle", type: "text", param: "display.subtitle" }
+  theme.accent: { label: "Accent", type: "color", param: "theme.accent" }
+  audio.text: { label: "Narration", type: "textarea", param: "audio.text", hint: "Voice updates on export" }
+end
+```
+
+Visual params (`display.*`, `theme.*`) sync to `out/public/props.json` for live preview.
+Pipeline params stay in `session.work` — agent sets those.

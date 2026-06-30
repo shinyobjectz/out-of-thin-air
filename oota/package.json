@@ -1,0 +1,25 @@
+{
+  "name": "oota",
+  "version": "0.1.0",
+  "description": "Out Of Thin Air — author any deliverable (decks, video, audio, diagrams, docs, 3D, …) as deterministic, version-controllable code, render headlessly, and view it in a universal browser shell.",
+  "type": "module",
+  "bin": {
+    "oota": "./bin/oota.ts"
+  },
+  "engines": {
+    "bun": ">=1.0"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "keywords": [
+    "code-as-x",
+    "deterministic",
+    "render",
+    "cli",
+    "nexus",
+    "workbooks"
+  ],
+  "license": "MIT"
+}

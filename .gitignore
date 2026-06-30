@@ -1,0 +1,12 @@
+# OOTA — generated outputs & local env
+cli/sessions/*/out/
+**/node_modules/
+.venv-tts/
+*.log
+.DS_Store
+.nexus/
+# Model weights / caches — fetched via `oota models`, never committed
+cli/sessions/_models/
+**/*.pth
+**/*.safetensors
+**/*.onnx

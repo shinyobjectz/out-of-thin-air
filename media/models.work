@@ -1,0 +1,82 @@
+# Local model catalog (Hugging Face)
+
+Curated models downloadable **without API keys**. Each entry declares task, format,
+and minimum hardware. Run `oota hardware` then `oota models list`
+to see what fits this machine. Filter with `oota models list tts`.
+
+model :kokoro-tts do
+  task: tts
+  repo: hexgrad/Kokoro-82M
+  format: onnx
+  min_ram_gb: 4
+  min_vram_gb: 0
+  runtime: onnx
+  cmd: "pip install kokoro-onnx && python -m kokoro_onnx"
+  notes: "Small, fast CPU TTS. Good default for voiceover."
+end
+
+model :piper-en do
+  task: tts
+  repo: rhasspy/piper-voices
+  format: onnx
+  min_ram_gb: 2
+  min_vram_gb: 0
+  runtime: onnx
+  cmd: "pip install piper-tts"
+  notes: "Piper voices — pick a voice file from the repo. Very light."
+end
+
+model :speecht5 do
+  task: tts
+  repo: microsoft/speecht5_tts
+  format: transformers
+  min_ram_gb: 8
+  min_vram_gb: 0
+  runtime: transformers
+  cmd: "pip install transformers torch soundfile && huggingface-cli download microsoft/speecht5_tts"
+  notes: "Classic HF TTS. CPU ok, slower."
+end
+
+model :bark-small do
+  task: tts
+  repo: suno/bark-small
+  format: transformers
+  min_ram_gb: 12
+  min_vram_gb: 6
+  runtime: transformers
+  cmd: "pip install transformers accelerate scipy"
+  notes: "Expressive but heavy. Prefer GPU/MPS. Defer on low RAM."
+end
+
+model :musicgen-small do
+  task: music
+  repo: facebook/musicgen-small
+  format: transformers
+  min_ram_gb: 16
+  min_vram_gb: 8
+  runtime: transformers
+  cmd: "pip install transformers torch audiocraft"
+  notes: "Text-to-music. GPU recommended. Use oota music libs when AI not needed."
+end
+
+model :stable-video-xt do
+  task: video-gen
+  repo: stabilityai/stable-video-diffusion-img2vid-xt
+  format: diffusers
+  min_ram_gb: 32
+  min_vram_gb: 16
+  runtime: diffusers
+  cmd: "pip install diffusers transformers accelerate"
+  notes: "Image-to-video. Usually defer — prefer Remotion for deterministic video."
+end
+
+model :whisper-base do
+  task: stt
+  repo: openai/whisper-base
+  format: gguf
+  min_ram_gb: 4
+  min_vram_gb: 0
+  runtime: whisper-cpp
+  cmd: "brew install whisper-cpp || pip install openai-whisper"
+  notes: "Transcription for captions — already used in shinyobjectz pipeline via Groq."
+end

@@ -1,0 +1,20 @@
+# @@TITLE@@
+
+card do
+  board: "code-as"
+  status: "draft"
+  slug: "@@SLUG@@"
+end
+
+## Requirements
+
+@@REQUIREMENTS@@
+
+chain do
+  diagrams: mermaid
+end
+
+params do
+  diagrams.title: "System overview"
+  diagrams.direction: "TB"
+end

@@ -1,0 +1,338 @@
+# Code as — browser client
+
+Nexus `client :oota` for **Code-as-anything**. Opens in the browser via the
+standalone code-as nexus (`oota serve`, then `oota admin`). Sessions in
+[[projects/out-of-thin-air/cli/sessions]]; catalog in
+[[projects/out-of-thin-air/cli/catalog]]. Wrappers in
+[[projects/out-of-thin-air/wrappers]].
+
+client :oota do
+  <div class="ca-app" id="app">
+    <aside class="ca-side">
+      <div class="ca-brand"><span class="mk">⌨</span>Code as</div>
+      <button class="ca-btn primary block" id="btn-new">New session</button>
+      <nav class="ca-nav">
+        <a class="ca-link on" data-view="sessions" href="#sessions">Sessions</a>
+        <a class="ca-link" data-view="evals" href="#evals">Evals</a>
+        <a class="ca-link" data-view="catalog" href="#catalog">Catalog</a>
+      </nav>
+      <div class="ca-side-foot">
+        <span class="ca-hint" id="hw-hint">Local · polyglot · `.work`</span>
+      </div>
+    </aside>
+    <main class="ca-main">
+      <section class="ca-view on" data-view="sessions">
+        <div class="ca-bar"><h1>Sessions</h1><span class="sub" id="sess-count">…</span>
+          <span class="sp"></span><button class="ca-btn ghost sm" id="sess-refresh">Refresh</button></div>
+        <div class="ca-board" id="sess-board"></div>
+      </section>
+      <section class="ca-view" data-view="catalog">
+        <div class="ca-bar"><h1>Catalog</h1><span class="sub">Code-as-X domains</span></div>
+        <div class="ca-scroll" id="catalog"></div>
+      </section>
+      <section class="ca-view" data-view="evals">
+        <div class="ca-bar"><h1>Evals</h1><span class="sub">Blind agent scenarios</span>
+          <span class="sp"></span><button class="ca-btn ghost sm" id="eval-refresh">Rescore all</button></div>
+        <div class="ca-scroll" id="eval-list"></div>
+      </section>
+      <section class="ca-view" data-view="editor">
+        <div class="ca-bar"><button class="ca-btn ghost sm" id="ed-back">← Sessions</button>
+          <h1 id="ed-title">—</h1><span class="sp"></span>
+          <div class="ca-tabs" id="ed-tabs">
+            <button class="ca-tab on" data-tab="session" type="button">Session</button>
+            <button class="ca-tab" data-tab="player" type="button">Player</button>
+          </div>
+          <span class="sp"></span>
+          <button class="ca-btn sm" id="ed-run">Run chain</button>
+          <button class="ca-btn primary sm" id="ed-save">Save</button></div>
+        <div class="ca-editor on" data-tab="session">
+          <div class="ca-panel">
+            <h2>Requirements</h2>
+            <textarea id="ed-req" rows="4" placeholder="What are you trying to make?"></textarea>
+            <div class="ca-route-row">
+              <button class="ca-btn sm" id="ed-route" type="button">Suggest chain</button>
+              <p class="ca-hint" id="ed-rationale"></p>
+            </div>
+            <h2>Chain</h2>
+            <div id="ed-chain" class="ca-chain"></div>
+            <button class="ca-btn ghost sm" id="ed-add-step">+ Add step</button>
+            <h2>Params</h2>
+            <div id="ed-params" class="ca-params"></div>
+          </div>
+          <div class="ca-panel">
+            <h2>session.work</h2>
+            <textarea id="ed-source" class="ca-source" spellcheck="false"></textarea>
+            <h2>Output</h2>
+            <pre id="ed-log" class="ca-log"></pre>
+          </div>
+        </div>
+        <div class="ca-player" data-tab="player">
+          <aside class="ca-player-rail">
+            <div class="ca-rail-sect">
+              <h3>View</h3>
+              <div class="ca-seg" id="pl-view">
+                <button class="ca-seg-btn on" data-view="full" type="button">Full</button>
+                <button class="ca-seg-btn" data-view="component" type="button">Component</button>
+              </div>
+            </div>
+            <div class="ca-rail-sect">
+              <h3>Components</h3>
+              <ul id="pl-components" class="ca-comp-list"></ul>
+            </div>
+            <div class="ca-rail-sect ca-rail-grow">
+              <h3>Adjust</h3>
+              <div id="pl-controls" class="ca-controls"></div>
+            </div>
+            <div class="ca-rail-foot">
+              <button class="ca-btn sm block" id="pl-apply" type="button">Save adjustments</button>
+              <button class="ca-btn primary sm block" id="pl-rerender" type="button">Re-render</button>
+              <p class="ca-hint" id="pl-status"></p>
+            </div>
+          </aside>
+          <div class="ca-player-stage">
+            <div class="ca-canvas" id="pl-canvas">
+              <video id="pl-video" playsinline preload="metadata"></video>
+              <div class="ca-canvas-empty" id="pl-empty">
+                <p>No render yet.</p>
+                <p class="ca-hint">Run the chain, then re-render to preview here.</p>
+                <button class="ca-btn primary" id="pl-run" type="button">Run chain</button>
+              </div>
+              <button class="ca-play-overlay" id="pl-play" type="button" aria-label="Play pause">▶</button>
+            </div>
+            <div class="ca-transport">
+              <button class="ca-btn ghost sm" id="pl-play-sm" type="button">Play</button>
+              <input type="range" id="pl-scrub" min="0" max="1000" value="0" step="1">
+              <span class="ca-time" id="pl-time">0:00 / 0:00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div class="ca-scrim" id="scrim"></div>
+    <aside class="ca-modal" id="modal">
+      <h2>New session</h2>
+      <label class="ca-field"><span>Title</span><input id="np-title" placeholder="Deck + diagram for talk"></label>
+      <label class="ca-field"><span>Requirements</span><textarea id="np-req" rows="3" placeholder="I need a presentation and an architecture diagram…"></textarea></label>
+      <div class="ca-modal-actions">
+        <button class="ca-btn ghost" id="np-cancel">Cancel</button>
+        <button class="ca-btn primary" id="np-create">Create</button>
+      </div>
+      <p class="ca-msg" id="np-msg"></p>
+    </aside>
+  </div>
+  <script>
+  (function(){
+    var cols=['draft','chaining','running','done'],cards=[],catalog=[],edSlug=null,plData=null,plComp=null,plView='full',plTransportBound=false;
+    function $(s,r){return (r||document).querySelector(s)}
+    function $all(s,r){return Array.from((r||document).querySelectorAll(s))}
+    function api(m,p,b){return fetch(p,{method:m,headers:{'content-type':'application/json'},body:b?JSON.stringify(b):undefined}).then(function(r){return r.json()})}
+    function fmtTime(s){s=Math.max(0,Math.floor(s||0)); var m=Math.floor(s/60), sec=s%60; return m+':'+(sec<10?'0':'')+sec}
+    function show(v){$all('.ca-view').forEach(function(el){el.classList.toggle('on',el.dataset.view===v)});$all('.ca-link').forEach(function(a){a.classList.toggle('on',a.dataset.view===v)});location.hash=v==='editor'?'editor/'+(edSlug||''):v}
+    function showTab(t){$all('[data-tab]').forEach(function(el){if(el.classList.contains('ca-editor')||el.classList.contains('ca-player'))el.classList.toggle('on',el.dataset.tab===t)});$all('.ca-tab').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t)});if(t==='player')loadPlayer()}
+    function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+    function loadCards(){api('GET','/oota/sessions').then(function(d){
+      cards=d.cards||[]; $('#sess-count').textContent=cards.length+' session'+(cards.length===1?'':'s');
+      var b=$('#sess-board'); b.innerHTML='';
+      cols.forEach(function(col){
+        var lane=document.createElement('div'); lane.className='ca-lane';
+        lane.innerHTML='<div class="ca-lane-h">'+col+'</div>';
+        var body=document.createElement('div'); body.className='ca-lane-b';
+        cards.filter(function(c){return c.status===col}).forEach(function(c){
+          var card=document.createElement('button'); card.className='ca-card'; card.type='button';
+          card.innerHTML='<strong>'+esc(c.title)+'</strong><span>'+esc((c.chain||[]).join(' → '))+'</span>';
+          card.addEventListener('click',function(){openEditor(c.slug,c.title)});
+          body.appendChild(card);
+        });
+        lane.appendChild(body); b.appendChild(lane);
+      });
+    })}
+    function loadCatalog(){api('GET','/oota/catalog').then(function(d){
+      catalog=d.categories||[]; var el=$('#catalog'); el.innerHTML='';
+      catalog.forEach(function(cat){
+        var sec=document.createElement('article'); sec.className='ca-cat';
+        sec.innerHTML='<h2>'+esc(cat.id)+'</h2><p>'+esc(cat.summary)+'</p><ul>'+
+          (cat.tools||[]).map(function(t){return '<li><code>'+esc(t)+'</code></li>'}).join('')+'</ul>';
+        el.appendChild(sec);
+      });
+    })}
+    function openEditor(slug,title){edSlug=slug; plComp=null; $('#ed-title').textContent=title||slug; show('editor'); showTab('session');
+      api('GET','/oota/session?slug='+encodeURIComponent(slug)).then(function(d){
+        if(!d.ok){$('#ed-log').textContent=d.error||'load failed';return}
+        $('#ed-req').value=d.requirements||''; $('#ed-source').value=d.content||'';
+        renderChain(d.chain||[]); renderParams(d.params||{},d.controls||{});
+        var hasVid=(d.chain||[]).some(function(s){return s.category==='video'});
+        $('#ed-tabs').style.display=hasVid?'flex':'none';
+      })}
+    function loadEvals(){api('GET','/oota/evals').then(function(d){
+      var el=$('#eval-list'); el.innerHTML='';
+      (d.scenarios||[]).forEach(function(s){
+        var sc=s.score||{}, badge=sc.total?(sc.passed+'/'+sc.total+(sc.ok?' ✓':'')):'—';
+        var art=document.createElement('article'); art.className='ca-eval';
+        art.innerHTML='<header><strong>'+esc(s.id)+'</strong><span class="ca-badge'+(sc.ok?' ok':'')+'">'+esc(badge)+'</span></header>'+
+          '<p class="ca-hint">'+esc(s.prompt||'').slice(0,200)+'</p>'+
+          '<div class="ca-eval-actions"></div><pre class="ca-log ca-eval-log"></pre>';
+        var actions=art.querySelector('.ca-eval-actions');
+        var btnScore=document.createElement('button'); btnScore.className='ca-btn sm'; btnScore.textContent='Score';
+        btnScore.addEventListener('click',function(){api('POST','/oota/eval/score',{id:s.id}).then(function(r){
+          art.querySelector('.ca-eval-log').textContent=(r.score&&r.score.lines||[]).join('\n'); loadEvals()})});
+        actions.appendChild(btnScore);
+        if(s.sessionSlug){var btnOpen=document.createElement('button'); btnOpen.className='ca-btn sm primary'; btnOpen.textContent='Open component';
+          btnOpen.addEventListener('click',function(){var pfx=location.pathname.replace(/\/cli(\/.*)?$/,'');window.open(pfx+'/components/artifact?slug='+encodeURIComponent(s.sessionSlug),'_blank')});
+          actions.appendChild(btnOpen)}
+        el.appendChild(art);
+      })})}
+    function renderPlControls(controls,params){
+      var el=$('#pl-controls'); el.innerHTML='';
+      (controls||[]).forEach(function(c){
+        var key=c.param||c.key, val=(params&&params[key]!=null)?params[key]:'';
+        var row=document.createElement('label'); row.className='ca-field';
+        if(c.type==='select'){row.innerHTML='<span>'+esc(c.label||key)+'</span><select data-k="'+esc(key)+'">'+
+          (c.options||'').split(',').map(function(o){o=o.trim();return '<option'+(val===o?' selected':'')+'>'+o+'</option>'}).join('')+'</select>'}
+        else if(c.type==='range'){row.innerHTML='<span>'+esc(c.label||key)+'</span><input type="range" data-k="'+esc(key)+'" min="'+(c.min||0)+'" max="'+(c.max||100)+'" step="'+(c.step||1)+'" value="'+esc(val||c.min||0)+'"><output>'+esc(val)+'</output>';
+          row.querySelector('input').addEventListener('input',function(e){row.querySelector('output').textContent=e.target.value})}
+        else if(c.type==='color'){row.innerHTML='<span>'+esc(c.label||key)+'</span><input type="color" data-k="'+esc(key)+'" value="'+esc(val||'#09090b')+'">'}
+        else if(c.type==='toggle'){row.innerHTML='<span>'+esc(c.label||key)+'</span><input type="checkbox" data-k="'+esc(key)+'"'+(val==='true'||val==='1'?' checked':'')+'>'}
+        else if(c.type==='textarea'){row.innerHTML='<span>'+esc(c.label||key)+'</span><textarea data-k="'+esc(key)+'" rows="3">'+esc(val)+'</textarea>'}
+        else{row.innerHTML='<span>'+esc(c.label||key)+'</span><input data-k="'+esc(key)+'" value="'+esc(val)+'">'}
+        el.appendChild(row);
+      });
+      if(!el.children.length) el.innerHTML='<p class="ca-hint">Agent adds form controls in <code>player.work</code>.</p>'}
+    function readPlParams(){var o={}; $all('#pl-controls [data-k]').forEach(function(el){
+      if(el.type==='checkbox')o[el.dataset.k]=el.checked?'true':'false'; else o[el.dataset.k]=el.value}); return o}
+    function setPlVideo(url){
+      var v=$('#pl-video'), empty=$('#pl-empty'), play=$('#pl-play');
+      if(url){v.src=url+'?t='+(Date.now()); v.style.display='block'; empty.style.display='none'; play.style.display='grid'}
+      else {v.removeAttribute('src'); v.style.display='none'; empty.style.display='flex'; play.style.display='none'}}
+    function bindTransport(){
+      if(plTransportBound)return; plTransportBound=true;
+      var v=$('#pl-video'), scrub=$('#pl-scrub'), time=$('#pl-time'), play=$('#pl-play'), playSm=$('#pl-play-sm');
+      function sync(){if(!v.duration)return; scrub.value=Math.round(v.currentTime/v.duration*1000); time.textContent=fmtTime(v.currentTime)+' / '+fmtTime(v.duration)}
+      v.onloadedmetadata=sync; v.ontimeupdate=sync;
+      scrub.oninput=function(){if(v.duration)v.currentTime=scrub.value/1000*v.duration};
+      function toggle(){if(v.paused){v.play(); play.textContent='⏸'; playSm.textContent='Pause'} else {v.pause(); play.textContent='▶'; playSm.textContent='Play'}}
+      play.onclick=toggle; playSm.onclick=toggle; v.onclick=toggle;
+    }
+    function loadPlayer(){if(!edSlug)return; api('GET','/oota/session/player?slug='+encodeURIComponent(edSlug)).then(function(d){
+      if(!d.ok){$('#pl-status').textContent=d.error||'load failed'; return}
+      plData=d;
+      renderPlControls(d.controls,d.params);
+      var ul=$('#pl-components'); ul.innerHTML='';
+      var comps=d.compositions||[];
+      if(!comps.length && d.videos&&d.videos.length){comps=d.videos.map(function(v,i){return {composition:v.composition,label:v.composition,default:i===0}})}
+      comps.forEach(function(c){
+        var li=document.createElement('li'); li.className=(plComp||c.composition)===c.composition?'on':'';
+        li.textContent=c.label||c.composition;
+        li.addEventListener('click',function(){
+          plComp=c.composition;
+          var vid=(d.videos||[]).find(function(v){return v.composition===c.composition});
+          setPlVideo(vid?vid.url:d.video);
+          $all('#pl-components li').forEach(function(n){n.classList.toggle('on',n===li)});
+          if(plView==='component') $('#pl-canvas').classList.add('component-view');
+        });
+        ul.appendChild(li);
+        if(!plComp && c.default) li.click();
+      });
+      if(!plComp) setPlVideo(d.video);
+      bindTransport();
+    })}
+    function renderChain(chain){var el=$('#ed-chain'); el.innerHTML='';
+      (chain.length?chain:[{category:'',tool:''}]).forEach(function(step,i){
+        var row=document.createElement('div'); row.className='ca-chain-row';
+        var cats=(catalog.length?catalog:[]).map(function(c){return c.id});
+        row.innerHTML='<select class="ca-sel cat"><option value="">category</option>'+
+          cats.map(function(c){return '<option'+(step.category===c?' selected':'')+'>'+c+'</option>'}).join('')+
+          '</select><select class="ca-sel tool"><option value="">tool</option></select>'+
+          '<button type="button" class="ca-btn ghost sm rm">×</button>';
+        var catSel=row.querySelector('.cat'), toolSel=row.querySelector('.tool');
+        function fillTools(){var cat=catalog.find(function(c){return c.id===catSel.value});
+          toolSel.innerHTML='<option value="">tool</option>'+((cat&&cat.tools)||[]).map(function(t){
+            return '<option'+(step.tool===t?' selected':'')+'>'+t+'</option>'}).join('')}
+        catSel.addEventListener('change',fillTools); fillTools();
+        row.querySelector('.rm').addEventListener('click',function(){row.remove()});
+        el.appendChild(row);
+      })}
+    function readChain(){return $all('.ca-chain-row').map(function(row){
+      return {category:row.querySelector('.cat').value,tool:row.querySelector('.tool').value}
+    }).filter(function(s){return s.category&&s.tool})}
+    function renderParams(params,controls){var el=$('#ed-params'); el.innerHTML='';
+      Object.keys(params).concat(Object.keys(controls)).filter(function(k,i,a){return a.indexOf(k)===i}).sort().forEach(function(key){
+        var c=controls[key]||{}, val=params[key]!=null?params[key]:'';
+        var row=document.createElement('label'); row.className='ca-field';
+        if(c.type==='select'){row.innerHTML='<span>'+esc(c.label||key)+'</span><select data-k="'+esc(key)+'">'+
+          (c.options||'').split(',').map(function(o){o=o.trim();return '<option'+(val===o?' selected':'')+'>'+o+'</option>'}).join('')+'</select>'}
+        else{row.innerHTML='<span>'+esc(c.label||key)+'</span><input data-k="'+esc(key)+'" value="'+esc(val)+'">'}
+        el.appendChild(row);
+      });
+      if(!el.children.length) el.innerHTML='<p class="ca-hint">Add chain steps — params appear from wrappers.</p>'}
+    function readParams(){var o={}; $all('#ed-params [data-k]').forEach(function(el){o[el.dataset.k]=el.value}); return o}
+    function applyRoute(andSync){var req=$('#ed-req').value.trim(); if(!req){$('#ed-rationale').textContent='Add requirements first.';return Promise.resolve()}
+      return api('POST','/oota/route',{requirements:req,title:$('#ed-title').textContent}).then(function(d){
+        if(!d.ok){$('#ed-rationale').textContent=d.error||'route failed';return}
+        $('#ed-rationale').textContent=d.rationale||'';
+        renderChain(d.chain||[]);
+        var ctrls={}; (d.chain||[]).forEach(function(){});
+        return api('GET','/oota/catalog').then(function(c){
+          catalog=c.categories||catalog;
+          return api('POST','/oota/session/sync',{slug:edSlug,requirements:req,chain:d.chain,params:d.params}).then(function(s){
+            if(s.content)$('#ed-source').value=s.content;
+            return api('GET','/oota/session?slug='+encodeURIComponent(edSlug)).then(function(sess){
+              renderParams(sess.params||{}, sess.controls||{});
+            });
+          });
+        });
+      })}
+    $('#ed-route').addEventListener('click',function(){if(!edSlug)return; applyRoute(false)});
+    function syncSource(){if(!edSlug)return; return api('POST','/oota/session/sync',{
+      slug:edSlug,requirements:$('#ed-req').value,chain:readChain(),params:readParams()
+    }).then(function(d){if(d.content)$('#ed-source').value=d.content})}
+    $('#btn-new').addEventListener('click',function(){$('#modal').classList.add('on');$('#np-title').focus()});
+    $('#np-cancel').addEventListener('click',function(){$('#modal').classList.remove('on')});
+    $('#scrim').addEventListener('click',function(){$('#modal').classList.remove('on')});
+    $('#np-create').addEventListener('click',function(){
+      var title=$('#np-title').value.trim(), req=$('#np-req').value.trim(), msg=$('#np-msg');
+      if(!title){msg.textContent='title required';return}
+      api('POST','/oota/session/new',{title:title,requirements:req}).then(function(d){
+        if(d.ok){$('#modal').classList.remove('on');$('#np-title').value='';$('#np-req').value='';msg.textContent='';loadCards();openEditor(d.slug,title)}
+        else msg.textContent=d.error||'failed';
+      })});
+    $('#sess-refresh').addEventListener('click',loadCards);
+    $('#ed-back').addEventListener('click',function(){show('sessions')});
+    $('#ed-add-step').addEventListener('click',function(){renderChain(readChain().concat([{category:'',tool:''}]))});
+    $('#ed-save').addEventListener('click',function(){
+      if(!edSlug)return; syncSource(); api('POST','/oota/session/save',{slug:edSlug,content:$('#ed-source').value}).then(function(d){
+        $('#ed-log').textContent=d.ok?'saved.':'error: '+(d.error||'save failed')})});
+    $('#ed-run').addEventListener('click',function(){
+      if(!edSlug)return; syncSource(); api('POST','/oota/run',{slug:edSlug}).then(function(d){
+        $('#ed-log').textContent=(d.log||[]).join('\n')+(d.error?'\nerror: '+d.error:'');
+        loadCards(); loadPlayer();
+      })});
+    $('#eval-refresh').addEventListener('click',loadEvals);
+    $all('.ca-tab').forEach(function(b){b.addEventListener('click',function(){showTab(b.dataset.tab)})});
+    $('#pl-apply').addEventListener('click',function(){
+      if(!edSlug)return; $('#pl-status').textContent='saving…';
+      api('POST','/oota/session/adjust',{slug:edSlug,params:readPlParams()}).then(function(d){
+        $('#pl-status').textContent=d.ok?'saved — re-render to apply visuals':'error: '+(d.error||'failed')})});
+    $('#pl-rerender').addEventListener('click',function(){
+      if(!edSlug)return; $('#pl-status').textContent='rendering…';
+      api('POST','/oota/render',{slug:edSlug}).then(function(d){
+        $('#pl-status').textContent=d.ok?'render done':'error: '+(d.error||'render failed');
+        plComp=null; loadPlayer(); loadCards()})});
+    $('#pl-run').addEventListener('click',function(){
+      if(!edSlug)return; syncSource(); $('#pl-status').textContent='running chain…';
+      api('POST','/oota/run',{slug:edSlug}).then(function(d){
+        $('#pl-status').textContent=d.ok?'chain done — hit Re-render':'error: '+(d.error||'run failed');
+        loadCards()})});
+    $all('#pl-view .ca-seg-btn').forEach(function(b){b.addEventListener('click',function(){
+      plView=b.dataset.view; $all('#pl-view .ca-seg-btn').forEach(function(x){x.classList.toggle('on',x===b)});
+      $('#pl-canvas').classList.toggle('component-view',plView==='component')})});
+    $all('.ca-link').forEach(function(a){a.addEventListener('click',function(e){e.preventDefault();show(a.dataset.view); if(a.dataset.view==='evals')loadEvals()})});
+    loadCatalog().then(loadCards);
+    api('GET','/oota/hardware').then(function(h){
+      if(h && h.ram_gb) $('#hw-hint').textContent=h.ram_gb+'GB RAM · '+h.gpu+' · local models';
+    }).catch(function(){});
+    if(location.hash.indexOf('editor/')===0){openEditor(location.hash.slice(7))}
+    else if((location.hash.slice(1)||'sessions')==='evals'){show('evals'); loadEvals()}
+    else show(location.hash.slice(1)||'sessions');
+  })();
+  </script>
+end

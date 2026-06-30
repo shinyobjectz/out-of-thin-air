@@ -1,0 +1,24 @@
+# audio / tts-local
+
+Local text-to-speech from Hugging Face — **no API keys**. Pick model via
+`oota models list tts` after `oota hardware`.
+
+controls do
+  audio.text: { label: "Voiceover script", type: "text" }
+  audio.model: { label: "Model id", type: "select", options: "kokoro-tts, piper-en, speecht5" }
+  audio.voice: { label: "Voice name (piper/kokoro)", type: "text" }
+end
+
+## Setup
+
+```bash
+oota hardware
+oota models list tts
+oota models download kokoro-tts
+pip install kokoro-onnx   # or piper-tts per model notes in media/models.work
+```
+
+## Failure modes
+
+- **Model too heavy** — `check` defers with reason; try piper-en or kokoro-tts.
+- **No huggingface-cli** — `pip install huggingface_hub` then retry download.

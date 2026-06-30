@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# games / love2d
+
+LÖVE (love2d) is a free 2D game framework for Lua. You write a game as a folder
+with `main.lua` (`love.load` / `love.update(dt)` / `love.draw` callbacks); the
+`love` runtime bundles LuaJIT. Run natively with the `love` CLI, or compile a
+`.love` archive to a playable web build (WASM + HTML + JS) with `love.js` — the
+HTML export renders as an interactive playable embed in the artifact shell.
+
+controls do
+  games.title: { label: "Window title", type: "text" }
+  games.width: { label: "Window width", type: "range", min: 160, max: 1920, step: 16 }
+  games.height: { label: "Window height", type: "range", min: 120, max: 1080, step: 16 }
+  games.fps: { label: "Target FPS", type: "select", options: "30, 60, 120" }
+  games.fullscreen: { label: "Fullscreen", type: "toggle" }
+  games.main: { label: "main.lua", type: "textarea", file: "src/main.lua" }
+end
+
+## Required reading
+- LÖVE Wiki — canonical API reference (official, docs CC-licensed): https://love2d.org/wiki/Main_Page
+- Lua skill (mindrally, community; game-dev section: loops/collision/state): https://crossaitools.com/skills/mindrally/skills/lua
+- love-font skill (community; font/typography in LÖVE): https://mcpmarket.com/tools/skills/l-ve-font-text-styling
+
+## Render
+```bash
+# install (macOS)
+brew install --cask love
+# run natively
+love out/
+# package + web export (playable HTML embed)
+( cd out && zip -9 -r ../game.love . ) && npm install -g love.js && love.js game.love out/web -c -t MyGame
+```
+
+## Failure modes
+- Not headless: love needs an OpenGL context / display. On a headless box the
+  window and screenshot capture fail — run on a logged-in GUI session.
+- On macOS the terminal binary is `/Applications/love.app/Contents/MacOS/love`;
+  alias it to `love` for stdout/stderr.
+- Screenshots land in the LOVE save dir (`~/Library/Application Support/LOVE/<identity>/`),
+  not the cwd — set `love.filesystem.setIdentity` to control it.
+- love.js export needs Node + Emscripten toolchain; large `.love` archives may
+  need a bigger memory size flag.

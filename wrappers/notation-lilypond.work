@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# notation / lilypond
+
+LilyPond is a text-to-engraving compiler. You write notation in its `.ly`
+domain-specific language and the `lilypond` CLI engraves it into a
+publication-quality PDF score (also SVG, PNG, PostScript, and MIDI). The
+primary deliverable here is a PDF. Edit `src/score.ly`, recompile, repeat.
+
+controls do
+  notation.title: { label: "Title", type: "text" }
+  notation.format: { label: "Output format", type: "select", options: "pdf, png, svg, ps" }
+  notation.staff_size: { label: "Staff size", type: "range", min: 12, max: 30, step: 1 }
+  notation.midi: { label: "Emit MIDI", type: "toggle" }
+  notation.source: { label: "Score source", type: "textarea", file: "src/score.ly" }
+end
+
+## Required reading
+- [LilyPond Learning Manual — command-line setup](https://lilypond.org/doc/v2.25/Documentation/learning/command-line-setup) — official, GFDL / public-domain docs, LilyPond project
+- [LilyPond Notation Reference + Usage manuals](https://lilypond.org/manuals.html) — official, GFDL, LilyPond project
+- [Abjad — Python API for building LilyPond files](https://github.com/Abjad/abjad) — community, MIT, Abjad / Trevor Bača et al.
+- [music21 LilyPond translate module](https://github.com/cuthbertLab/music21/blob/master/music21/lily/translate.py) — community, BSD-3-Clause, cuthbertLab
+
+## Render
+```bash
+# install (macOS)
+brew install lilypond && lilypond --version
+
+# render src/score.ly → out/score.pdf
+lilypond -dno-point-and-click -o out/score src/score.ly
+
+# other formats
+lilypond --png -dresolution=300 -o out/score src/score.ly
+lilypond --svg -o out/score src/score.ly
+```
+
+## Failure modes
+- `lilypond: command not found` — install via `brew install lilypond` (or use the `codello/lilypond` Docker image).
+- `\version` mismatch warnings — set a `\version "2.24.0"` header matching your installed binary; `convert-ly -e file.ly` upgrades old syntax.
+- No MIDI produced — MIDI is only emitted when the source has a `\midi {}` block inside `\score`; flags do not control it.
+- Paper / staff size ignored on the command line — these live in the `.ly` (`\paper {}`, `#(set-global-staff-size N)`), not as CLI flags.
+- Clickable-but-noisy PDFs — add `-dno-point-and-click` for clean output.

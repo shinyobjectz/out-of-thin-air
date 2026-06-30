@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# fiction / renpy
+
+Ren'Py is an open-source visual-novel / branching interactive-fiction engine. You author `.rpy` script files (a Python-embedding DSL) declaring characters, labels, dialogue, menus (player choices), and stateful variables, then drive the engine headlessly via the `renpy.sh` launcher CLI — run, `lint`, or `distribute` (including a WebAssembly HTML5 web export). The reviewable text artifact is the `.rpy` script plus its lint report; the embeddable deliverable is the HTML5/WASM web build.
+
+controls do
+  fiction.title: { label: "Game title", type: "text" }
+  fiction.script: { label: "Script (.rpy)", type: "textarea", file: "src/script.rpy" }
+  fiction.subcommand: { label: "Subcommand", type: "select", options: "lint, run, distribute" }
+  fiction.package: { label: "Build package", type: "select", options: "web, pc, mac, linux, market, android" }
+  fiction.version: { label: "config.version", type: "text" }
+end
+
+## Required reading
+- [Ren'Py Documentation (Reference Manual)](https://www.renpy.org/doc/html/index.html) — official, Ren'Py / Tom Rothamel
+- [Ren'Py Language Basics (.rpy script syntax)](https://www.renpy.org/doc/html/language_basics.html) — official, renpy.org
+- [Ren'Py Command Line Interface docs](https://www.renpy.org/doc/html/cli.html) — official, renpy.org
+- [renpy/renpy engine source](https://github.com/renpy/renpy) — official, MIT, renpy org
+- [renpy/renpyweb HTML5/WASM web port](https://github.com/renpy/renpyweb) — official, renpy / Beuc
+- [torrentails/RenPy-Script-Builder](https://github.com/torrentails/RenPy-Script-Builder) — community, torrentails
+
+## Render
+```bash
+# Install the SDK (no PyPI package — download + extract)
+curl -L -o renpy-sdk.tar.bz2 https://www.renpy.org/dl/8.3.4/renpy-8.3.4-sdk.tar.bz2
+tar xjf renpy-sdk.tar.bz2
+cd renpy-8.3.4-sdk
+
+# Scaffold + lint (deterministic, headless, no GUI)
+./renpy.sh launcher create_project /tmp/vn_test
+./renpy.sh /tmp/vn_test lint
+
+# Build a shippable distribution (web export → index.html + web.zip)
+./renpy.sh launcher distribute /tmp/vn_test --destination /tmp/out
+```
+
+## Failure modes
+- No official PyPI package — `pip install renpy` will not give you the engine. Use the downloadable SDK + `renpy.sh`.
+- `distribute` and web builds may prompt to download extra platform/web RAPT/web packages on first run, which needs network and is NOT fully silent — pre-download once for CI.
+- `run` opens a GUI window; in headless CI prefer `lint` for deterministic validation.
+- The web build is a multi-MB WASM runtime — heavy to embed; expect a full explorer/iframe, not a thumbnail.
+- Indentation matters in `.rpy` — blocks under `label:` / `menu:` must be consistently indented (spaces), or lint fails.

@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# fiction / twine
+
+Twine builds interactive, nonlinear, branching stories. You author passages in **Twee** markup, pick a **story format** (Harlowe, SugarCube, Snowman, Chapbook), and the Tweego compiler bakes it all into one self-contained, playable HTML file — JS, CSS, and story data inlined, no server required.
+
+controls do
+  fiction.title: { label: "Story title", type: "text" }
+  fiction.format: { label: "Story format", type: "select", options: "harlowe-3, sugarcube-2, snowman, chapbook-1" }
+  fiction.start: { label: "Start passage prose", type: "textarea", file: "src/story.twee" }
+end
+
+## Required reading
+- Twine Cookbook + wiki — https://twinery.org/cookbook/ (Interactive Fiction Technology Foundation / twinery.org, CC docs)
+- Twee 3 specification — https://github.com/iftechfoundation/twine-specs (IFTF)
+- Tweego docs — https://www.motoslave.net/tweego/docs/ (Thomas Michael Edwards / tmedwards)
+
+## Render
+```bash
+# Install Tweego (macOS): download binary, keep bundled storyformats/ alongside (or set TWEEGO_PATH)
+#   https://www.motoslave.net/tweego/
+# Verify:
+tweego --version && tweego --list-formats
+
+# Compile Twee -> self-contained HTML
+tweego -f harlowe-3 -o out/play.html src/story.twee
+
+# Alternatives:
+#   npm i extwee   # Node compiler/decompiler + CLI
+#   gem install twee2 && twee2 build src/story.twee out/play.html
+```
+
+## Failure modes
+- **No story format installed / wrong name:** `tweego --list-formats` to see exact names+versions. The `-f` value must match (e.g. `harlowe-3`, not `harlowe`).
+- **Formats not found:** keep the bundled `storyformats/` dir next to the `tweego` binary, or export `TWEEGO_PATH` to point at it.
+- **Missing `:: Start`:** Tweego needs a passage named `Start` (or a `StoryData` `start` override) as the entry point.
+- **Link syntax:** branching links use `[[Target]]` or `[[Display->Target]]`; broken/typo'd targets create dead-end links.
+- **Format mismatch:** macros are format-specific — Harlowe `(set:)` won't work under SugarCube `<<set>>`. Pick the format before writing macro-heavy logic.
+- **Confusing with PyPI `twine`:** `pip install twine` gives the Python upload tool, not this. Use Tweego/Extwee/Twee2.

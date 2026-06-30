@@ -1,0 +1,13 @@
+# diagrams / mermaid
+
+Wrapper for Mermaid — text → SVG, GitHub-native. Upstream: https://mermaid.js.org
+
+controls do
+  diagrams.title: { label: "Diagram title", type: "text" }
+  diagrams.direction: { label: "Flow direction", type: "select", options: "TB, LR, BT, RL" }
+end
+
+## Failure modes
+
+- **Layout tangles** — split into subgraphs or switch to [[diagrams-d2]] for nested arch.
+- **No renderer** — `.mmd` source is still useful in docs; install `mmdc` to export SVG.

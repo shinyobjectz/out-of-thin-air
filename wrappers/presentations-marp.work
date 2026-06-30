@@ -1,0 +1,20 @@
+# presentations / marp
+
+Wrapper for Marp — fast Markdown → PDF/PPTX. Upstream: https://marp.app
+
+controls do
+  presentations.title: { label: "Deck title", type: "text" }
+  presentations.theme: { label: "Theme", type: "select", options: "default, gaia, uncover" }
+end
+
+## Setup
+
+```bash
+npm i -g @marp-team/marp-cli
+# or: npx @marp-team/marp-cli deck.md -o deck.pdf
+```
+
+## Failure modes
+
+- **Theme not found** — stick to built-ins (`default`, `gaia`) or add a `themes/` dir.
+- **Missing CLI** — step script still writes `out/deck.md`; install Marp to export.

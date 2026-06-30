@@ -1,0 +1,43 @@
+<!-- generated draft — needs validation -->
+# diagrams / plantuml
+
+Render text markup (`@startuml…@enduml`) into UML and many other diagram types (sequence, class, activity, state, component, ER, C4, mindmap, gantt) as crisp, diffable SVG. Core engine is a Java jar; SVG is the primary deliverable. Needs Java 11+; the bundled Smetana layout engine avoids the Graphviz/`dot` dependency for most layouts.
+
+controls do
+  diagrams.title: { label: "Title", type: "text" }
+  diagrams.source: { label: "PlantUML source", type: "textarea", file: "src/diagram.puml" }
+  diagrams.format: { label: "Output format", type: "select", options: "svg, png, pdf, eps" }
+  diagrams.layout: { label: "Layout engine", type: "select", options: "dot, smetana" }
+end
+
+## Required reading
+- PlantUML command-line docs — https://plantuml.com/command-line (official, plantuml.com)
+- PlantUML language reference / guide — https://plantuml.com/guide (official, plantuml.com)
+- plantuml/plantuml core engine — https://github.com/plantuml/plantuml (official, GPLv3 / Arnaud Roques)
+- Ashley's PlantUML community docs — https://plantuml-documentation.readthedocs.io/en/latest/command_line_reference.html (community)
+
+## Render
+```bash
+# install (macOS — pulls in Java + Graphviz)
+brew install plantuml
+
+# render source to SVG (default, diffable)
+plantuml -tsvg src/diagram.puml
+
+# pure-Java layout, no Graphviz/dot dependency
+plantuml -tsvg -Playout=smetana src/diagram.puml
+
+# validate without rendering
+plantuml --check-syntax src/diagram.puml
+
+# programmatic / stdin → stdout
+plantuml -tsvg -pipe < src/diagram.puml > out/diagram.svg
+```
+
+## Failure modes
+- **Java not installed** — `plantuml` needs Java 11+; `brew install plantuml` pulls it in, else install a JDK.
+- **Graphviz/`dot` missing** — class/state/component layouts fail without `dot`; use `-Playout=smetana` to render in pure Java.
+- **Headless server errors** — add `-Djava.awt.headless=true` in CI/servers.
+- **Large diagram truncated** — raise the cap with `-DPLANTUML_LIMIT_SIZE=8192`.
+- **Confusing PyPI `plantuml`** — that package is a REMOTE server client (encodes + POSTs), not a local renderer; use the jar / `plantuml-markdown` for local rendering.
+- **Non-ASCII garbled** — pass `-charset UTF-8`.

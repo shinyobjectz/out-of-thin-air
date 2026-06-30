@@ -1,0 +1,50 @@
+# Code-as eval
+
+Blind agent evaluations — measure whether `skill/` + `tools/` + CLI give enough
+context to complete tasks without monorepo hand-holding.
+
+## Run
+
+```bash
+# From repo root:
+oota eval list
+oota eval run remotion-science-blind
+oota eval score remotion-science-blind
+
+# Reset a scenario seed session:
+oota eval reset remotion-science-blind
+```
+
+## Scenarios
+
+| Id | Task | Blind prompt only |
+|----|------|-------------------|
+| `remotion-science-blind` | Science video + voice + MP4 | [[eval/scenarios/remotion-science-blind/prompt]] |
+| `hardware-smoke` | Hardware + model list | [[eval/scenarios/hardware-smoke/prompt]] |
+
+## Browser viewer
+
+Open the **component surface** in the browser — not the session admin CLI:
+
+```bash
+oota serve   # serve this subtree's own nexus :4010 (once)
+oota open eval-remotion-science
+```
+
+The single universal shell [[components/artifact]] renders every medium.
+Agent invokes the URL; user sees preview + `player.work` forms only.
+
+Session admin (routing, evals): `oota admin`
+
+## Isolation model
+
+Each scenario seeds `cli/sessions/eval-<id>/` from `scenarios/<id>/seed/`.
+The subagent receives **only** the prompt file text plus instruction to read
+`projects/out-of-thin-air/skill/SKILL.md`. Score with `tools/score.sh` against
+`rubric.work` checkpoints.
+
+## Metrics
+
+- `checkpoints_passed / checkpoints_total`
+- `artifact_exists` per rubric row
+- Optional: agent step count (manual or transcript)

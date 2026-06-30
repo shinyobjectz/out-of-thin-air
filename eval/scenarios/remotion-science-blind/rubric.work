@@ -1,0 +1,32 @@
+# eval rubric — remotion-science-blind
+
+checkpoint :session-exists do
+  path: cli/sessions/eval-remotion-science/session.work
+  required: true
+end
+
+checkpoint :chain-ran do
+  path: cli/sessions/eval-remotion-science/out/voice/voice.wav
+  required: true
+end
+
+checkpoint :agent-authored-src do
+  path: cli/sessions/eval-remotion-science/out/src/index.ts
+  required: true
+end
+
+checkpoint :composition-root do
+  path: cli/sessions/eval-remotion-science/out/src/Root.tsx
+  required: true
+  grep: "Composition"
+end
+
+checkpoint :voice-in-public do
+  path: cli/sessions/eval-remotion-science/out/public/voice/voice.wav
+  required: true
+end
+
+checkpoint :mp4-rendered do
+  path: cli/sessions/eval-remotion-science/out/out/photosynthesis.mp4
+  required: true
+end

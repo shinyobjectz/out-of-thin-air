@@ -1,0 +1,40 @@
+<!-- generated draft — needs validation -->
+# video / manim
+
+**Manim** (Community Edition) — programmatic, frame-accurate motion graphics in
+the 3Blue1Brown style. You author `Scene` subclasses in Python; the CLI renders
+a deterministic MP4. The step script writes a minimal valid `scene.py` scaffold
+into `out/` (preserved on re-run if you've edited it) and renders if `manim` is
+installed.
+
+controls do
+  video.title: { label: "Scene class", type: "text" }
+  video.quality: { label: "Quality", type: "select", options: "l, m, h, p, k" }
+  video.format: { label: "Format", type: "select", options: "mp4, gif, mov, png" }
+  video.fps: { label: "FPS", type: "select", options: "15, 30, 60" }
+  video.scene: { label: "scene.py", type: "textarea", file: "src/scene.py" }
+end
+
+## Required reading
+
+- [Manim Community docs](https://docs.manim.community/en/stable/) — official, MIT/CC
+- [Yusuke710/manim-skill](https://github.com/Yusuke710/manim-skill) — community (Yusuke710)
+- [adithya-s-k/manim_skill](https://github.com/adithya-s-k/manim_skill) — community (adithya-s-k)
+- [johnlarkin1 manim skill](https://playbooks.com/skills/johnlarkin1/claude-code-extensions/manim) — community (johnlarkin1)
+
+## Render
+
+```bash
+pip install manim && (command -v ffmpeg || brew install ffmpeg)
+manim -ql -o out src/scene.py S
+# quality: -ql 480p15 · -qm 720p30 · -qh 1080p60 · -qp 1440p60 · -qk 4k60
+# stills: add -s · transparent: -t · all scenes: -a · format: --format gif
+```
+
+## Failure modes
+
+- **`manim: command not found`** — `pip install manim`; ManimCE, not manimgl.
+- **Wrong fork** — ManimCE and 3b1b/manimgl share class names but differ in API; this scaffold targets ManimCE.
+- **ffmpeg missing** — render fails muxing; `brew install ffmpeg`.
+- **LaTeX errors** — `Tex`/`MathTex` need a TeX distribution installed.
+- **Scene name mismatch** — the positional selector must match the class in `scene.py`.

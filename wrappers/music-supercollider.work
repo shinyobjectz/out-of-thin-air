@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# music / supercollider
+
+SuperCollider is a server/language audio synthesis platform: `scsynth` (the DSP server) driven by `sclang` over OSC. You write `SynthDef`s and a `Score` in sclang, then render deterministically offline (NRT, `-N`) to a sound file — no GUI or audio device needed. The deliverable is an audio file (AIFF/WAV/FLAC).
+
+controls do
+  music.title: { label: "Title", type: "text" }
+  music.format: { label: "Header format", type: "select", options: "AIFF, WAV, FLAC" }
+  music.sampleformat: { label: "Sample format", type: "select", options: "int16, int24, float" }
+  music.samplerate: { label: "Sample rate", type: "select", options: "44100, 48000" }
+  music.duration: { label: "Duration (s)", type: "range", min: 1, max: 60, step: 1 }
+  music.channels: { label: "Channels", type: "select", options: "1, 2" }
+  music.source: { label: "sclang source", type: "textarea", file: "src/render.scd" }
+end
+
+## Required reading
+- SuperCollider official docs — Non-Realtime Synthesis guide (official, GPLv3): https://doc.sccode.org/Guides/Non-Realtime-Synthesis.html — SuperCollider project
+- awesome-supercollider (community, ARCHIVED): https://github.com/madskjeldgaard/awesome-supercollider — Mads Kjeldgaard
+- Supriya docs (Python API, NRT/score patterns; MIT): https://github.com/supriya-project/supriya — Joséphine Wolf Oberholtzer / supriya-project
+- howto_co34pt_liveCode (community live-coding book): https://theseanco.github.io/howto_co34pt_liveCode/ — theseanco
+
+## Render
+```bash
+# install (macOS)
+brew install --cask supercollider
+ln -sf /Applications/SuperCollider.app/Contents/MacOS/sclang /usr/local/bin/sclang
+
+# render offline (NRT) — writes the audio file, touches no audio device
+sclang src/render.scd
+
+# verify
+ls -l out/out.aiff && afinfo out/out.aiff   # or: soxi out/out.aiff
+```
+
+## Failure modes
+- `sclang: command not found` — the cask installs the .app but not a CLI symlink; create the `ln -sf ... /usr/local/bin/sclang` link shown above.
+- Script never exits / hangs — sclang stays in a REPL unless you call `0.exit` inside the action callback after `recordNRT`.
+- Empty or silent file — `doneAction:2` must free the synth, and the Score must include a final timed message (e.g. `/c_set`) past the last sound so the render advances to `duration`.
+- Clipping / distortion — keep amplitude well below 1.0 (e.g. `* 0.3`); NRT does not clamp.
+- Wrong channel count — `numOutputBusChannels` in `ServerOptions` must match the channel expansion in the SynthDef (`! 2` for stereo).
+- FLAC output fails — libsndfile must support FLAC; fall back to AIFF/WAV if `headerFormat:"FLAC"` errors.

@@ -1,0 +1,46 @@
+<!-- generated draft — needs validation -->
+# cad / openscad
+
+OpenSCAD is a script-only (code-as-CAD) solid modeler. You write `.scad` files in its declarative CSG language and the engine renders a parametric 3D model. The headless CLI exports STL/3MF/OFF (model3d) and PNG previews via `-o`. Edit the source, pick an output format, and render.
+
+controls do
+  cad.title: { label: "Model name", type: "text" }
+  cad.format: { label: "Output format", type: "select", options: "stl, 3mf, off, png" }
+  cad.fn: { label: "Facet resolution ($fn)", type: "range", min: 8, max: 128, step: 4 }
+  cad.imgsize: { label: "PNG size (WxH)", type: "text" }
+  cad.projection: { label: "Preview projection", type: "select", options: "perspective, ortho" }
+  cad.source: { label: "Model source (.scad)", type: "textarea", file: "src/model.scad" }
+end
+
+## Required reading
+- OpenSCAD CLI manual (official docs, GFDL) — https://files.openscad.org/documentation/manual/Using_OpenSCAD_in_a_command_line_environment.html
+- mitsuhiko/agent-stuff openscad skill (community, Armin Ronacher) — https://github.com/mitsuhiko/agent-stuff
+- iancanderson/openscad-agent (community, Ian Anderson) — https://github.com/iancanderson/openscad-agent
+- zacharyfmarion/openscad-studio (community, Zachary Marion) — https://github.com/zacharyfmarion/openscad-studio
+
+## Render
+```bash
+# install (macOS)
+brew install --cask openscad
+# Linux: apt install openscad
+
+# export a 3D model (headless)
+openscad -o out/model.stl src/model.scad
+
+# parametric variant: override top-level vars
+openscad -D 'size=30' -o out/model.stl src/model.scad
+
+# higher facet resolution + full CGAL render
+openscad -D '$fn=64' --render -o out/model.3mf src/model.scad
+
+# PNG preview
+openscad -o out/model.png src/model.scad --imgsize=800,600 \
+  --camera=0,0,0,55,0,25,140 --projection=perspective
+```
+
+## Failure modes
+- macOS binary lives at `/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD`; `openscad` may not be on PATH — symlink it or use the full path.
+- PNG export on headless Linux needs a display (run under `xvfb-run`); STL/3MF export is fully headless everywhere.
+- Curved surfaces look faceted unless `$fn` (or `$fa`/`$fs`) is raised; high `$fn` slows CGAL render.
+- Non-manifold geometry (zero-thickness walls, coincident faces) yields STL that slicers reject — keep solids watertight and overlap booleans slightly.
+- Fast preview (F5) differs from full render (F6/`--render`); always `--render` for final exports.

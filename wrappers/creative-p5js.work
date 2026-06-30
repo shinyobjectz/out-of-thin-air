@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# creative / p5js
+
+p5.js creative-coding sketches: generative art, animation, and interactive canvas/WebGL pieces driven by the `setup()`/`draw()` loop. The primary deliverable is a single interactive `index.html` that loads p5 from CDN; the same sketch can also render PNG frames headlessly in Node for offline export.
+
+controls do
+  creative.title: { label: "Title", type: "text" }
+  creative.width: { label: "Canvas width", type: "range", min: 100, max: 1920, step: 10 }
+  creative.height: { label: "Canvas height", type: "range", min: 100, max: 1920, step: 10 }
+  creative.seed: { label: "Random seed", type: "text" }
+  creative.palette: { label: "Background color", type: "color" }
+  creative.fill: { label: "Fill color", type: "color" }
+  creative.framerate: { label: "Frame rate", type: "range", min: 1, max: 60, step: 1 }
+  creative.sketch: { label: "Sketch source", type: "textarea", file: "src/sketch.js" }
+end
+
+## Required reading
+- algorithmic-art (community Claude skill; seeded PRNG, flow fields, particle systems, PNG/SVG/GIF/WebM export) — https://github.com/travisvn/awesome-claude-skills
+- p5.js official reference (Processing Foundation, canonical API) — https://p5js.org/reference/
+- Getting Started with Node.js (official p5 headless tutorial) — https://p5js.org/tutorials/getting-started-with-nodejs/
+
+## Render
+```bash
+# Browser (canonical): just open the generated HTML
+open out/index.html
+
+# Headless PNG export in Node:
+npm install node-p5
+node -e "const p5=require('node-p5');p5.createSketch(p=>{p.setup=()=>{const c=p.createCanvas(400,400);p.background(20);p.fill(255,120,0);p.ellipse(200,200,200);p.saveCanvas(c,'out','png').then(()=>process.exit(0));};});"
+# -> writes out.png
+```
+
+## Failure modes
+- p5 CDN script not loaded (offline / blocked) — sketch silently does nothing; pin a local copy of `p5.min.js` if the host has no network.
+- Forgetting `createCanvas()` in `setup()` — draws to a default 100x100 canvas.
+- Non-reproducible output — always call `randomSeed()`/`noiseSeed()` before generating if you need deterministic frames.
+- Headless WebGL (`WEBGL` mode) is unreliable under node-canvas; use Puppeteer for faithful WebGL screenshots.
+- `saveCanvas()` in node-p5 returns a Promise — exit only after it resolves or the file may be truncated.

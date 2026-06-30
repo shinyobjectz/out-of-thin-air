@@ -1,0 +1,13 @@
+# video / hyperframes
+
+Wrapper for HyperFrames — HTML/CSS/GSAP motion, no React build step.
+Upstream: https://hyperframes.dev
+
+controls do
+  video.title: { label: "Composition title", type: "text" }
+  video.duration: { label: "Duration (seconds)", type: "text" }
+end
+
+## Failure modes
+
+- **Headless render** — needs Chrome/ffmpeg wired; v1 scaffolds `comp.html` only.

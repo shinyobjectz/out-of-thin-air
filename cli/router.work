@@ -1,0 +1,77 @@
+# Code-as router
+
+Keyword rules for auto-routing requirements → category + tool. Read by
+[[api]] (`POST /oota/route`). Higher match scores win; up to four steps per
+session.
+
+match :presentations do
+  keywords: presentation, slide, deck, talk, keynote, marp, slidev, ppt, pdf deck
+  default: marp
+  prefer: slidev | live code, interactive, demo, vue, component
+end
+
+match :video do
+  keywords: video, motion, animation, mp4, remotion, hyperframes, render, footage
+  default: remotion
+  prefer: hyperframes | plain html, gsap, no react
+end
+
+match :audio do
+  keywords: voiceover, narration, tts, text to speech, voice, dub, speak, audio track
+  default: tts-local
+  prefer: tts-local | local, offline, no api, huggingface
+end
+
+match :diagrams do
+  keywords: diagram, architecture, flowchart, mermaid, d2, graph, system map
+  default: mermaid
+  prefer: d2 | nested, cloud, container, complex architecture
+end
+
+match :cad do
+  keywords: cad, enclosure, 3d, step, mechanical, parametric, cadquery, openscad
+  default: cadquery
+  prefer: openscad | csg, hobby, simple primitive
+end
+
+match :documents do
+  keywords: document, typst, latex, pdf, report, paper, typeset, publish
+  default: typst
+  prefer: latex | journal, bibtex, academic template
+end
+
+match :electronics do
+  keywords: pcb, schematic, netlist, skidl, kicad, circuit, board
+  default: skidl
+end
+
+match :music do
+  keywords: music, sonic pi, live code, algorave, synthesizer, audio code, tone.js, strudel
+  default: sonic-pi
+  prefer: tone-js | javascript, web audio, remotion bed
+end
+
+match :notation do
+  keywords: sheet music, lilypond, score, engraving, notation
+  default: lilypond
+end
+
+match :fiction do
+  keywords: interactive fiction, ink, twine, branching, narrative, story game
+  default: ink
+end
+
+match :games do
+  keywords: pico-8, fantasy console, lua game, tic-80, game jam
+  default: pico8
+end
+
+match :creative do
+  keywords: generative art, p5, creative coding, canvas, sketch
+  default: p5js
+end
+
+match :generative-text do
+  keywords: procedural text, tracery, grammar, bot, generated copy
+  default: tracery
+end

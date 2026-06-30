@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# cad / freecad
+
+FreeCAD is an open-source parametric 3D CAD modeler, fully scriptable in Python and
+runnable headless via the `freecadcmd` console binary. Author a `.py` build script
+that constructs solids with the `Part`/`Sketcher` modules, then export a 3D model —
+STEP/IGES/BREP for CAD interchange or STL/OBJ/GLTF for the model3d viewer.
+
+controls do
+  cad.title: { label: "Object name", type: "text" }
+  cad.format: { label: "Export format", type: "select", options: "stl, step, iges, brep, obj" }
+  cad.tolerance: { label: "Mesh tessellation tolerance", type: "range", min: 0.01, max: 1.0, step: 0.01 }
+  cad.script: { label: "Build script", type: "textarea", file: "src/model.py" }
+end
+
+## Required reading
+- FreeCAD Scripting Basics (official, CC-BY): https://wiki.freecad.org/Scripting
+- FreeCAD Headless / FreeCADCmd (official, CC-BY): https://wiki.freecad.org/Headless_FreeCAD
+- neka-nat/freecad-mcp (community, MIT): https://github.com/neka-nat/freecad-mcp
+- proximile/FreeCAD-MCP (community, multi-model, Docker headless): https://github.com/proximile/FreeCAD-MCP
+
+## Render
+```bash
+# install (macOS)
+brew install --cask freecad   # or: conda create -n fc freecad -c conda-forge
+
+# render headless — freecadcmd executes the .py build script
+FCBIN="/Applications/FreeCAD.app/Contents/Resources/bin/FreeCADCmd"
+"$FCBIN" src/model.py
+```
+
+## Failure modes
+- `freecadcmd` not on PATH: it lives inside the app bundle at
+  `/Applications/FreeCAD.app/Contents/Resources/bin/FreeCADCmd` on macOS. Reference it
+  by full path.
+- pip-installed FreeCAD wheels are unreliable for `import FreeCAD`; prefer the cask or
+  conda-forge build.
+- Mesh export needs `import Mesh` and a tessellated shape — `Part` shapes alone won't
+  write STL. Use `Mesh.Mesh(shape.tessellate(tol)).write(...)`.
+- Tolerance too large produces a faceted/blocky mesh; too small bloats file size and
+  render time.
+- STEP/IGES/BREP are exact (no tolerance) — only STL/OBJ/GLTF need tessellation.

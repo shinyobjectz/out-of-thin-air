@@ -1,0 +1,28 @@
+# eval seed — remotion science (blind)
+
+card do
+  board: "code-as"
+  status: "done"
+  slug: "eval-remotion-science"
+end
+
+## Requirements
+
+20-second science explainer about photosynthesis with voiceover. Full Remotion
+in out/src/. Follow remotion-dev/skills.
+
+chain do
+  audio: tts-local
+  video: remotion
+end
+
+params do
+  audio.text: "Photosynthesis turns sunlight into plant food. Light energizes chlorophyll. Water splits and releases oxygen. Carbon dioxide becomes glucose."
+  audio.model: "kokoro-tts"
+  display.title: "Photosynthesis"
+  display.subtitle: "20-second science explainer"
+  theme.accent: "#ffd166"
+  video.title: "photosynthesis"
+  video.duration: "20"
+  video.fps: "30"
+end

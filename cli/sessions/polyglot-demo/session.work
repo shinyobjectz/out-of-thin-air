@@ -1,0 +1,31 @@
+# Polyglot demo — presentation + diagram + CAD
+
+Reference session showing a mixed chain. Copy to `cli/sessions/` or recreate
+via `just code-as new "Polyglot demo"`.
+
+card do
+  board: "code-as"
+  status: "draft"
+  slug: "polyglot-demo"
+end
+
+## Requirements
+
+Technical talk deck, architecture diagram, and a parameterized enclosure —
+all deterministic, all in git.
+
+chain do
+  presentations: marp
+  diagrams: mermaid
+  cad: cadquery
+end
+
+params do
+  presentations.title: "Code as Anything"
+  presentations.theme: "default"
+  diagrams.title: "Session pipeline"
+  diagrams.direction: "LR"
+  cad.width: "80"
+  cad.height: "40"
+  cad.depth: "20"
+end

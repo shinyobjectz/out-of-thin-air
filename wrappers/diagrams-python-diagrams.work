@@ -1,0 +1,33 @@
+<!-- generated draft — needs validation -->
+# diagrams / python-diagrams
+
+python-diagrams (mingrammer/diagrams) is a Python "Diagram as Code" library for cloud/system architecture diagrams. You write Python that instantiates provider nodes (AWS/GCP/Azure/K8s/on-prem/SaaS) and connect them with `>>` / `<<` / `-`; Graphviz renders the result to a static image. The primary deliverable is an image file (PNG by default; SVG/JPG/PDF/DOT also available).
+
+controls do
+  diagrams.title: { label: "Title", type: "text" }
+  diagrams.outformat: { label: "Output format", type: "select", options: "png, svg, jpg, pdf, dot" }
+  diagrams.direction: { label: "Flow direction", type: "select", options: "LR, TB, BT, RL" }
+  diagrams.source: { label: "Diagram source", type: "textarea", file: "src/arch.py" }
+end
+
+## Required reading
+- [Diagrams official documentation](https://diagrams.mingrammer.com/) — official, MIT, by mingrammer (Min-gyu Kim).
+- [mingrammer/diagrams source + examples + node catalog](https://github.com/mingrammer/diagrams) — official, MIT, by mingrammer. Use the node catalog to find provider import paths (e.g. `diagrams.aws.compute.EC2`).
+- No dedicated Claude SKILL.md exists for python-diagrams; Mermaid/Excalidraw skills target different tools.
+
+## Render
+```bash
+# Graphviz system binary is required (pip does NOT bundle it)
+brew install graphviz
+python3 -m pip install diagrams
+
+# render the diagram (writes <filename>.<outformat> in the output dir)
+python3 src/arch.py
+```
+
+## Failure modes
+- `failed to execute "dot"` / `PosixPath('dot')` — Graphviz binary not installed or not on PATH. Run `brew install graphviz` and ensure `dot -V` works.
+- Auto-opening an image viewer on render — always pass `show=False` to `Diagram(...)` for headless runs.
+- `ModuleNotFoundError` on a provider import — wrong node path; check the node catalog in the repo for the exact module (e.g. `diagrams.aws.database.RDS`).
+- Empty or overlapping layout — adjust `direction` (LR/TB) or use `Cluster()` to group related nodes.
+- Wrong file extension — the extension is derived from `outformat`, not from `filename`; set `outformat` to control the type.

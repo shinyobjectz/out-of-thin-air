@@ -1,0 +1,47 @@
+<!-- generated draft — needs validation -->
+# creative / openframeworks
+
+openFrameworks creative-coding apps: a cross-platform C++/OpenGL toolkit driven by the `setup()`/`update()`/`draw()` loop. The native deliverable is a realtime graphics window; the portable shareable artifact is an Emscripten WebGL build (`index.html` + `.wasm` + `.js`) that runs in a canvas/iframe. This scaffold emits an editable `ofApp` (C++ source) plus a hosting `index.html`, and renders to WebGL via emsdk when present.
+
+controls do
+  creative.title: { label: "Title", type: "text" }
+  creative.platform: { label: "Target platform", type: "select", options: "emscripten, osx, linux" }
+  creative.width: { label: "Window width", type: "range", min: 100, max: 1920, step: 10 }
+  creative.height: { label: "Window height", type: "range", min: 100, max: 1920, step: 10 }
+  creative.framerate: { label: "Frame rate", type: "range", min: 1, max: 120, step: 1 }
+  creative.background: { label: "Background color", type: "color" }
+  creative.fill: { label: "Fill color", type: "color" }
+  creative.draw: { label: "draw() body", type: "textarea", file: "src/ofApp.cpp" }
+end
+
+## Required reading
+- openFrameworks official documentation (canonical API; framework MIT) — https://openframeworks.cc/documentation/
+- openFrameworks learning tutorials (official, CC/site) — https://openframeworks.cc/learning/
+- openFrameworks Emscripten setup (official; the WebGL/HTML artifact path) — https://openframeworks.cc/setup/emscripten/
+- openFrameworks GitHub source + README guides (official, MIT) — https://github.com/openframeworks/openFrameworks
+
+## Render
+```bash
+# One-time core install (macOS):
+git clone --depth 1 https://github.com/openframeworks/openFrameworks
+cd openFrameworks/scripts/osx && ./download_libs.sh
+
+# Browser (portable WebGL artifact) — needs emsdk + OF emscripten platform:
+git clone https://github.com/emscripten-core/emsdk && ./emsdk/emsdk install latest && ./emsdk/emsdk activate latest
+source ./emsdk/emsdk_env.sh
+# in the generated project dir, with platform=emscripten:
+emmake make            # -> bin/index.html + .wasm + .js
+python3 -m http.server 8000   # serve bin/, open http://localhost:8000
+
+# Native (osx/linux) realtime window:
+make -j4 && make RunRelease
+# offline PNG: in ofApp::draw() add
+#   ofImage img; img.grabScreen(0,0,ofGetWidth(),ofGetHeight()); img.save("out.png");
+```
+
+## Failure modes
+- Missing `download_libs.sh` step — link errors against the precompiled OF core libs; run it before any build.
+- Emscripten platform not configured — `emmake make` falls back to native target; follow https://openframeworks.cc/setup/emscripten/ and set the project's platform to emscripten.
+- WebGL build serves blank — must be served over HTTP (not `file://`); `.wasm` MIME / CORS issues break the canvas.
+- Fully headless on macOS is unsupported — needs a GL/window context; use the Vulkan renderer or Linux + XVFB for offline frame dumps.
+- `ofImage::grabScreen` before the first frame draws produces an empty image; call it inside `draw()` after rendering.

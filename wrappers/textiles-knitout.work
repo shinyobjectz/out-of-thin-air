@@ -1,0 +1,45 @@
+<!-- generated draft — needs validation -->
+# textiles / knitout
+
+knitout is a machine-independent, low-level instruction format (`.k`, UTF-8 text) for
+industrial / whole-garment knitting machines, maintained by the CMU Textiles Lab. You write
+opcode lines (`knit`, `tuck`, `xfer`, `inhook`, `outhook`...) against named yarn carriers and
+needle beds; a backend (`knitout-to-dat` for Shima Seiki, `knitout-backend-kniterate` for
+Kniterate) converts the `.k` into a machine-specific format that drives real hardware. The
+deliverable here is the `.k` text file, best inspected in the live 2D stitch visualizer.
+
+controls do
+  textiles.title: { label: "Title", type: "text" }
+  textiles.carriers: { label: "Carriers", type: "text" }
+  textiles.machine: { label: "Machine", type: "text" }
+  textiles.gauge: { label: "Gauge", type: "text" }
+  textiles.width: { label: "Needle width", type: "range", min: 2, max: 200, step: 1 }
+  textiles.rows: { label: "Rows", type: "range", min: 1, max: 200, step: 1 }
+  textiles.backend: { label: "Backend target", type: "select", options: "swg-dat, kniterate" }
+  textiles.source: { label: "knitout source", type: "textarea", file: "src/out.k" }
+end
+
+## Required reading
+- Knitout (.k) File Format Specification v0.6 — CMU Textiles Lab, MIT — https://textiles-lab.github.io/knitout/knitout.html
+- textiles-lab/knitout (spec repo) — CMU Textiles Lab, MIT — https://github.com/textiles-lab/knitout
+- textiles-lab/knitout-examples (sample .k files) — CMU Textiles Lab, MIT — https://github.com/textiles-lab/knitout-examples
+- knitout-live-visualizer (2D render) — CMU Textiles Lab, MIT — https://textiles-lab.github.io/knitout-live-visualizer/
+
+## Render
+```bash
+# generate a .k with the Node frontend
+npm i knitout
+node -e "const k=require('knitout');const w=new k.Writer({carriers:['1','2','3']});w.inhook('1');for(let n=0;n<10;n++)w.knit('+','f'+n,'1');w.outhook('1');w.write('out.k')"
+# inspect: open out.k in the live visualizer
+#   https://textiles-lab.github.io/knitout-live-visualizer/
+# drive hardware: convert to a machine format
+#   git clone https://github.com/textiles-lab/knitout-backend-kniterate
+#   node knitout-to-dat.js out.k out.dat
+```
+
+## Failure modes
+- Missing or wrong magic header: the first line MUST be `;!knitout-2` (no leading whitespace) or parsers reject the file.
+- Carrier used before bring-in: `knit`/`tuck` with a carrier that was never `in`/`inhook`'d produces invalid passes — always `inhook`/`in` before use and `outhook`/`out` after.
+- Hook left engaged: forgetting `releasehook`/`outhook` leaves the yarn-inserting hook holding, jamming subsequent passes on real machines.
+- Needle naming: targets are bed+index like `f0`, `b3`, `fs2` — bare integers or unknown beds are invalid.
+- Backend mismatch: `.k` is machine-independent, but a given backend (`knitout-to-dat` vs kniterate) supports a subset of opcodes / gauges; verify against the target machine.

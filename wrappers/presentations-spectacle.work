@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# presentations / spectacle
+
+Spectacle is a React/JSX presentation library by Formidable/Nearform. Decks are authored as
+React components and run as a live, navigable HTML/JS web app with syntax-highlighted code
+panes and live demos. The primary deliverable is HTML; PDF is a secondary export via the
+built-in print view or `decktape`.
+
+controls do
+  presentations.title: { label: "Deck title", type: "text" }
+  presentations.theme: { label: "Theme", type: "select", options: "dark, light, formidable" }
+  presentations.transition: { label: "Slide transition", type: "select", options: "slide, fade, none" }
+  presentations.code_language: { label: "CodePane language", type: "select", options: "javascript, typescript, python, jsx, bash" }
+  presentations.export_mode: { label: "Built-in print/overview view (?exportMode=true)", type: "toggle" }
+  presentations.deck: { label: "Deck source", type: "textarea", file: "src/App.tsx" }
+end
+
+## Required reading
+- FormidableLabs/spectacle (official source + README + docs, MIT, Formidable Labs) — https://github.com/FormidableLabs/spectacle
+- Spectacle documentation site (official, MIT, Formidable/Nearform) — https://commerce.nearform.com/open-source/spectacle/
+- decktape — HTML-deck → PDF exporter (community, MIT, Antonin Stefanutti) — https://github.com/astefanutti/decktape
+
+## Render
+```bash
+# scaffold + build the HTML deck
+npm create vite@latest deck -- --template react-ts
+cd deck && npm install && npm install spectacle react react-dom
+# author src/App.tsx as a <Deck>...</Deck>, then:
+npm run build            # emits dist/index.html (the navigable HTML deck)
+
+# optional PDF export (secondary path)
+npm run dev &            # serves at http://localhost:5173/
+npx -y decktape automatic http://localhost:5173/ deck.pdf
+```
+
+## Failure modes
+- Forgetting to install `react`/`react-dom` alongside `spectacle` — build fails on missing peer deps.
+- `<CodePane>` syntax highlighting is runtime-only; a flat HTML snapshot without the JS bundle won't highlight or navigate.
+- `spectacle-renderer` is deprecated (~9yr unmaintained) — use `decktape` for PDF.
+- decktape needs the deck actually *served* (dev server or static host); pointing it at a `file://` path or a non-running URL yields a blank/partial PDF.
+- Animated/transition slides may need `--pause` so decktape captures the final frame.

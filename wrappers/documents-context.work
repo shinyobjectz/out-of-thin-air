@@ -1,0 +1,37 @@
+<!-- generated draft — needs validation -->
+# documents / context
+
+ConTeXt (LMTX / LuaMetaTeX) is a TeX-derived typesetting system for structured documents, fine typography, multilingual layout, and automated PDF production. Author a `.tex`/`.mkxl` source in ConTeXt markup and run the `context` CLI to produce a PDF.
+
+controls do
+  documents.title: { label: "Title", type: "text" }
+  documents.papersize: { label: "Paper size", type: "select", options: "A4, letter, A5" }
+  documents.bodyfont: { label: "Body font size", type: "select", options: "10pt, 11pt, 12pt" }
+  documents.source: { label: "Source", type: "textarea", file: "src/document.tex" }
+end
+
+## Required reading
+- ConTeXt Garden Wiki — official community docs (Pragma ADE): https://wiki.contextgarden.net/Main_Page
+- Pragma ADE manuals (Hans Hagen) — engine + reference manuals: https://www.pragma-ade.nl/
+- context-examples / GUIDE.md (Henri Menke, community): https://github.com/hmenke/context-examples
+- context-minimals (usertam, community — reproducible LMTX distro): https://github.com/usertam/context-minimals
+
+## Render
+```bash
+# install (LMTX standalone, macOS)
+cd ~ && mkdir -p context && cd context \
+  && curl -O https://lmtx.pragma-ade.com/install-lmtx/context-osx-64.zip \
+  && unzip -o context-osx-64.zip && sh ./install.sh && source tex/setuptex
+# (alternative) TeX Live: brew install --cask mactex && mtxrun --generate
+
+# render source -> PDF
+context --result=document src/document.tex
+# output: document.pdf
+```
+
+## Failure modes
+- `context: command not found` — you didn't `source tex/setuptex` (LMTX) or run `mtxrun --generate` (TeX Live) in this shell.
+- LaTeX habits fail — ConTeXt markup is NOT LaTeX (`\starttext…\stoptext`, not `\documentclass`/`\begin{document}`).
+- Missing TOC / cross-refs — needs multiple passes; let `context` auto-run or use `--runs=2`.
+- Stale layout from cached intermediates — clean with `--purgeall`.
+- Missing fonts — register/refresh with `mtxrun --script fonts --reload`.

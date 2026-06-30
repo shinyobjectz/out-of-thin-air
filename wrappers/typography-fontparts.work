@@ -1,0 +1,49 @@
+<!-- generated draft — needs validation -->
+# typography / fontparts
+
+FontParts is an application-independent Python API for programmatically drawing
+and editing the parts of a font (font, glyph, contour, point, anchor, component).
+It produces a **UFO source** — a directory of XML/plist (GLIF) text files — which
+you compile to OTF/TTF separately with `fontmake`. Use it for algorithmic and
+parametric glyph design: script `font.info` metrics and glyph outlines via a pen,
+then `font.save('x.ufo')`.
+
+controls do
+  typography.title: { label: "Font family name", type: "text" }
+  typography.glyph: { label: "Glyph name", type: "text" }
+  typography.unicode: { label: "Unicode (hex, e.g. 0041)", type: "text" }
+  typography.width: { label: "Advance width", type: "range", min: "0", max: "2000", step: "10" }
+  typography.upm: { label: "Units per em", type: "select", options: "1000, 2048" }
+  typography.ascender: { label: "Ascender", type: "range", min: "0", max: "1200", step: "10" }
+  typography.descender: { label: "Descender", type: "range", min: "-500", max: "0", step: "10" }
+  typography.compile: { label: "Compile target", type: "select", options: "none, otf, ttf" }
+  typography.build: { label: "Build program (Python pen calls)", type: "textarea", file: "src/build_font.py" }
+end
+
+## Required reading
+- FontParts official documentation — https://fontparts.robotools.dev/en/stable/ (official, MIT; robotools / FontParts authors)
+- FontParts GitHub (source + fontshell CLI) — https://github.com/robotools/fontParts (official, MIT; robotools org)
+- RoboFont FontParts API reference (richest examples) — https://robofont.com/documentation/reference/fontparts/ (community, free to read; RoboFont / Type Supply)
+
+## Render
+```bash
+# install (headless, no GUI)
+python3 -m venv /tmp/fpv && /tmp/fpv/bin/pip install fontParts
+# build the UFO source
+/tmp/fpv/bin/python src/build_font.py
+# optional: compile to a binary font
+/tmp/fpv/bin/pip install fontmake && fontmake -u out/font.ufo -o otf
+```
+
+## Failure modes
+- A `.ufo` is a directory of XML/GLIF files, not a single binary — the artifact
+  shell cannot "render" it; inspect `out/font.ufo/glyphs/*.glif` or generate an
+  SVG specimen via a pen.
+- Always pass `showInterface=False` to `RFont()` for headless runs; otherwise it
+  tries to open a GUI in host apps.
+- Every contour must be closed (`pen.closePath()`); unclosed paths produce broken
+  or empty glyphs.
+- Glyph filenames are name-mangled (`A` → `A_.glif`); don't assume the GLIF name
+  matches the glyph name verbatim.
+- Set `font.info.unitsPerEm`/`ascender`/`descender` before saving — missing core
+  metrics make downstream `fontmake` compilation fail.

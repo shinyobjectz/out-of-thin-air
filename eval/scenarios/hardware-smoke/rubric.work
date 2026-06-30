@@ -1,0 +1,19 @@
+# eval rubric — hardware-smoke
+
+checkpoint :hardware-json do
+  cmd: "bash tools/hardware.sh"
+  grep: "ram_gb"
+  required: true
+end
+
+checkpoint :models-list-tts do
+  cmd: "bash tools/models.sh list tts"
+  grep: "kokoro-tts"
+  required: true
+end
+
+checkpoint :models-check-piper do
+  cmd: "bash tools/models.sh check piper-en"
+  grep: "OK:"
+  required: true
+end

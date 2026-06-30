@@ -1,0 +1,23 @@
+# Media stack
+
+Local **voice**, **music**, and **video** legs for out-of-thin-air. Remotion is
+the primary video path; optional Hugging Face models run locally with **no API
+keys** when hardware allows.
+
+## Layers
+
+| Layer | File | Role |
+|-------|------|------|
+| Libraries | [[media/libraries]] | Upstream skills + Remocn + oota music libs |
+| Models | [[media/models]] | HF catalog with RAM/VRAM/runtime requirements |
+| Hardware | `oota hardware` | Probe machine → filter runnable models |
+
+## Golden path (video + voice)
+
+1. Route to `video/remotion` + optional `audio/tts-local`
+2. `oota run <slug>` — voice WAV + npm shell (never overwrites `out/src/`)
+3. Agent writes full Remotion in `out/src/` per [remotion-dev/skills](https://github.com/remotion-dev/skills)
+4. Optional Remocn components, local TTS via [[media/models]]
+5. `oota render <slug>`
+
+Code-as music (non-AI): Sonic Pi, Tone.js, Strudel — see [[media/libraries]].

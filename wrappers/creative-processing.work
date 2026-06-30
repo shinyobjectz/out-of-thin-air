@@ -1,0 +1,43 @@
+<!-- generated draft — needs validation -->
+# creative / processing
+
+Processing is a Java-based creative-coding language for generative art. You write a sketch (`setup()`/`draw()`) and the engine renders it; the canonical deliverable is a single PNG frame via `saveFrame()`. The native toolchain is the `processing-java` CLI; for headless image export on macOS this wrapper falls back to the p5.js JS sibling running in Node (`node-p5`), which writes a PNG with no display. Edit the source, set a seed and canvas size, and render one representative frame.
+
+controls do
+  creative.title: { label: "Sketch name", type: "text" }
+  creative.engine: { label: "Engine", type: "select", options: "node-p5, processing-java" }
+  creative.width: { label: "Canvas width", type: "range", min: 100, max: 2000, step: 50 }
+  creative.height: { label: "Canvas height", type: "range", min: 100, max: 2000, step: 50 }
+  creative.seed: { label: "Random seed", type: "range", min: 0, max: 9999, step: 1 }
+  creative.count: { label: "Element count", type: "range", min: 10, max: 2000, step: 10 }
+  creative.bg: { label: "Background", type: "color" }
+  creative.source: { label: "Sketch source (p5)", type: "textarea", file: "src/sketch.js" }
+end
+
+## Required reading
+- Anthropic p5.js algorithmic-art skill (official Anthropic skill — seeded randomness, flow fields, particle systems) — https://github.com/anthropics/skills
+- p5.js official reference + for-LLM docs (Processing Foundation / p5.js; docs CC-BY-SA, library LGPL-2.1) — https://p5js.org/reference/
+- Processing official reference (Processing Foundation; docs CC-BY-NC-SA, core GPL/LGPL) — https://processing.org/reference/
+- p5.js MCP server / editor (community, Adil Moujahid) — https://adilmoujahid.com/posts/2025/06/mcp-server-p5js-editor/
+
+## Render
+```bash
+# --- headless PNG via p5.js (default, no display needed) ---
+npm install node-p5
+node src/render.js          # writes out/sketch.png
+
+# --- native Processing (Java) ---
+# Download Processing: https://processing.org/download
+# macOS: install the processing-java helper from the Tools menu
+processing-java --sketch="$PWD/src/processing" --output=/tmp/p5out --force --run
+# (sketch must call saveFrame("out.png") then exit();)
+# Linux/CI headless: wrap with xvfb-run
+xvfb-run -a processing-java --sketch="$PWD/src/processing" --output=/tmp/p5out --force --run
+```
+
+## Failure modes
+- `node-p5` is 2D only — no WebGL/3D, no mouse/keyboard input. For WebGL sketches render full p5.js in headless Chromium via Puppeteer (`page.screenshot()`), or use native `processing-java`.
+- `processing-java` is not on PATH by default; install the helper from the Processing app's Tools menu (macOS) or use the full path inside the app bundle.
+- Native headless rendering needs a display context — on Linux/CI wrap with `xvfb-run`; on macOS it generally needs a window server session.
+- Without `exit()` (Java) or `process.exit()` after `saveCanvas` (Node), the sketch hangs in its draw loop and never returns.
+- Forgetting `randomSeed()`/`noiseSeed()` makes output non-reproducible across runs — set the seed for deterministic frames.

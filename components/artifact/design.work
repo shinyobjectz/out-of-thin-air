@@ -1,0 +1,156 @@
+# Artifact shell — design
+
+Universal component shell for **every** code-as-X medium. Header (collapse ·
+version tabs · export) + Adjust rail with dirty-aware Save + a preview stage that
+swaps renderer by artifact kind.
+
+design :oota_component do
+  @import url('https://cdn.jsdelivr.net/npm/basecoat-css@1.0.1/dist/basecoat.cdn.min.css');
+
+  :root { --ca2-rail-w: 280px; --ca2-header-h: 44px; }
+
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  body { font-size: 14px; }
+  section.file { margin: 0; padding: 0; border: 0; max-width: none; }
+  nav.wb-nav, .unit figcaption { display: none !important; }
+
+  .ca2-shell {
+    display: grid;
+    grid-template-rows: var(--ca2-header-h) 1fr;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--background, #fff);
+    color: var(--foreground, #09090b);
+  }
+
+  /* ── Header ──────────────────────────────────────────────────────────── */
+  .ca2-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--border, #e9e9ec);
+    background: color-mix(in srgb, var(--background, #fff) 94%, transparent);
+    backdrop-filter: blur(8px);
+  }
+  .ca2-collapse {
+    display: grid;
+    place-items: center;
+    width: 30px; height: 30px;
+    border: 1px solid var(--border, #e9e9ec);
+    border-radius: var(--radius, 8px);
+    background: var(--background, #fff);
+    color: var(--muted-foreground, #71717a);
+    cursor: pointer;
+    font-size: 14px;
+    flex: 0 0 auto;
+  }
+  .ca2-collapse[aria-pressed="true"] { background: var(--accent, #f4f4f5); color: var(--foreground, #09090b); }
+  .ca2-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 0 auto;
+    padding: 3px;
+    border: 1px solid var(--border, #e9e9ec);
+    border-radius: var(--radius, 8px);
+    background: var(--muted, #f4f4f5);
+    max-width: 60%;
+    overflow-x: auto;
+  }
+  .ca2-vtab {
+    border: 0;
+    background: transparent;
+    color: var(--muted-foreground, #71717a);
+    font: inherit;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ca2-vtab.on { background: var(--background, #fff); color: var(--foreground, #09090b); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .ca2-export { flex: 0 0 auto; }
+
+  /* ── Body: rail | stage ──────────────────────────────────────────────── */
+  .ca2-body {
+    display: grid;
+    grid-template-columns: var(--ca2-rail-w) 1fr;
+    min-height: 0;
+  }
+  .ca2-shell.rail-collapsed .ca2-body { grid-template-columns: 0 1fr; }
+  .ca2-shell.rail-collapsed .ca2-rail { display: none; }
+
+  .ca2-rail {
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow: auto;
+    background: var(--muted, #f4f4f5);
+    border-right: 1px solid var(--border, #e9e9ec);
+    min-width: 0;
+  }
+  .ca2-rail-head h1 { margin: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ca2-section-title { margin: 0 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-foreground, #71717a); }
+  .ca2-rail-grow { flex: 1; min-height: 0; overflow: auto; }
+  .ca2-rail-foot { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+  .ca2-save.is-dirty { background: var(--foreground, #09090b); color: var(--background, #fff); }
+  .ca2-status { color: var(--muted-foreground, #71717a); font-size: 12px; margin: 0; min-height: 1.2em; }
+
+  /* ── Stage: preview + transport ──────────────────────────────────────── */
+  .ca2-main { display: flex; flex-direction: column; gap: 12px; padding: 16px; min-width: 0; min-height: 0; }
+  .ca2-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    background: #050506;
+    border-radius: var(--radius, 10px);
+    overflow: hidden;
+    border: 1px solid var(--border, #e9e9ec);
+  }
+  .ca2-art-el { max-width: 100%; max-height: 100%; }
+  .ca2-stage .ca-art-video,
+  .ca2-stage .ca-art-audio { width: 100%; }
+  .ca2-stage .ca-art-video { height: 100%; object-fit: contain; background: #000; }
+  .ca2-stage .ca-art-audio { align-self: end; margin-bottom: 16px; }
+  .ca2-stage .ca-art-image,
+  .ca2-stage .ca-art-svg { object-fit: contain; background: #fff; }
+  .ca2-stage .ca-art-pdf,
+  .ca2-stage .ca-art-html,
+  .ca2-stage .ca-art-model3d { width: 100%; height: 100%; border: 0; background: #fff; }
+  .ca2-stage .ca-art-text {
+    width: 100%; height: 100%; margin: 0; overflow: auto; padding: 16px;
+    background: var(--background, #fff); color: var(--foreground, #09090b);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap;
+  }
+  .ca-art-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--muted-foreground, #71717a); text-align: center; padding: 24px; }
+
+  .ca2-transport { display: flex; align-items: center; gap: 10px; padding: 4px 2px; }
+  .ca2-transport[hidden] { display: none; }
+
+  /* ── Shared field + scrubber primitives (driven by ui.js) ────────────── */
+  .ca-time { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted-foreground, #71717a); min-width: 88px; text-align: right; }
+  .ca-scrub { position: relative; flex: 1; height: 28px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+  .ca-scrub-sm { height: 22px; }
+  .ca-scrub-track { position: absolute; left: 0; right: 0; height: 4px; border-radius: 999px; background: var(--muted, #ececee); overflow: hidden; }
+  .ca-scrub-fill { height: 100%; width: 0; background: var(--foreground, #09090b); border-radius: inherit; }
+  .ca-scrub-thumb { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--foreground, #09090b); border: 2px solid var(--background, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.2); pointer-events: none; }
+  .ca-scrub:focus-visible { outline: 2px solid var(--ring, #09090b); outline-offset: 2px; border-radius: 4px; }
+
+  .ca-text { min-height: 36px; padding: 8px 10px; border: 1px solid var(--border, #e9e9ec); border-radius: var(--radius, 8px); background: var(--background, #fff); color: var(--foreground, #09090b); outline: none; }
+  .ca-text:focus { border-color: var(--foreground, #09090b); box-shadow: 0 0 0 2px color-mix(in srgb, var(--foreground, #09090b) 12%, transparent); }
+  .ca-text-area { min-height: 72px; white-space: pre-wrap; }
+  .ca-field-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+  .ca-field-val { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: var(--muted-foreground, #71717a); }
+  .ca-toggle-field { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .ca-switch { width: 42px; height: 24px; border-radius: 999px; border: 1px solid var(--border, #e9e9ec); background: var(--muted, #ececee); padding: 2px; cursor: pointer; transition: background .15s, border-color .15s; }
+  .ca-switch.on { background: var(--foreground, #09090b); border-color: var(--foreground, #09090b); }
+  .ca-switch-thumb { display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--background, #fff); transition: transform .15s; }
+  .ca-switch.on .ca-switch-thumb { transform: translateX(18px); }
+  .ca-color { display: flex; align-items: center; gap: 10px; }
+  .ca-color-swatch { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border, #e9e9ec); background: var(--swatch, #09090b); cursor: pointer; padding: 0; }
+  .ca-color-val { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--muted-foreground, #71717a); }
+  .ca-hint { font-size: 11px; color: var(--muted-foreground, #71717a); margin: 4px 0 0; line-height: 1.35; }
+end

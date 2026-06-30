@@ -1,0 +1,12 @@
+Make a 20-second science explainer video about photosynthesis with voiceover.
+
+You are in the code-as-anything project. `cd` to the project root (where `Justfile` and `skill/` live). Read `skill/SKILL.md` and follow it.
+
+Session slug: **eval-remotion-science** — requirements and params are already in `cli/sessions/eval-remotion-science/session.work`.
+
+Steps (use portable `just` verbs from the project Justfile):
+1. `just run eval-remotion-science` — voice + project shell
+2. Write full Remotion in `cli/sessions/eval-remotion-science/out/src/` (read remotion-dev/skills)
+3. `just render eval-remotion-science` — must produce `out/out/photosynthesis.mp4`
+
+Do not ask clarifying questions. Do not read files outside this project.

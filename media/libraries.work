@@ -1,0 +1,74 @@
+# Media libraries
+
+Upstream skills, component registries, and **code-as** (non-AI) libraries.
+Hybrid rule: link official repos; maintain thin wrappers in [[../wrappers]] only
+when we demo the path in this monorepo.
+
+## Video — Remotion (primary leg)
+
+library :remotion-skills do
+  kind: upstream-skill
+  url: https://github.com/remotion-dev/skills
+  path: skills/remotion/SKILL.md
+  notes: "Official Remotion agent skill. Clone or vendor into session; do not rewrite."
+end
+
+library :remocn do
+  kind: component-registry
+  url: https://github.com/Remocn/remocn
+  install: "npx shadcn@latest add @remocn/<component>"
+  catalog: https://remocn.dev
+  notes: "110+ copy-paste Remotion components — typography, transitions, AI scenes. You own the code."
+end
+
+library :remotion do
+  kind: toolchain
+  url: https://www.remotion.dev
+  install: "npx create-video@latest"
+  notes: "Prerequisite for remocn. React/TS deterministic video."
+end
+
+## Audio — code-as (non-AI, preferred for determinism)
+
+library :sonic-pi do
+  kind: oota music
+  url: https://sonic-pi.net
+  lang: ruby
+  notes: "Live-coding music. Already in catalog as music/sonic-pi."
+end
+
+library :tone-js do
+  kind: oota music
+  url: https://tonejs.github.io
+  lang: javascript
+  npm: tone
+  notes: "Web Audio synthesis + sequencing in JS. Pairs with Remotion via offline render hooks."
+end
+
+library :strudel do
+  kind: oota music
+  url: https://strudel.cc
+  lang: javascript
+  notes: "TidalCycles-style patterns in the browser. Good for algorithmic beds under voiceover."
+end
+
+library :magenta-js do
+  kind: oota music
+  url: https://github.com/magenta/magenta-js
+  lang: javascript
+  notes: "Non-AI + some ML helpers. MusicRNN etc. Optional middle ground."
+end
+
+library :aubio do
+  kind: oota music
+  url: https://aubio.org
+  lang: c/python
+  notes: "Onset/pitch detection — utility for syncing Remotion to audio."
+end
+
+## When to use local HF models vs code-as
+
+Use **code-as music** (Tone.js, Strudel, Sonic Pi) when timing must be exact and
+git-diffable. Use **HF musicgen** only when the user wants generative beds and
+hardware passes `oota models check musicgen-small`. Same for TTS: prefer
+kokoro/piper on CPU before heavy GPU models.

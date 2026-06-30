@@ -1,0 +1,29 @@
+# Eval isolation manifest
+
+What a blind subagent receives vs what exists on disk.
+
+## Allowed context
+
+- `eval/scenarios/<id>/prompt.txt` — only user message
+- `skill/SKILL.md` + files linked from it
+- `projects/out-of-thin-air/**` — full project tree
+
+## Disallowed for blind runs
+
+- Repo root `AGENTS.md`
+- Other monorepo projects
+- Prior chat / conversation history
+
+## Portable CLI
+
+Eval agents should `cd projects/out-of-thin-air` and use the local
+`Justfile` (`just run`, `just hardware`, …) OR monorepo `oota *`
+if running from repo root. Skill documents both.
+
+## Metrics
+
+| Metric | Tool |
+|--------|------|
+| Checkpoint pass rate | `oota eval score <id>` |
+| Reference POC | `oota validate` |
+| Agent step count | transcript / manual |

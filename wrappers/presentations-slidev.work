@@ -1,0 +1,20 @@
+# presentations / slidev
+
+Wrapper for Slidev — Vue-powered interactive dev decks. Upstream: https://sli.dev
+
+controls do
+  presentations.title: { label: "Talk title", type: "text" }
+  presentations.theme: { label: "Theme", type: "select", options: "default, seriph, apple-basic" }
+end
+
+## Setup
+
+```bash
+npm i -g @slidev/cli
+slidev slides.md --open
+```
+
+## Failure modes
+
+- **Node version** — Slidev wants a recent Node LTS.
+- **Missing deps in slides** — keep demo components inline for portable sessions.

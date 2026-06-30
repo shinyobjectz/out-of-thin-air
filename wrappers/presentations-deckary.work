@@ -1,0 +1,31 @@
+<!-- generated draft — needs validation -->
+# presentations / deckary
+
+Deckary (deckary.com) is a closed-source AI add-in for Microsoft PowerPoint that generates consultant-grade `.pptx` slides, charts, and icons from prompts inside the Office taskpane. It is **not** a code-as-X tool — no CLI, no SDK, no headless mode — so it cannot be driven from this runtime. This wrapper documents that gap and degrades to the real oota presentations toolchain (**Marp**) so a markdown-driven deck can still render to PDF headlessly.
+
+controls do
+  presentations.title: { label: "Deck title", type: "text" }
+  presentations.subtitle: { label: "Subtitle", type: "text" }
+  presentations.theme: { label: "Theme", type: "select", options: "default, gaia, uncover" }
+end
+
+## Required reading
+- **Deckary product (proprietary, no OSS license)** — https://deckary.com — the named tool; GUI-only, no scriptable surface.
+- **Marp CLI (official, marp-team, MIT)** — https://github.com/marp-team/marp-cli — the fallback engine this wrapper actually renders with.
+- **Marpit (official, marp-team, MIT)** — https://github.com/marp-team/marpit — markdown→slide framework underneath Marp.
+- **Slidev (official, slidevjs, MIT)** — https://github.com/slidevjs/slidev — alternative markdown deck engine with `build`/`export`.
+
+## Render
+```bash
+# Deckary itself has NO install / CLI — it is an AppSource PowerPoint add-in (GUI only).
+# Fallback: render the markdown scaffold to PDF with Marp.
+npm i -g @marp-team/marp-cli
+marp out/deck.md --pdf -o out/deck.pdf
+# alt outputs: marp out/deck.md --pptx   |   marp out/deck.md --html
+```
+
+## Failure modes
+- **Expecting a Deckary CLI** — there is none. The product only runs interactively inside PowerPoint; nothing here invokes Deckary.
+- **`.pptx` won't preview** — the universal shell cannot render the binary PowerPoint format; export to PDF (Marp `--pdf`) for a viewable artifact.
+- **Marp PDF needs Chromium** — `marp --pdf` launches headless Chrome; if missing, set `CHROME_PATH` or install Chrome/Chromium. Use `--html` to avoid the browser dependency.
+- **Wrong tool for the category** — if you genuinely want code-driven decks, target Marp or Slidev directly; Deckary will never satisfy a headless/syntax-highlighted workflow.

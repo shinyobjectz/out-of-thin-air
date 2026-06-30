@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# music / alda
+
+Alda is a text-based music programming language. You write notes, chords, tempo,
+and instrument parts as plain text; the `alda` CLI plays them back or exports a
+Standard MIDI File. The player is a Kotlin/JVM engine, so Java is required. This
+wrapper produces a `.alda` source and exports it to MIDI (the audio artifact).
+
+controls do
+  music.title: { label: "Title", type: "text" }
+  music.instrument: { label: "Instrument (General MIDI)", type: "select", options: "piano, trumpet, guitar, violin, flute, clarinet, trombone, organ" }
+  music.tempo: { label: "Tempo (BPM)", type: "range", min: 40, max: 240, step: 1 }
+  music.score: { label: "Alda score", type: "textarea", file: "src/song.alda" }
+end
+
+## Required reading
+- Official Alda docs — tutorial, language reference, install: https://alda.io/docs/ (official, EPL-2.0; alda-lang / Dave Yarwood)
+- alda-lang/alda repo README + doc/: https://github.com/alda-lang/alda (official, EPL-2.0)
+- Implementing an Alda library (for wrapper internals): https://github.com/alda-lang/alda/blob/master/doc/implementing-an-alda-library.md (official, EPL-2.0; Dave Yarwood)
+
+## Render
+```bash
+# install (macOS); player requires Java (OpenJDK from Adoptium if missing)
+brew install alda && java -version
+
+# health check
+alda doctor
+
+# export the source to MIDI (headless; no audio device needed)
+alda export -f src/song.alda -o out/song.mid
+
+# or play it (requires audio output)
+alda play -f src/song.alda
+```
+
+## Failure modes
+- "no player" / hangs: the Kotlin/JVM player needs Java — run `java -version` and `alda doctor`.
+- `alda play` fails on headless machines (no audio device); use `alda export` to produce MIDI instead.
+- Tempo must be set inside the source via `(tempo! N)`, not a CLI flag.
+- Instrument names must be valid General MIDI names; unknown names error out.
+- First run downloads/starts the player process — allow a moment and re-check `alda doctor`.

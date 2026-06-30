@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# typography / metafont
+
+METAFONT is Donald Knuth's parametric font-description language: a `.mf` program defines glyphs as pen-stroke paths and filled regions driven by equations (stroke width, slant, x-height, serif size). Changing parameters yields a whole family from one source. The `mf` engine rasterizes the source to a GF bitmap + TFM metrics; we render a proof sheet to a PNG image.
+
+controls do
+  typography.title: { label: "Title", type: "text" }
+  typography.glyph_letter: { label: "Glyph letter", type: "text" }
+  typography.stroke_width: { label: "Stroke width (pt)", type: "range", min: "0.2", max: "4", step: "0.1" }
+  typography.slant: { label: "Slant", type: "range", min: "0", max: "0.5", step: "0.01" }
+  typography.x_height: { label: "x-height (pt)", type: "range", min: "3", max: "12", step: "0.5" }
+  typography.mode: { label: "Engine mode", type: "select", options: "proof, localfont, ljfour" }
+  typography.mag: { label: "Magnification", type: "range", min: "1", max: "8", step: "1" }
+  typography.source: { label: "Metafont source", type: "textarea", file: "src/font.mf" }
+end
+
+## Required reading
+- The METAFONTbook / mf(1) man page — https://www.mankier.com/1/mf (official, TeX Live docs / Donald E. Knuth)
+- Metafont overview (GF/TFM output, pen model) — https://en.wikipedia.org/wiki/Metafont (CC BY-SA, Wikipedia contributors)
+- mf2pt1 manual — Metafont source to PostScript Type 1 — https://www.ctan.org/pkg/mf2pt1 (LPPL, Scott Pakin / Werner Lemberg)
+- METAFONT for Beginners (tutorial PDF) — http://ftp.cvut.cz/tex-archive/info/metafont/beginners/metafont-for-beginners.pdf (free doc, Christophe Grandsire et al.)
+- GitHub topic: metafont — https://github.com/topics/metafont (community examples)
+
+## Render
+```bash
+# install (macOS) — adds mf-nowin, gftodvi, dvipng to PATH
+brew install --cask mactex-no-gui
+
+# rasterize source to GF bitmap + TFM metrics
+mf-nowin '\mode=localfont; mode_setup; mag=4; nonstopmode; input font'
+
+# render a proof sheet to PNG
+gftodvi font.*gf && dvipng -D150 -o font-proof.png font.dvi
+```
+
+## Failure modes
+- `mf` only finds `font.mf` if it is in the current dir or TEXINPUTS — run from the source dir or set the path.
+- Output filename is `jobname.<dpi>gf`; the dpi depends on `mode` × `mag`, so glob `font.*gf` rather than hardcoding a dpi.
+- `\mode=proof` produces large proof rasters; use `localfont` for normal dpi. Wrong/unknown mode aborts with `! Unknown mode`.
+- Without `nonstopmode` the engine drops into an interactive `*` prompt and hangs in headless runs.
+- GF is a bitmap — there is no direct vector/PNG output from `mf`; you must pipe through `gftodvi` + `dvipng` (or use `mf2pt1` for Type 1 outlines).
+- `mf2pt1` requires every glyph drawn from closed fill/unfill paths; pen-stroked-only glyphs fail to convert.

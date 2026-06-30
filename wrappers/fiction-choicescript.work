@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# fiction / choicescript
+
+ChoiceScript is a JS-based DSL + interpreter for branching, stat-tracking interactive fiction. You author plain-text scene files (`startup.txt`, `scenes/*.txt`) and compile them into a single self-contained HTML page that plays offline in any browser. License is ChoiceScript License v1.0 — non-commercial free; commercial use needs a Choice of Games license.
+
+controls do
+  fiction.title: { label: "Game Title", type: "text" }
+  fiction.author: { label: "Author", type: "text" }
+  fiction.scene: { label: "startup scene", type: "textarea", file: "mygame/scenes/startup.txt" }
+  fiction.test_mode: { label: "Test mode", type: "select", options: "quicktest, randomtest" }
+  fiction.iterations: { label: "Randomtest iterations", type: "range", min: 100, max: 10000, step: 100 }
+  fiction.seed: { label: "Randomtest seed", type: "text" }
+end
+
+## Required reading
+- Choice of Games — ChoiceScript Intro (official docs, Choice of Games LLC): https://www.choiceofgames.com/make-your-own-games/choicescript-intro/
+- dfabulich/choicescript (official interpreter + tooling; ChoiceScript License v1.0, non-commercial): https://github.com/dfabulich/choicescript
+- ChoiceScript Wiki — language reference (Choice of Games community): https://github.com/dfabulich/choicescript/wiki
+- ChoiceScript IDE (community; CJ Sharp): https://choicescriptide.github.io/
+- ChoiceScript Dev Wiki — Development Tools (Fandom community, CC-BY-SA): https://choicescriptdev.fandom.com/wiki/Development_Tools
+
+## Render
+```bash
+git clone https://github.com/dfabulich/choicescript.git
+cd choicescript
+# author scenes under web/mygame/scenes/*.txt (startup.txt is the entry point)
+node compile.js mygame > game.html      # single self-contained playable HTML
+node quicktest.js                         # deterministic path-coverage test
+node randomtest.js                        # randomized playthroughs (seed + iterations)
+# pure-browser alternative: open compile.html / web/index.html
+```
+
+## Failure modes
+- `startup.txt` must end every reachable branch in `*finish` / `*ending` or `*goto` — dangling lines fail tests.
+- `*choice` options must be indented consistently (tabs vs spaces matter); mixed indentation breaks parsing.
+- Variables must be `*create`d in `startup.txt` before use; `*temp` for scene-local. Using an uncreated var errors at runtime.
+- `compile.js` expects the game folder name relative to `web/` (e.g. `mygame`), not a path to a `.txt` file.
+- Commercial distribution requires a Choice of Games license — the default output is non-commercial only.
+- The third-party `choicescript` npm CLI is unverified; prefer the git repo for fidelity.

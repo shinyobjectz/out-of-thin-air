@@ -1,0 +1,51 @@
+<!-- generated draft — needs validation -->
+# music / tidal-cycles
+
+TidalCycles is a Haskell live-coding environment for algorithmic patterns. Tidal generates
+patterns and sends them as OSC to SuperDirt running inside SuperCollider, which does the
+actual synthesis — so the deliverable is an audio file (rendered via SuperCollider's
+`s.record`). The JS port Strudel can render the same mini-notation on Web Audio without
+SuperCollider. This wrapper writes an editable pattern scaffold and renders to WAV when a
+backend is present.
+
+controls do
+  music.title: { label: "Title", type: "text" }
+  music.pattern: { label: "Pattern (mini-notation)", type: "textarea", file: "src/pattern.tidal" }
+  music.cps: { label: "Cycles per second", type: "range", min: "0.1", max: "2.0", step: "0.05" }
+  music.cycles: { label: "Render cycles", type: "range", min: "1", max: "64", step: "1" }
+  music.samplebank: { label: "Sample bank / SuperDirt path", type: "text" }
+  music.channels: { label: "Output channels", type: "select", options: "2, 1, 4, 8" }
+  music.backend: { label: "Backend", type: "select", options: "superdirt, strudel" }
+end
+
+## Required reading
+- Official Tidal Cycles documentation — https://tidalcycles.org/docs/ (official; TidalCycles project / Alex McLean)
+- TidalCycles userbase wiki — https://userbase.tidalcycles.org/ (community)
+- Strudel docs (JS port) — https://strudel.cc/ (official; AGPL-3.0, uzu/strudel)
+- No dedicated Anthropic/Claude SKILL.md or llms.txt exists for tidal-cycles (searched anthropics/skills as of 2026-06)
+
+## Render
+```bash
+# Install (macOS / Homebrew)
+brew install --cask supercollider
+brew install ghc cabal-install
+cabal update && cabal install tidal
+# In SuperCollider GUI run once: Quarks.install("SuperDirt"); thisProcess.recompile()
+
+# Headless render: arm a recorder in sclang, then send the pattern over GHCi Tidal
+sclang -i tidal <<'SC'
+(SuperDirt.start; s.waitForBoot { s.record("out/tidal.wav"); });
+SC
+#   d1 $ sound "bd sn hh sn"   (let it run music.cycles cycles)
+#   s.stopRecording            -> out/tidal.wav
+
+# Alternative (no SuperCollider): Strudel JS port renders the same mini-notation on Web Audio
+npm install @strudel/core @strudel/web
+```
+
+## Failure modes
+- Silent or zero-length WAV: SuperDirt didn't boot, no samples loaded, or no audio device. Check sclang output.
+- Pure-CI macOS has no real audio device — install a virtual device (BlackHole) and route output to it.
+- No standalone Tidal CLI binary — the Haskell engine is driven via the GHCi REPL (BootTidal.hs).
+- `Quarks.install("SuperDirt")` must be run once in the SuperCollider GUI before headless boot works.
+- Forgetting `s.stopRecording` leaves the file open / truncated.

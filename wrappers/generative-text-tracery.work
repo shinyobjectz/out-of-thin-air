@@ -1,0 +1,33 @@
+<!-- generated draft — needs validation -->
+# generative-text / tracery
+
+Tracery expands a JSON/dict grammar of symbols and rules — starting from `#origin#` — into a flattened plain-text string. Use it for bots, dialogue, procedural names, poems, and tweets. Nesting via `#symbol#`, modifiers like `.capitalize`/`.a`/`.s`, and inline `[key:#rule#]` variable assignment are the power features.
+
+controls do
+  generative-text.title: { label: "Title", type: "text" }
+  generative-text.start: { label: "Start symbol", type: "text" }
+  generative-text.samples: { label: "Samples", type: "range", min: 1, max: 50, step: 1 }
+  generative-text.seed: { label: "Random seed", type: "text" }
+  generative-text.modifiers: { label: "base_english modifiers", type: "toggle" }
+  generative-text.grammar: { label: "Grammar (JSON)", type: "textarea", file: "src/grammar.json" }
+end
+
+## Required reading
+- galaxykate/tracery — reference JS source + readme (official, Apache-2.0, Kate Compton): https://github.com/galaxykate/tracery
+- tracery.io docs site (official, Apache-2.0, Kate Compton): http://tracery.io/
+- aparrish/pytracery — Python port w/ tutorials/notebooks (community, Apache-2.0, Allison Parrish): https://github.com/aparrish/pytracery
+- tracery-grammar — maintained Node packaging (community, Apache-2.0): https://www.npmjs.com/package/tracery-grammar
+
+## Render
+```bash
+pip install tracery
+# expands src/grammar.json from the start symbol into out/output.txt (N samples)
+python -m tracery src/grammar.json
+```
+
+## Failure modes
+- Missing start symbol: `#origin#` must exist in the grammar or `flatten` returns the literal `((origin))`-style placeholder.
+- Forgetting `g.add_modifiers(base_english)` makes `.capitalize`/`.a`/`.s` no-ops (modifier name passes through literally).
+- Grammar values must be arrays of strings, not bare strings — `"place":"world"` iterates characters.
+- The stale `npm i tracery` (v1.0.3) and unmaintained reference JS differ subtly from `tracery-grammar`; pin the port you target.
+- Unbalanced `#` symbols or `[key:#rule#]` brackets silently break expansion rather than erroring.

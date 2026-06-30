@@ -1,0 +1,46 @@
+<!-- generated draft — needs validation -->
+# textiles / turtlestitch
+
+TurtleStitch is a browser-based Snap! visual-blocks environment for turning turtle-graphics code
+into embroidery-machine patterns (Tajima/DST, Melco/EXP) plus SVG/PNG previews. The core app has no
+headless CLI, so this wrapper drives the code-equivalent **TurtleThread** Python library to generate
+the same artifacts headlessly: a turtle program stitches a path and saves both an SVG preview and a
+`.dst` machine file.
+
+controls do
+  textiles.title: { label: "Title", type: "text" }
+  textiles.shape: { label: "Shape", type: "select", options: "square, triangle, hexagon, star" }
+  textiles.size: { label: "Side length (units)", type: "range", min: 50, max: 400, step: 10 }
+  textiles.stitch_length: { label: "Running-stitch length", type: "range", min: 5, max: 60, step: 5 }
+  textiles.color: { label: "Thread color", type: "color" }
+  textiles.export_format: { label: "Machine format", type: "select", options: "dst, exp, pes, jef" }
+end
+
+## Required reading
+- TurtleStitch official site / FAQ / resources — https://www.turtlestitch.org/ (official, AGPL-3.0; backface / Michael Aschauer et al.)
+- backface/turtlestitch source + OFFLINE.md + docs/API.md — https://github.com/backface/turtlestitch (official, AGPL-3.0)
+- TurtleThread docs (code-driven equivalent) — https://turtlethread.com/ (community, GPLv3; Marie Roald & Yngve Mardal Moe)
+- TurtleThread/TurtleThread repo — https://github.com/TurtleThread/TurtleThread (community, GPLv3)
+- EmbroidePy/pyembroidery (format engine) — https://github.com/EmbroidePy/pyembroidery (community, MIT)
+
+## Render
+```bash
+python3 -m venv venv && ./venv/bin/pip install turtlethread
+./venv/bin/python -c "import turtlethread; t=turtlethread.Turtle()
+with t.running_stitch(30):
+    for _ in range(4):
+        t.forward(200); t.right(90)
+t.save('square.svg'); t.save('square.dst')"
+```
+Writes `square.svg` (vector preview, openable in any browser) and `square.dst` (Tajima machine file).
+
+## Failure modes
+- Expecting a TurtleStitch CLI: there is none. The browser app exports only interactively via its
+  Export menu; use TurtleThread for any scripted/batch generation.
+- `running_stitch` is a context manager — stitches drawn outside its `with` block won't carry the
+  intended stitch type.
+- Stitch length too small relative to shape size produces huge stitch counts and slow saves; too
+  large skips detail. Tune `textiles.stitch_length` to the shape scale.
+- `.dst`/`.exp` carry no real color data; multicolor designs collapse unless you split color blocks
+  (or use the "ignore colors during export" toggle in TurtleStitch proper).
+- Open path / unclosed shape: ensure the turtle returns to its start so the stitched outline closes.

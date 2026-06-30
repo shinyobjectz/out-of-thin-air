@@ -1,0 +1,45 @@
+<!-- generated draft — needs validation -->
+# presentations / reveal.js
+
+reveal.js is an open-source HTML presentation framework (MIT). A deck is an `index.html` of nested `<section>` slides that renders as a self-contained, navigable web app — syntax-highlighted code, speaker notes, fragments, transitions, and themes. Primary deliverable is an interactive HTML deck; PDF is a first-class secondary export via `?print-pdf` or DeckTape.
+
+controls do
+  presentations.title: { label: "Deck title", type: "text" }
+  presentations.theme: { label: "Theme", type: "select", options: "black, white, league, beige, sky, night, serif, simple, solarized, dracula, moon, blood" }
+  presentations.transition: { label: "Transition", type: "select", options: "slide, fade, convex, concave, zoom, none" }
+  presentations.highlightTheme: { label: "Code highlight theme", type: "select", options: "monokai, github, atom-one-dark, zenburn, vs" }
+  presentations.slideNumber: { label: "Show slide numbers", type: "toggle" }
+  presentations.printPdf: { label: "Static/PDF export", type: "toggle" }
+end
+
+## Required reading
+- reveal.js official docs — https://revealjs.com/ (official, MIT; Hakim El Hattab & contributors)
+- hakimel/reveal.js repo + README — https://github.com/hakimel/reveal.js (official, MIT; Hakim El Hattab)
+- webpro/reveal-md (Markdown → reveal.js CLI, maintenance-only) — https://github.com/webpro/reveal-md (community, MIT; Lars Kappert)
+- astefanutti/decktape (headless PDF export) — https://github.com/astefanutti/decktape (community, MIT; Antonio Stefanutti)
+- Quarto reveal.js format docs — https://quarto.org/docs/presentations/revealjs/ (Posit, PBC; docs CC / Quarto GPL-2.0)
+
+## Render
+```bash
+# Markdown authoring path (simplest)
+npm install -g reveal-md
+
+# Live preview server (http://localhost:1948)
+reveal-md slides.md --theme black --highlight-theme monokai
+
+# Self-contained static HTML site
+reveal-md slides.md --static _site --theme black
+
+# Flattened PDF (headless Chromium)
+reveal-md slides.md --print deck.pdf
+# or against any served deck:
+#   npm install -g decktape && decktape reveal --fragments http://localhost:8000 deck.pdf
+```
+
+## Failure modes
+- `reveal-md --print` / DeckTape need a headless Chromium; PDF export fails without it (static HTML export does not).
+- In the browser, PDF is reached only via the `?print-pdf` URL fragment then Print → Save as PDF — not the normal view.
+- Markdown slide separators matter: `---` (with blank lines) splits horizontal slides, `--` vertical; mixing them up collapses slides.
+- Speaker notes open in a second window with the S key — blocked by popup blockers.
+- Native HTML path: forgetting `Reveal.initialize()` (or the plugin scripts) yields a blank/unstyled page.
+- reveal-md is maintenance-only; for actively maintained Markdown→deck use MkSlides or Quarto.

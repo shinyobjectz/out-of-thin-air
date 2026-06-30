@@ -1,0 +1,27 @@
+# Code as Anything
+
+Open-source **Code-as-X** router — compose polyglot tool chains from `.work`
+sessions.
+
+## Layout
+
+- `cli/` — nexus worktop (catalog, router, API, sessions, UI)
+- `tools/` — host runners (`run.sh`, `steps/`, hardware, models, render)
+- `skill/` — agent skill (`skill/SKILL.md`) packaged with the project
+- `wrappers/` — one `.work` file per maintained tool (`category-tool.work`)
+- `eval/` — blind agent scenarios + rubrics
+- `Justfile` — portable CLI (project-only install)
+
+## Polyglot rule
+
+The spine is `.work` + `oota new` / `oota run`. Native toolchains
+run **locally on the host** via `tools/steps/`.
+
+## Links
+
+- Worktop: [[projects/out-of-thin-air/cli]]
+- Catalog: [[projects/out-of-thin-air/cli/catalog]]
+- Router: [[projects/out-of-thin-air/cli/router]]
+- Media stack: [[projects/out-of-thin-air/media]]
+- Agent skill: [[projects/out-of-thin-air/skill/SKILL]]
+- Research survey: `out-of-thin-air.md`

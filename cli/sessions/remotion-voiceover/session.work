@@ -1,0 +1,27 @@
+# Remotion intro with voiceover
+
+Golden-path media session — local TTS + Remotion scaffold.
+
+card do
+  board: "code-as"
+  status: "draft"
+  slug: "remotion-voiceover"
+end
+
+## Requirements
+
+Short product intro video with narration. React/Remotion composition, optional
+Remocn blur-reveal. Local TTS — no API keys.
+
+chain do
+  audio: tts-local
+  video: remotion
+end
+
+params do
+  audio.text: "Welcome to code as anything. This voiceover was generated locally."
+  audio.model: "kokoro-tts"
+  video.title: "Intro"
+  video.duration: "10"
+  video.fps: "30"
+end

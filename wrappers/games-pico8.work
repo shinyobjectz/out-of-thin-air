@@ -1,0 +1,43 @@
+<!-- generated draft — needs validation -->
+# games / pico8
+
+PICO-8 is Lexaloffle's commercial fantasy console: a whole game is a single editable Lua/text cartridge (`.p8`) with `_init`/`_update`/`_draw` loops plus pixel/sound/map data, rendered at 128x128 in 16 colors. The paid native binary runs carts headless and exports a self-contained **HTML+JS web player** the artifact shell can iframe and play.
+
+controls do
+  games.title: { label: "Cart title", type: "text" }
+  games.export_format: { label: "Export format", type: "select", options: "html, bin, png, gif" }
+  games.headless_run: { label: "Headless run (-x execute-and-exit)", type: "toggle" }
+  games.minify: { label: "Minify with shrinko8", type: "toggle" }
+  games.source: { label: "Cartridge source", type: "textarea", file: "src/cart.p8" }
+end
+
+## Required reading
+- PICO-8 Manual (Lexaloffle, official, proprietary docs) — CLI `-x`/`-export`, `EXPORT` command, headless builds: https://www.lexaloffle.com/pico8_manual.txt
+- PICO-8 API Cheatsheet (iiviigames, community) — Lua API reference: https://iiviigames.github.io/pico8-api/
+- awesome-PICO-8 (pico-8 org, community, CC0) — tools/carts/libraries index: https://github.com/pico-8/awesome-PICO-8
+- Code-Vibing with AI: Building a Pico-8 Game (lgallardo.com, community blog) — Claude Code workflow: https://lgallardo.com/2025/11/09/pico8-ai-game-development/
+- Claude Code and PICO-8 (Lexaloffle BBS, community forum): https://www.lexaloffle.com/bbs/?tid=153543
+
+## Render
+```bash
+# Install (paid): purchase + download from https://www.lexaloffle.com/pico-8.php
+# macOS symlink so `pico8` is on PATH:
+ln -s /Applications/PICO-8.app/Contents/MacOS/pico8 /usr/local/bin/pico8
+
+# Web export (primary deliverable): writes game.html + game.js
+pico8 src/cart.p8 -export "game.html"
+
+# Headless run-and-exit (build/data carts, no display/sound/input):
+pico8 -x src/cart.p8
+
+# Optional minify + token/char/compressed budget (no binary needed):
+python shrinko8.py src/cart.p8 out.p8 --minify
+python shrinko8.py src/cart.p8 out.p8 --count
+```
+
+## Failure modes
+- `pico8` not on PATH — the binary is paid and not in brew/apt; install from lexaloffle.com and symlink (macOS path above).
+- Cart exceeds the 8192-token or compressed-size limit — run `shrinko8 --count` to check, `--minify` to shrink.
+- Paths are relative to cwd, NOT the PICO-8 virtual filesystem — pass real OS paths to `-export`.
+- A bare `.p8` renders as code and a `.p8.png` as an image; only the HTML export is playable in the shell — always export to `html` for a play experience.
+- Missing/wrong header lines (`pico-8 cartridge ...`, `version NN`, `__lua__`) make the cart unloadable.

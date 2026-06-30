@@ -1,0 +1,51 @@
+<!-- generated draft — needs validation -->
+# diagrams / structurizr
+
+Structurizr is a C4-model "diagrams as code" toolset. Author a software
+architecture model in the Structurizr DSL (`.dsl`), then export views to
+diagram-as-code text — Mermaid, PlantUML, DOT, WebSequenceDiagrams, Ilograph, or
+workspace JSON — using the Structurizr CLI. The `.dsl` is the diffable artifact;
+the CLI deliverable is text. Render to an image downstream (mermaid-cli, the
+PlantUML jar) or explore visually in Structurizr Lite.
+
+controls do
+  diagrams.title: { label: "Workspace title", type: "text" }
+  diagrams.format: { label: "Export format", type: "select", options: "mermaid, plantuml, plantuml/c4plantuml, plantuml/structurizr, websequencediagrams, ilograph, dot, json" }
+  diagrams.view: { label: "View type", type: "select", options: "systemContext, container, component" }
+  diagrams.dsl: { label: "DSL source", type: "textarea", file: "src/workspace.dsl" }
+end
+
+## Required reading
+- [Structurizr CLI docs (install + export)](https://docs.structurizr.com/cli) — official, Apache-2.0
+- [Structurizr DSL language reference](https://docs.structurizr.com/dsl) — official, Apache-2.0
+- [Getting started: export diagrams as code](https://docs.structurizr.com/getting-started/export-diagrams-as-code) — official
+- [Community tooling index (ports + plugins)](https://docs.structurizr.com/community) — official
+- [Simon Brown: Getting started with the Structurizr CLI](https://dev.to/simonbrown/getting-started-with-the-structurizr-cli-10c2) — community
+
+## Render
+```bash
+# install (macOS; needs Java 17+)
+brew install structurizr-cli   # brew install temurin if Java missing
+
+# export DSL -> diagram-as-code text
+structurizr.sh export -workspace src/workspace.dsl -format mermaid -output ./out
+ls ./out   # e.g. ./out/structurizr-SystemContext.mmd
+
+# OPTIONAL: render the exported text to an image
+npm i -g @mermaid-js/mermaid-cli
+mmdc -i ./out/structurizr-SystemContext.mmd -o ./out/diagram.svg
+
+# OPTIONAL: interactive visual explorer (auto-layout in browser on :8080)
+docker run -it --rm -p 8080:8080 -v "$PWD/src":/usr/local/structurizr structurizr/lite
+```
+
+## Failure modes
+- **No Java**: the CLI is a JVM app; `brew install temurin` (Java 17+) first.
+- **Expecting PNG/SVG from the CLI**: it cannot render images — output is text.
+  Chain to `mmdc` or the PlantUML jar, or use Structurizr Lite.
+- **DSL syntax**: every model element needs an identifier to be referenced in a
+  view; views must `include` elements and usually want `autolayout`.
+- **Format strings**: sub-formats use a slash (`plantuml/c4plantuml`), not a
+  space.
+- **Structurizr Lite volume**: mount the *directory* containing
+  `workspace.dsl`, not the file.

@@ -1,0 +1,57 @@
+<!-- generated draft — needs validation -->
+# fiction / ink
+
+inkle's open-source scripting language for branching interactive narrative. You
+write `.ink` (prose + choices + logic + stateful variables); `inklecate`
+compiles it to a `.json` story; the `inkjs` runtime plays that JSON in the
+browser, rendering narrative text and clickable choices while tracking variable
+and flow state across turns. Primary deliverable: an interactive HTML web player.
+
+controls do
+  fiction.title: { label: "Story title", type: "text" }
+  fiction.ink_source: { label: "ink source", type: "textarea", file: "src/story.ink" }
+  fiction.source_mode: { label: "Source mode", type: "select", options: "ink, json" }
+  fiction.play_mode: { label: "inklecate play mode (-p)", type: "toggle" }
+  fiction.count_visits: { label: "Count visits (-c)", type: "toggle" }
+  fiction.auto_advance: { label: "Auto-advance gather points", type: "toggle" }
+end
+
+## Required reading
+- Writing With Ink — full language guide (official, MIT, inkle Ltd): https://github.com/inkle/ink/blob/master/Documentation/WritingWithInk.md
+- ink homepage + web tutorial (official, inkle Studios): https://www.inklestudios.com/ink/web-tutorial/
+- inkle/ink-library — samples, tools, ports (official, MIT, inkle Ltd): https://github.com/inkle/ink-library
+- DeepWiki: Web and JavaScript (inkjs) usage (community, DeepWiki): https://deepwiki.com/inkle/ink-library/3.2-web-and-javascript
+
+## Render
+```bash
+# install compiler wrapper + runtime
+npm i inkjs inklecate
+
+# compile .ink -> .json
+npx inklecate -o out/story.json out/src/story.ink
+
+# headless smoke (runtime): print narrative + choices
+node -e "const{Story}=require('inkjs');const s=new Story(require('fs').readFileSync('out/story.json','utf8'));while(s.canContinue)process.stdout.write(s.Continue());s.currentChoices.forEach((c,i)=>console.log('['+i+'] '+c.text))"
+
+# pure-native alternative: interactive terminal play
+# ./inklecate -p out/src/story.ink
+```
+The HTML deliverable wraps `out/story.json` with an inkjs player: load the JSON
+into `new Story(json)`, drain `story.Continue()`, render `story.currentChoices`
+as buttons, and call `story.ChooseChoiceIndex(i)` on click. Persist with
+`story.state.toJson()` / `loadJson(...)`.
+
+## Failure modes
+- `inklecate` needs .NET (6+); the npm `inklecate` wrapper bundles a runner but
+  still requires the platform binary — verify with the smoke test.
+- `bladeink`, `inkcpp-py`, and `blade-ink` only PLAY compiled JSON; they do not
+  compile `.ink` — always run `inklecate` first.
+- A story must reach `-> END` (or a tunnel return); unterminated flow throws a
+  runtime error rather than ending cleanly.
+- Choices with conditions or once-only `*` vs sticky `+` behave differently —
+  exhausted once-only choices disappear, which can leave a knot with no choices
+  and no `-> END`, hanging the player.
+- `story.currentChoices` is only valid after `canContinue` is false; calling
+  `ChooseChoiceIndex` out of order throws.
+- Variable state lives in `story.variablesState`; reloading from JSON resets it
+  unless you persist + restore via `state.toJson`/`loadJson`.

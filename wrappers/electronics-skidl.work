@@ -1,0 +1,32 @@
+<!-- generated draft — needs validation -->
+# electronics / skidl
+
+SKiDL describes electronic circuits as Python code. You define `Part`s, `Net`s, and their connections in a script, then call `generate_netlist()` to emit a KiCad-format S-expression netlist (the primary text deliverable), plus optional XML BOMs and SPICE simulation. Python-only, MIT licensed.
+
+controls do
+  electronics.title: { label: "Title", type: "text" }
+  electronics.kicad_version: { label: "KiCad version", type: "select", options: "KICAD5, KICAD6, KICAD7, KICAD8, KICAD9" }
+  electronics.erc: { label: "Run ERC (electrical rules check)", type: "toggle" }
+  electronics.source: { label: "Circuit source", type: "textarea", file: "src/circuit.py" }
+end
+
+## Required reading
+- SKiDL official documentation — https://devbisme.github.io/skidl/ (official, MIT, devbisme / Dave Vandenbout)
+- devbisme/skidl source + README + examples — https://github.com/devbisme/skidl (official, MIT, devbisme / Dave Vandenbout)
+
+## Render
+```bash
+# install
+python3 -m venv /tmp/skidlenv && /tmp/skidlenv/bin/pip install skidl
+# KiCad symbol libs required for Part lookup; install + point KICAD_SYMBOL_DIR if unset
+#   macOS: brew install --cask kicad
+#   export KICAD_SYMBOL_DIR=/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols
+# render: run the script — it calls generate_netlist(file_=...)
+/tmp/skidlenv/bin/python src/circuit.py
+```
+
+## Failure modes
+- `Part('Device','R')` raises a library-not-found error when `KICAD_SYMBOL_DIR` is unset — install KiCad and export the symbols dir first.
+- There is no standalone `skidl` CLI binary; it is a library — always run it via `python your_script.py`.
+- Wrong `tool=` KiCad version vs installed libs causes lookup/format mismatch — match `generate_netlist(tool=...)` to your installed KiCad.
+- Output is a text netlist, not a visual schematic — import into KiCad eeschema/pcbnew to view graphically.

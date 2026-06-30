@@ -1,0 +1,67 @@
+# Code-as components
+
+**One universal shell** — [[components/artifact]] — renders every medium. The
+agent (or user) opens it in the browser (served by the nexus); not the session
+admin CLI. No per-medium clients: every artifact reduces to one of 8 render
+kinds (video, audio, pdf, image, svg, html, model3d, text).
+
+## Invoke
+
+```bash
+oota serve                           # serve THIS subtree's own nexus :4010
+oota open eval-remotion-science      # prints the browser URL (any medium)
+```
+
+URL pattern (standalone nexus):
+
+```
+http://localhost:4010/components/artifact?slug=<session-slug>
+```
+
+The shell auto-detects artifact kinds by scanning `out/`; a `player.work`
+`artifacts do` block overrides naming/ordering and declares multiple versions
+(the header's center tabs). See [[universal-shell-plan]].
+
+## UI policy
+
+Component surfaces use **[Basecoat UI](https://basecoatui.com/)** (CDN) plus shared primitives in
+[[components/lib/ui.js]] and shell CSS in [[components/design]].
+
+**Never use native system controls** in component shells — no `<select>`, `<input type="range">`,
+`<input type="checkbox">`, or `<video controls>` / `<audio controls>`. Build or reuse:
+
+| Need | Use |
+|------|-----|
+| Buttons, fields, tabs | Basecoat classes (`btn`, `field`, `tabs`, `select`) |
+| Dropdowns | Basecoat `select` (div + listbox) |
+| Text / textarea | `CodeAsUI` contenteditable `.ca-text` |
+| Sliders / scrubbing | `CodeAsUI` `.ca-scrub` (video transport + param ranges) |
+| Toggles | `CodeAsUI` `.ca-switch` |
+| Save / dirty state | `CodeAsUI.initSaveState` (the rail's **Save changes** button) |
+| Version tabs | `CodeAsUI.renderVersionTabs` (header center) |
+| Collapse rail | `CodeAsUI.initCollapse` (header left → preview-only) |
+| Artifact preview | `CodeAsUI.renderArtifact` (kind → renderer) |
+
+The single `artifact` shell handles every medium; no per-type layout.
+
+## UX model
+
+| Surface | Role |
+|---------|------|
+| **Header left** | Collapse toggle — hides the rail → preview-only. Persisted per slug. |
+| **Header center** | Version tabs — one per artifact (named, else 1·2·3). Switches the previewed version. |
+| **Header right** | **Export** — run chain + render the session deliverable. |
+| **Adjust rail** | Agent-defined `player.work` `controls do` — human-meaningful tweaks. |
+| **Save changes** (rail) | Dirty-aware. Persists params → `/session/adjust`; `file:`-bound controls → `/session/src`. Disabled ("Saved") when clean. |
+| **Stage** | Preview, renderer chosen by artifact `kind`. |
+
+Two verbs: **Save changes** persists edits to the code; **Export** produces the deliverable.
+
+## Agent contract
+
+1. Agent authors code in `cli/sessions/<slug>/out/` that emits a known-kind file.
+2. *(Optional)* Agent writes `player.work` `controls do` (human tweaks; add
+   `file:` for source-bound fields) + `artifacts do` (name/order versions).
+3. Agent opens: `oota open <slug>` — user sees the preview + Adjust rail.
+
+The admin CLI (`[[projects/out-of-thin-air/cli]]`) is for routing/sessions; the artifact shell is what users actually view.

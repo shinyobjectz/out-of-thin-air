@@ -1,0 +1,43 @@
+<!-- generated draft — needs validation -->
+# games / tic80
+
+TIC-80 is a free/open-source fantasy console for making tiny games. You author a single cart with a `TIC()` game-loop callback in one of ~10 embedded scripting languages, constrained to a 240x136 16-color display, 256-tile sheet, and 4-channel sound. Running headless via `tic80 --cli` turns it into a compiler: `load` a plain-text cart and `export` a self-contained playable HTML bundle (the primary deliverable — a browser-runnable game), native executables, sprites, GIF, or WAV.
+
+controls do
+  games.title: { label: "Title", type: "text" }
+  games.script: { label: "Scripting language", type: "select", options: "lua, js, fennel, ruby, wren, squirrel, janet, python, scheme, moon" }
+  games.export: { label: "Export target", type: "select", options: "html, win, linux, mac, rpi, sprites, map, track, sfx" }
+  games.scale: { label: "Window scale", type: "range", min: 1, max: 8, step: 1 }
+  games.bg: { label: "Background color index (0-15)", type: "range", min: 0, max: 15, step: 1 }
+  games.cart: { label: "Cart source", type: "textarea", file: "src/game.lua" }
+end
+
+## Required reading
+- TIC-80 Wiki (official, nesbox/TIC-80, MIT) — https://github.com/nesbox/TIC-80/wiki
+- Command-line arguments (official, MIT) — https://github.com/nesbox/TIC-80/wiki/Command-line-arguments
+- Supported Languages (official, MIT) — https://github.com/nesbox/TIC-80/wiki/supported-languages
+- API reference (official, MIT) — https://github.com/nesbox/TIC-80/wiki/API
+- TIC-80 The Missing Manual (community / XPUB) — https://hub.xpub.nl/sandbot/PrototypingTimes/tic80-manual.html
+- TIC-80 Cheat Sheet (community, skyelynwaddell) — https://skyelynwaddell.github.io/tic80-manual-cheatsheet/
+
+## Render
+```bash
+# install (verify formula at runtime)
+brew install tic80 || echo "fallback: https://nesbox.itch.io/tic80 OR build from source: git clone --recursive https://github.com/nesbox/TIC-80 && cd TIC-80/build && cmake .. && make"
+
+# headless export to a playable HTML bundle (compiler-like)
+tic80 --cli --skip --fs out --cmd "load src/game.lua & export html out/game.zip & exit"
+# -> out/game.zip = self-contained index.html + tic80.wasm/.js, plays in a browser
+
+# other artifacts: swap the export verb
+# tic80 --cli --fs out --cmd "load src/game.lua & export mac out/game.app & exit"
+# tic80 --cli --fs out --cmd "load src/game.lua & export sprites out/sprites.gif & exit"
+```
+
+## Failure modes
+- FREE official build refuses save/export ("PRO feature") — build from source (cmake) for an unrestricted binary, or buy PRO.
+- Forgetting `& exit` in `--cmd` — the process hangs open; always chain `& exit` for pipeline use.
+- Wrong `--fs` root — `load`/`export` paths are relative to the `--fs` sandbox dir, not your shell cwd.
+- Missing `// script:` (or lang-appropriate comment) metadata tag for non-Lua carts — the runtime defaults to Lua and fails to parse.
+- Serving the exported HTML from `file://` — it loads a `.wasm` and needs an HTTP origin; serve over http (`python3 -m http.server`).
+- Display/sound limits are hard: 240x136, 16 colors, 256 tiles, 4 channels — content that assumes more silently clips.

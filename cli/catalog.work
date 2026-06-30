@@ -1,0 +1,110 @@
+# Code-as-X catalog
+
+Structured reference for routing requirements → category → tool. The worktop and
+agent skill read this file. Wrappers with `controls do` blocks live in
+[[projects/out-of-thin-air/wrappers]].
+
+category :presentations do
+  summary: "Slide decks and technical talks — syntax-highlighted, exportable, version-controlled."
+  tools: marp, slidev, reveal.js, spectacle, quarto, deckary
+  default: marp
+  notes: "Marp = fast static export. Slidev = interactive Vue demos. Reveal = infrastructure."
+end
+
+category :video do
+  summary: "Deterministic motion graphics — frame-accurate, data-driven, CI-friendly."
+  tools: remotion, hyperframes, motion-canvas, manim
+  default: remotion
+  notes: "Remotion = primary leg + Remocn components + remotion-dev/skills. HyperFrames = plain HTML/GSAP."
+end
+
+category :audio do
+  summary: "Voiceover and narration — local HF TTS without API keys when hardware allows."
+  tools: tts-local
+  default: tts-local
+  notes: "See media/models.work. Run oota hardware first."
+end
+
+category :diagrams do
+  summary: "Architecture and system diagrams as text — diffable alongside code."
+  tools: mermaid, d2, plantuml, structurizr, python-diagrams
+  default: mermaid
+  notes: "Mermaid = GitHub-native. D2 = nested containers + TALA layout."
+end
+
+category :cad do
+  summary: "Parametric 3D models — hardware enclosures, mechanical parts."
+  tools: cadquery, openscad, freecad
+  default: cadquery
+  notes: "CadQuery = Python BREP. OpenSCAD = CSG functional."
+end
+
+category :electronics do
+  summary: "Schematics and PCB layout as code — netlists, reusable blocks."
+  tools: skidl, kicad-api
+  default: skidl
+  notes: "SKiDL → netlist → KiCad pcbnew Python API."
+end
+
+category :documents do
+  summary: "Typesetting and publishing — academic, legal, long-form."
+  tools: typst, latex, context
+  default: typst
+  notes: "Typst = incremental Rust backend. LaTeX = package ecosystem."
+end
+
+category :creative do
+  summary: "Generative art and creative coding — canvas, WebGL, installations."
+  tools: p5js, processing, openframeworks, threejs
+  default: p5js
+  notes: "p5.js = browser-first. openFrameworks = C++ performance."
+end
+
+category :music do
+  summary: "Algorithmic composition and live coding — algoraves, synthesis."
+  tools: sonic-pi, tone-js, tidal-cycles, supercollider, alda
+  default: sonic-pi
+  notes: "Sonic Pi = Ruby live loops. Tone.js = JS beds for Remotion. HF musicgen via oota models."
+end
+
+category :notation do
+  summary: "Sheet music engraving — publication-quality scores from text."
+  tools: lilypond
+  default: lilypond
+  notes: "LaTeX-like separation of content and layout rules."
+end
+
+category :fiction do
+  summary: "Interactive fiction and branching narratives — stateful storytelling."
+  tools: ink, twine, choicescript, renpy
+  default: ink
+  notes: "Ink = continuous script + game-engine API. Twine = passage nodes."
+end
+
+category :games do
+  summary: "Fantasy consoles and constrained game dev — pure code loops."
+  tools: pico8, tic80, love2d
+  default: pico8
+  notes: "PICO-8 = 128×128 token limits. LÖVE = unrestricted Lua."
+end
+
+category :typography do
+  summary: "Algorithmic type design — parametric glyphs and font families."
+  tools: metafont, fontparts
+  default: fontparts
+  notes: "FontParts = Python API across font editors."
+end
+
+category :textiles do
+  summary: "Knitting and embroidery from code — physical thread as output."
+  tools: knitout, turtlestitch
+  default: turtlestitch
+  notes: "knitout = machine opcodes. Turtlestitch = Logo turtle paths."
+end
+
+category :"generative-text" do
+  summary: "Procedural text from grammars — bots, dialogue, constrained generation."
+  tools: tracery
+  default: tracery
+  notes: "Strict authorial control vs LLM stochastic output."
+end
