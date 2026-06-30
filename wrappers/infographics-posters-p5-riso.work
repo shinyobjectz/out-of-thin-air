@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# infographics-posters / p5.riso
+
+p5.riso generates Risograph-print-ready artwork as separated ink layers. Each ink is a `Riso` layer drawn with p5.js calls; `exportRiso()` writes one PNG per ink (72 dpi). It is browser-only — to render headlessly on macOS, drive the sketch in headless Chromium (Puppeteer/Playwright) and capture the canvas or intercept the per-layer PNG downloads.
+
+controls do
+  infographics-posters.title: { label: "Title", type: "text" }
+  infographics-posters.colors: { label: "Ink colors (comma-separated)", type: "text" }
+  infographics-posters.scale: { label: "Scale (canvas px / 72 = inches)", type: "range" }
+  infographics-posters.sketch: { label: "Sketch source", type: "textarea", file: "src/sketch.html" }
+end
+
+## Required reading
+- p5.riso official docs + tutorials — https://antiboredom.github.io/p5.riso/ (official, ACSL 1.4; Sam Lavigne & Tega Brain; web by Crystal Chen, Paolla Bruno Dutra)
+- antiboredom/p5.riso source + getting-started — https://github.com/antiboredom/p5.riso (official, ACSL)
+- Secret Riso Club — Javascript & Riso — https://secretrisoclub.com/Javascript-Riso (community)
+- NYU IDM — P5 Riso Printing — https://idm.engineering.nyu.edu/index.php/p5-riso-printing/ (community)
+
+## Render
+```bash
+mkdir -p riso-smoke && cd riso-smoke && npm init -y && npm i puppeteer \
+  && curl -L https://raw.githack.com/antiboredom/p5.riso/master/lib/riso.js -o riso.js \
+  && curl -L https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js -o p5.min.js
+# load src/sketch.html in headless Chromium and capture the canvas:
+node -e "const p=require('puppeteer');(async()=>{const b=await p.launch();const pg=await b.newPage();await pg.goto('file://'+process.cwd()+'/sketch.html');await pg.waitForFunction(()=>document.querySelector('canvas'));const d=await pg.\$eval('canvas',c=>c.toDataURL());require('fs').writeFileSync('out.png',Buffer.from(d.split(',')[1],'base64'));await b.close();})()"
+```
+
+## Failure modes
+- Browser-only API: there is no Node renderer. Without headless Chromium nothing renders.
+- `exportRiso()`/`save()` triggers browser downloads — in headless mode intercept downloads (Playwright `page.on('download')`) or read buffers via `canvas.toDataURL`.
+- Non-deterministic output unless `random()`/`noise()` are seeded with `randomSeed`/`noiseSeed`.
+- 72 dpi default — small/blurry for print; scale the canvas up (px / 72 = inches).
+- SVG/PDF unsupported — image is the only deliverable kind.
+- ACSL license: not OSI-permissive; bars commercial/capitalist and law-enforcement/military use. Flag before bundling.

@@ -1,0 +1,31 @@
+<!-- generated draft — needs validation -->
+# maps-geo / kepler.gl
+
+kepler.gl renders large-scale geospatial maps (points, arcs, hexbins, heatmaps, trips, GeoJSON) as a single self-contained interactive HTML file. The Python `keplergl` package's `save_to_html()` is fully headless and deterministic: given identical data + JSON config, the emitted HTML is reproducible and version-controllable. The JSON config pins the visual (viewport, layers, color scales, filters); the CSV/GeoJSON is the data input.
+
+controls do
+  maps-geo.title: { label: "Title", type: "text" }
+  maps-geo.data: { label: "Data file (CSV/GeoJSON)", type: "text", file: "src/data.csv" }
+  maps-geo.config: { label: "kepler.gl JSON config", type: "textarea", file: "src/config.json" }
+  maps-geo.lat: { label: "Center latitude", type: "text" }
+  maps-geo.lng: { label: "Center longitude", type: "text" }
+  maps-geo.zoom: { label: "Zoom", type: "range" }
+end
+
+## Required reading
+- [kepler.gl official documentation](https://docs.kepler.gl/) — kepler.gl / Vis.gl (OpenJS Foundation), originally Uber (MIT)
+- [keplergl-jupyter user guide (save_to_html, add_data, config)](https://docs.kepler.gl/docs/keplergl-jupyter) — kepler.gl / Vis.gl (MIT)
+- [keplergl/kepler.gl GitHub repo](https://github.com/keplergl/kepler.gl) — Vis.gl / OpenJS Foundation (MIT)
+
+## Render
+```bash
+pip install keplergl pandas
+python3 -c "import pandas as pd; from keplergl import KeplerGl; df=pd.DataFrame({'lat':[37.77,40.71,34.05],'lng':[-122.42,-74.0,-118.24],'val':[1,2,3]}); m=KeplerGl(height=600); m.add_data(data=df, name='pts'); m.save_to_html(file_name='out_map.html', read_only=True); print('ok')"
+```
+
+## Failure modes
+- Image/PNG export is NOT headless — it only exists in the browser UI export modal (GitHub issue #974). Treat png as out of scope; html is the supported kind.
+- Basemap tiles are fetched at VIEW time (Mapbox/Carto), not at build time. The emitted HTML needs network when opened. For a no-tile map use a Carto/positron style or a data-only deck layer.
+- Non-deterministic output if config is not pinned — always commit an explicit JSON config (`m.config`) rather than relying on auto-generated defaults.
+- The npm/JS `kepler.gl` path renders only in a live browser DOM (WebGL); it is not headless-deterministic. Use the Python path for OOTA.
+- Pin `keplergl==0.3.7` + pandas for reproducibility; add geopandas only if GeoDataFrame/shapefile input is needed.

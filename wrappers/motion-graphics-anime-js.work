@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# motion-graphics / anime.js
+
+anime.js is a lightweight (~10KB) ES-module JS animation engine (npm `animejs`, v4, MIT, Julian Garnier). It animates DOM/CSS, SVG (path morph + line draw), and plain JS objects with timelines, staggers, and spring easing. It has no file output of its own — OOTA drives it inside headless Chromium, seeks the timeline clock at fixed frame intervals (`anim.seek(ms)`), screenshots each frame, and assembles with ffmpeg for deterministic, version-controllable video. A self-contained animated HTML page is the secondary deliverable.
+
+controls do
+  motion-graphics.title: { label: "Title", type: "text" }
+  motion-graphics.fps: { label: "FPS", type: "range" }
+  motion-graphics.duration: { label: "Duration (ms)", type: "range" }
+  motion-graphics.kind: { label: "Output kind", type: "select", options: ["video", "html"] }
+end
+
+## Required reading
+- Official anime.js v4 docs (Julian Garnier, MIT) — https://animejs.com/documentation/
+- animejs-skills (BowTiedSwan, community, MIT) — https://github.com/BowTiedSwan/animejs-skills
+- animejs-best-practices (davidosemwegie, community) — https://github.com/davidosemwegie/animejs-best-practices
+- claudedesignskills/animejs (freshtechbro, community) — https://github.com/freshtechbro/claudedesignskills
+
+## Render
+```bash
+# install
+mkdir -p /tmp/anime-smoke && cd /tmp/anime-smoke && npm init -y
+npm install animejs playwright && npx playwright install chromium
+command -v ffmpeg || brew install ffmpeg
+
+# render: headless seek-and-capture -> mp4
+# 1. scene.html loads anime.js UMD, exposes paused timeline on window.tl
+# 2. capture.mjs: for f in 0..N-1 -> tl.seek(f/fps*1000) + page.screenshot
+# 3. assemble
+node capture.mjs
+ffmpeg -framerate 30 -i frame_%d.png -pix_fmt yuv420p out.mp4
+```
+
+## Failure modes
+- Letting RAF/wall-clock advance the animation breaks determinism — always set `paused:true` and step via `anim.seek(ms)`.
+- Unpinned animejs/chromium versions yield non-byte-stable renders — pin both.
+- First screenshot before fonts load produces flaky frames — await font loading.
+- Expecting 3D — anime.js is 2D DOM/SVG only; pair with three.js for 3D.
+- Pure-Node (no browser) only tweens JS objects to data, not visual frames.

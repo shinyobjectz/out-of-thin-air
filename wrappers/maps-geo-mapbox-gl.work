@@ -1,0 +1,50 @@
+# maps-geo / mapbox-gl
+
+<!-- generated draft — needs validation -->
+
+Render a Mapbox / MapLibre GL JSON style + viewport spec headlessly to a PNG
+raster image. The deterministic, diff-friendly source is a plain JSON style plus
+a viewport (center + zoom, width, height). Rendering uses MapLibre GL Native via
+`mbgl-renderer` (Node) — no browser. Mapbox-hosted tiles need a
+`MAPBOX_ACCESS_TOKEN`; self-hosted/MapLibre styles with embedded GeoJSON render
+fully offline.
+
+controls do
+  maps-geo.title: { label: "Title", type: "text" }
+  maps-geo.center: { label: "Center (lon,lat)", type: "text" }
+  maps-geo.zoom: { label: "Zoom", type: "range" }
+  maps-geo.width: { label: "Width (px)", type: "text" }
+  maps-geo.height: { label: "Height (px)", type: "text" }
+  maps-geo.style: { label: "GL style JSON", type: "textarea", file: "src/style.json" }
+end
+
+## Required reading
+
+- Mapbox Agent Skills (official, Mapbox Inc.) — https://github.com/mapbox/mapbox-agent-skills ; docs https://docs.mapbox.com/api/guides/mapbox-agent-skills/ — install `npx skills add mapbox`. App-building guidance, not headless rendering.
+- Mapbox MCP Server (official) — https://www.mapbox.com/blog/introducing-the-mapbox-model-context-protocol-mcp-server
+- `mbgl-renderer` (MIT) — static GL style -> PNG via MapLibre GL Native.
+- `pymgl` (Python alt) — https://github.com/brendan-ward/pymgl
+- mapbox-use-guide (community, unverified) — https://skillsmp.com/skills/hnkatze-bipbipbackoffice2-1-claude-skills-mapbox-use-guide-skill-md
+
+## Render
+
+```bash
+npm add mbgl-renderer
+# Mapbox-hosted tiles only: export MAPBOX_ACCESS_TOKEN=pk....
+npx mbgl-render src/style.json out/map.png 512 256 -c -79.86,32.68 -z 10
+# Linux headless CI: prefix with `xvfb-run -a`. macOS runs natively.
+```
+
+## Failure modes
+
+- **`mapbox-gl-js` is NOT the headless path.** The browser client uses a WebGL
+  canvas and has tile-load races — do not depend on a browser for OOTA.
+- **Missing token / blank tiles.** Mapbox-hosted styles/tiles need
+  `MAPBOX_ACCESS_TOKEN`. Prefer self-hosted/MapLibre styles with embedded GeoJSON
+  for token-free deterministic builds.
+- **Linux: no X server.** Native renderer needs `xvfb-run -a ...` on headless
+  Linux. macOS does not.
+- **Node version mismatch.** Prebuilt `@maplibre/maplibre-gl-native` binaries
+  gate supported Node versions — verify the matrix on the target machine.
+- **Non-reproducible tiles.** Pin tile sources to specific tileset/versions; use
+  embedded GeoJSON for a self-contained component.

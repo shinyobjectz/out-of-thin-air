@@ -1,0 +1,31 @@
+<!-- generated draft — needs validation -->
+# maps-geo / leaflet
+
+Authors a self-contained interactive Leaflet map as a single portable `.html` file. The deterministic path uses Python's folium to compile a Leaflet map (tile layer + marker) to HTML via `map.save()` — no browser or server needed.
+
+controls do
+  maps-geo.title: { label: "Title", type: "text" }
+  maps-geo.lat: { label: "Center latitude", type: "text" }
+  maps-geo.lng: { label: "Center longitude", type: "text" }
+  maps-geo.zoom: { label: "Zoom", type: "range" }
+  maps-geo.marker_popup: { label: "Marker popup", type: "text" }
+end
+
+## Required reading
+- [Leaflet API reference](https://leafletjs.com/reference.html) — BSD-2-Clause, canonical library docs (Leaflet maintainers).
+- [folium](https://github.com/python-visualization/folium) — MIT, Python wrapper emitting self-contained Leaflet HTML (strongest deterministic path).
+- [leafmap](https://leafmap.org/) — MIT, multi-backend mapping toolkit with export helpers (Qiusheng Wu).
+- [anthropics/skills](https://github.com/anthropics/skills) — official SKILL.md authoring reference.
+
+## Render
+```bash
+python3 -m venv /tmp/lf && /tmp/lf/bin/pip install folium
+/tmp/lf/bin/python -c "import folium; m=folium.Map(location=[37.7749,-122.4194], zoom_start=12); folium.Marker([37.7749,-122.4194], popup='SF').add_to(m); m.save('out/map.html')"
+```
+
+## Failure modes
+- folium injects a random map div id per save → output not byte-stable; set the element id explicitly if you need reproducible diffs.
+- Tile imagery is fetched live from the tile server → HTML is deterministic but rendered pixels depend on the live source; pin the tile URL template + attribution.
+- Don't target Leaflet 2.0 (alpha, ESM-only) for stable output — pin to 1.9.x.
+- PNG export via Puppeteer/leaflet-headless is non-deterministic (live tiles); cache/stub tiles to mitigate.
+- Pin CDN version + SRI hashes in hand-authored HTML so the artifact stays self-contained and verifiable.

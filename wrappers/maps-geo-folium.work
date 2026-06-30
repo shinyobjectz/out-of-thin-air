@@ -1,0 +1,31 @@
+<!-- generated draft — needs validation -->
+# maps-geo / folium
+
+Folium wraps Leaflet.js to render interactive web maps from declarative Python. Build the map (center, zoom, markers, layers), call `m.save("map.html")`, and get one self-contained HTML file with Leaflet JS/CSS inlined. The save step is fully headless and deterministic; only live viewing fetches remote basemap tiles.
+
+controls do
+  maps-geo.title: { label: "Title", type: "text" }
+  maps-geo.lat: { label: "Center latitude", type: "text" }
+  maps-geo.lon: { label: "Center longitude", type: "text" }
+  maps-geo.zoom: { label: "Zoom", type: "range" }
+  maps-geo.tiles: { label: "Tile provider", type: "select", options: ["OpenStreetMap", "CartoDB positron", "CartoDB dark_matter"] }
+end
+
+## Required reading
+- Folium official docs (user guide + API), MIT — https://python-visualization.github.io/folium/latest/
+- Folium GitHub repo (source + examples/), MIT — https://github.com/python-visualization/folium
+- Real Python: Create Web Maps From Your Data (community guide) — https://realpython.com/python-folium-web-maps-from-data/
+- No official Anthropic skill — drive directly via the Python toolchain.
+
+## Render
+```bash
+python3 -m venv /tmp/folium-venv
+/tmp/folium-venv/bin/pip install 'folium==0.20.0'
+bash tools/steps/maps-geo-folium.sh "$SESSION" "$OUT"
+```
+
+## Failure modes
+- Blank basemap = no network: default OSM tiles load live in the browser. For offline/reproducible maps, point `tiles=` at a local tileset or static raster.
+- `m.save()` is HTML-only — there is no native PNG/PDF export. Headless-screenshot the saved HTML (Playwright/Selenium) for raster output.
+- Choropleth needs the `key_on` field to match the GeoJSON feature property exactly, and the dataframe key column to match those values, or regions render uncolored.
+- Pin `folium==0.20.0`; minor releases change emitted markup and break byte-for-byte reproducibility.

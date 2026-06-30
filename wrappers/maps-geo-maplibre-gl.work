@@ -1,0 +1,47 @@
+<!-- generated draft — needs validation -->
+# maps-geo / maplibre-gl
+
+MapLibre GL renders interactive vector/raster maps from a declarative MapLibre
+Style Spec JSON (version 8). The same `style.json` drives both renderers: the
+primary OOTA deliverable is a deterministic static-map **PNG** produced by
+`@maplibre/maplibre-gl-native` with no browser; the alternate path is a
+self-contained interactive **HTML** map using `maplibre-gl` (headless-renderable
+via Puppeteer). Pin renderer versions and vendor glyph/sprite/tile assets for
+reproducible output.
+
+controls do
+  maps-geo.title: { label: "Title", type: "text" }
+  maps-geo.center: { label: "Center (lon,lat)", type: "text" }
+  maps-geo.zoom: { label: "Zoom", type: "range", min: 0, max: 22, step: 1 }
+  maps-geo.width: { label: "Width (px)", type: "text" }
+  maps-geo.height: { label: "Height (px)", type: "text" }
+  maps-geo.bg: { label: "Background color", type: "color" }
+  maps-geo.ratio: { label: "Pixel ratio (DPI)", type: "range", min: 1, max: 4, step: 1 }
+  maps-geo.style: { label: "MapLibre GL style", type: "textarea", file: "src/style.json" }
+end
+
+## Required reading
+- MapLibre Style Spec (official, BSD-3-Clause; the version-8 JSON source of truth) — https://maplibre.org/maplibre-style-spec/
+- MapLibre GL JS docs + examples (official, BSD-3-Clause) — https://maplibre.org/maplibre-gl-js/docs/
+- @maplibre/maplibre-gl-native (official Node bindings, prebuilt binaries, BSD-2-Clause) — https://github.com/maplibre/maplibre-native/tree/main/platform/node
+- awesome-maplibre (MapLibre org; curated tools/plugins) — https://github.com/maplibre/awesome-maplibre
+
+## Render
+```bash
+# Image (canonical, headless, deterministic) — GL Native + sharp:
+npm i @maplibre/maplibre-gl-native sharp
+node -e "const mbgl=require('@maplibre/maplibre-gl-native');const sharp=require('sharp');const fs=require('fs');const style=JSON.parse(fs.readFileSync('out/src/style.json','utf8'));const W=512,H=512;const map=new mbgl.Map({ratio:1});map.load(style);map.render({width:W,height:H,zoom:0,center:[0,0]},(e,buf)=>{if(e)throw e;map.release();sharp(buf,{raw:{width:W,height:H,channels:4}}).toFile('out/map.png',x=>{if(x)throw x;console.log('wrote out/map.png');});});"
+
+# HTML (interactive) — just open the generated file:
+open out/index.html
+# Headless PNG from the HTML: load in Puppeteer, await map 'idle', screenshot.
+```
+
+## Failure modes
+- Remote tile/glyph/sprite sources introduce network nondeterminism — vendor mbtiles/PMTiles + a local glyphs/sprite set for reproducible builds.
+- Text/symbol layers render blank without a `glyphs` URL (or local SDF set); icon layers need a `sprite`.
+- Pixel output drifts across renderer versions and DPI — pin `maplibre-gl` / `@maplibre/maplibre-gl-native` and the `ratio`.
+- GL Native prebuilt binaries gate supported Node versions (22/24/26); a mismatch fails the native bind at install.
+- `map.render()` callback returns a RAW RGBA buffer, not a PNG — must wrap with `sharp({raw:{width,height,channels:4}})`; forgetting `map.release()` leaks the renderer.
+- Browser path: screenshotting before `map.on('idle')` captures a half-loaded map.
+- Do NOT substitute `mapbox-gl` (non-free since v2) — MapLibre is the BSD fork.

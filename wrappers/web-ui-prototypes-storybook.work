@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# web-ui-prototypes / Storybook + Playwright
+
+Author a UI component as a deterministic Storybook story, then render it headlessly with Playwright/Chromium to capture a byte-stable PNG screenshot. The story file (`.stories.jsx`) is the version-controllable source of truth; the screenshot is the image deliverable.
+
+controls do
+  web-ui-prototypes.title: { label: "Story title", type: "text" }
+  web-ui-prototypes.label: { label: "Button label", type: "text" }
+  web-ui-prototypes.viewport: { label: "Viewport width", type: "select", options: ["375", "768", "1280"] }
+end
+
+## Required reading
+
+- Storybook test-runner (official docs): https://storybook.js.org/docs/writing-tests/integrations/test-runner — storybookjs/test-runner: https://github.com/storybookjs/test-runner
+- Portable stories for Playwright CT (official): https://storybook.js.org/docs/api/portable-stories/portable-stories-playwright
+- webapp-testing (Anthropic official skill): https://github.com/anthropics/skills — Playwright-based web app testing (closest official match)
+- playwright-skill (community): https://github.com/lackeyjb/playwright-skill — writes+runs Playwright on the fly, returns screenshots (check repo LICENSE)
+
+## Render
+
+```bash
+# scaffold once: npm create storybook@latest -- --yes my-sb
+npm i -D @storybook/test-runner playwright http-server wait-on
+npx playwright install --with-deps chromium
+
+npx storybook build -o storybook-static
+npx http-server storybook-static -p 6006 &
+npx wait-on tcp:6006
+node -e "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage();await p.goto('http://localhost:6006/iframe.html?id=example-button--primary&viewMode=story');await p.waitForSelector('#storybook-root button');await p.screenshot({path:'button-primary.png'});await b.close();})()"
+# full suite: npx test-storybook --ci --url http://localhost:6006
+```
+
+## Failure modes
+
+- Non-deterministic screenshots: animations/web fonts/timezone/random data drift bytes. Disable CSS animations, pin fonts + locale + TZ, fix viewport, seed randomness.
+- Chromium version drift changes anti-aliasing — pin the Playwright/Chromium version in CI.
+- `#storybook-root` selector empty: story failed to render; check console via test-runner or `page.on('console')` before screenshotting.
+- Storybook 9 built-in addon is Vitest browser-mode now; for the headless screenshot path use the standalone `@storybook/test-runner`, not the built-in addon.
+- Forgetting `wait-on`: screenshotting before the static server is up yields a blank/connection-refused page.

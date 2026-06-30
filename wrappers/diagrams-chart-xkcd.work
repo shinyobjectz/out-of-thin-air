@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# diagrams / chart-xkcd
+
+Render a "sketchy / hand-drawn / cartoony" XKCD-styled chart as inline SVG. You author a deterministic chart config (title, axis labels, labels, datasets) and chart.xkcd plots it into an `<svg>` node, which a headless Chromium serializes to a diff-able SVG (or rasterizes to PNG). The config object is the canonical source artifact; re-rendering is reproducible-enough rather than bit-identical because of the hand-drawn jitter.
+
+controls do
+  diagrams.title: { label: "Title", type: "text" }
+  diagrams.chartType: { label: "Chart type", type: "select", options: ["Line", "Bar", "StackedBar", "XY", "Pie", "Radar"] }
+  diagrams.xLabel: { label: "X axis label", type: "text" }
+  diagrams.yLabel: { label: "Y axis label", type: "text" }
+  diagrams.config: { label: "Chart config (JSON)", type: "textarea", file: "src/chart.config.json" }
+end
+
+## Required reading
+- chart.xkcd official docs + examples (official, MIT) — https://timqian.com/chart.xkcd/ — timqian (Tim Qian)
+- chart.xkcd README / src (official, MIT) — https://github.com/timqian/chart.xkcd
+- chart.xkcd-vue (community wrapper, MIT) — https://github.com/shiyiya/chart.xkcd-vue
+- chart.xkcd-react (community wrapper, MIT) — https://github.com/obiwankenoobi/chart.xkcd-react
+
+## Render
+```bash
+# hermetic/offline: bundle chart.xkcd locally rather than via CDN
+npm i chart.xkcd puppeteer
+# render.js loads node_modules/chart.xkcd/dist/chart.xkcd.min.js into a headless
+# page, runs `new chartXkcd.<Type>(svg, config)`, then writes svg.outerHTML -> out.svg
+node render.js
+```
+
+## Failure modes
+- chart.xkcd is browser/DOM-only — it needs a real `<svg>` element and `document`; there is no Node/CLI API. You MUST drive it through a headless browser.
+- Hand-drawn jitter uses pseudo-random distortion → SVG bytes vary run to run. Pin viewport, disable animation, seed RNG if strict determinism is needed.
+- The xkcd-script font must be embedded for portable rendering; missing-font rendering falls back to a plain typeface.
+- Prefer local npm bundle over the jsDelivr CDN for offline/hermetic builds.
+- Pie/Radar configs differ from Line/Bar — check the docs for per-class config shape.

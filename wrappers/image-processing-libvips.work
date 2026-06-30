@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# image-processing / libvips
+
+libvips is a fast, low-memory, demand-driven image processing library driven here through its `vips` CLI. It is fully deterministic and headless: every operation is reachable as `vips <op> in out [args]`, and the OUTPUT artifact is always a raster image. This wrapper generates a solid-colour PNG of the requested size as a minimal, valid starting point.
+
+controls do
+  image-processing.title: { label: "Title", type: "text" }
+  image-processing.width: { label: "Width (px)", type: "range" }
+  image-processing.height: { label: "Height (px)", type: "range" }
+  image-processing.colour: { label: "Fill colour", type: "color" }
+end
+
+## Required reading
+- [libvips API / CLI reference](https://www.libvips.org/API/current/) — official, LGPL-2.1 (library); docs CC. Authoritative operation reference.
+- [libvips GitHub (source + releases + bindings wiki)](https://github.com/libvips/libvips) — official, LGPL-2.1-or-later. Bindings: https://github.com/libvips/libvips/wiki/Language-bindings
+- [libvips-image (community)](https://lobehub.com/skills/openclaw-skills-libvips-image) — community LobeHub listing (openclaw-skills); license unverified. Treat with caution.
+
+## Render
+```bash
+# install (macOS)
+brew install vips
+
+# render: solid-colour PNG, then inspect
+vips black out/libvips.png 256 256
+vips colourspace out/libvips.png out/libvips_rgb.png srgb
+vipsheader out/libvips.png
+file out/libvips.png
+```
+
+## Failure modes
+- Pin the libvips version — operation defaults and format support change across minors (e.g. 8.18 added dcrawload/UltraHDR).
+- The OUTPUT is always an image even when the input is PDF/SVG (libvips rasterizes); do not expect vector output.
+- For hermetic builds prefer `pip install pyvips[binary]` or `npm install sharp` (both bundle their own libvips) instead of a system `brew install vips`.
+- `vips black` produces a 1-band b-w image; run `colourspace ... srgb` if you need an RGB raster.

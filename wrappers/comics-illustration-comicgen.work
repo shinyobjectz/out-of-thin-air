@@ -1,0 +1,43 @@
+<!-- generated draft — needs validation -->
+# comics-illustration / comicgen
+
+Generate deterministic cartoon-character comic panels as SVG with Gramener's open-source comicgen. Pick a character, angle, emotion, and pose; each invocation maps to a fixed, pre-authored SVG (identical params -> byte-identical markup). Speech bubbles and multi-panel layout are composed by the wrapper, not the core primitive. Best for data-storytelling panels, illustrated docs, and dialogue strips — not free-form AI art.
+
+controls do
+  comics-illustration.title: { label: "Title", type: "text" }
+  comics-illustration.name: { label: "Character", type: "select", options: ["ava", "ethan", "dey", "aryan"] }
+  comics-illustration.angle: { label: "Camera angle", type: "select", options: ["front", "side"] }
+  comics-illustration.emotion: { label: "Emotion", type: "select", options: ["normal", "cry", "wink", "smile", "angry"] }
+  comics-illustration.pose: { label: "Pose", type: "select", options: ["normal", "angry", "explaining"] }
+  comics-illustration.dialogue: { label: "Dialogue", type: "text" }
+end
+
+## Required reading
+
+- comicgen (Gramener) — MIT, open source: https://github.com/gramener/comicgen
+- Hosted explorer & docs: https://gramener.com/comicgen/
+- Asset library is Git LFS — `git-lfs` required for a self-host clone.
+
+## Render
+
+```bash
+# install (vendor + pin for reproducible offline builds)
+npm install comicgen
+
+# author + render (npm module, synchronous, zero-network — preferred)
+node -e "const c=require('comicgen'); const fs=require('fs'); const svg=c({name:'ava',emotion:'cry',pose:'angry'}); fs.writeFileSync('out/comic.svg', svg);"
+
+# optional deterministic raster: pipe composite SVG through resvg-js
+npx resvg-js out/comic.svg out/comic.png   # or: sharp
+
+# fallback (non-hermetic, network): hosted REST
+# curl 'https://gramener.com/comicgen/v1/comic?name=ava&emotion=cry&pose=angry' -o out/comic.svg
+```
+
+## Failure modes
+
+- **Missing assets:** repo clone without `git-lfs` yields broken/empty SVG; vendor LFS artwork or run `comicserver`.
+- **Invalid enum:** unknown name/angle/emotion/pose silently degrades — stick to each character's enumerated set.
+- **No bubbles/layout from core:** speech bubbles, panels, multi-character scenes must be composed by wrapping the returned SVG fragments yourself.
+- **PNG via web component (`ext=png`)** needs a DOM/browser — for headless raster use resvg-js/sharp instead.
+- **Hosted REST is non-hermetic** — network dependency breaks reproducible/offline builds; use the npm module.

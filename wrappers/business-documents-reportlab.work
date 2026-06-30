@@ -1,0 +1,30 @@
+# business-documents / RML (ReportLab)
+
+<!-- generated draft — needs validation -->
+
+ReportLab is the canonical open-source Python library for generating PDFs from code. It renders headlessly (no browser, no display server) and produces deterministic, diffable output — ideal for OOTA business documents like invoices, reports, and statements. This wrapper drives a small Python script that writes a valid PDF from a title parameter; swap in Platypus flowables for real multi-page documents.
+
+controls do
+  business-documents.title: { label: "Title", type: "text" }
+end
+
+## Required reading
+
+- [anthropics/skills — pdf](https://github.com/anthropics/skills/blob/main/skills/pdf/SKILL.md) — Anthropic official Agent Skills repo; the PDF skill uses ReportLab for generation. (official)
+- [ReportLab docs / User Guide](https://docs.reportlab.com/) — ReportLab Inc. official documentation. (official-docs, BSD)
+- [awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills) — community-curated skill catalog. (community, MIT)
+
+## Render
+
+```bash
+python3 -m venv /tmp/rl && /tmp/rl/bin/pip install reportlab
+/tmp/rl/bin/python out/make_doc.py
+file out/document.pdf
+```
+
+## Failure modes
+
+- ReportLab stamps `CreationDate`/`ModDate` by default — identical content yields differing bytes across runs. Override the info date if you need byte-stable diffs.
+- Non-JPEG image embedding needs `pip install pillow`; PNG `drawImage` fails without it.
+- Built-in fonts are the Type1 base-14 only; register TTFs via `pdfmetrics.registerFont` + `TTFont` and bundle the font files to avoid host-font drift.
+- Raw canvas does not paginate — use Platypus `SimpleDocTemplate` + flowables for content that overflows a page.

@@ -1,0 +1,50 @@
+<!-- generated draft — needs validation -->
+# web-ui-prototypes / frontend-design (Tailwind/shadcn)
+
+Author a distinctive, production-grade web UI as a self-contained HTML page using the
+official Anthropic `frontend-design` skill as guidance. Every color/type decision is
+derived from an explicit token plan (4–6 hex palette, 2+ typefaces, layout concept,
+one signature element). The deliverable is plain `html` + CSS that renders headlessly
+in any Chromium, so it is deterministic and version-controllable. No build step is
+required for the no-build path; the component path adds Node + Tailwind v4 + shadcn.
+
+controls do
+  web-ui-prototypes.title: { label: "Title", type: "text" }
+  web-ui-prototypes.concept: { label: "Layout concept + signature element", type: "textarea" }
+  web-ui-prototypes.palette: { label: "Palette (4–6 hex)", type: "text" }
+  web-ui-prototypes.accent: { label: "Accent color", type: "color" }
+end
+
+## Required reading
+
+- **frontend-design** (Anthropic, official, Apache-2.0) —
+  `/Users/shinyobjectz/.claude/plugins/marketplaces/claude-plugins-official/plugins/frontend-design/skills/frontend-design/SKILL.md`
+  · https://github.com/anthropics/claude-code
+- **shadcn/ui** (community, MIT) — https://ui.shadcn.com/docs/cli
+- **Tailwind CSS v4** (Tailwind Labs, MIT) — https://ui.shadcn.com/docs/tailwind-v4
+
+## Render
+
+```bash
+# No-build path: render the hand-authored page headless (macOS)
+'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' \
+  --headless --disable-gpu --screenshot=out/page.png \
+  --window-size=1280,800 "file://$PWD/out/page.html"
+
+# Component path (Tailwind v4 + shadcn)
+npm create vite@latest demo -- --template react-ts && cd demo && npm i
+npm i tailwindcss@4 @tailwindcss/vite
+npx shadcn@latest init -d && npx shadcn@latest add button card
+npm run build   # -> dist/index.html
+```
+
+## Failure modes
+
+- Falling into one of the three AI-default looks (cream+serif+terracotta;
+  near-black+acid accent; broadsheet hairline) — derive tokens explicitly instead.
+- CSS specificity collisions (class vs element selectors) flagged in the skill.
+- Non-deterministic renders: unpinned CDN fonts or randomized animation seeds — pin
+  fonts, drop random seeds, commit the emitted HTML/CSS.
+- Missing accessibility floor: no visible keyboard focus, not mobile-responsive, or
+  ignoring `prefers-reduced-motion`.
+- Committing `node_modules`; commit source markup + `components.json` + pinned versions.

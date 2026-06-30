@@ -1,0 +1,29 @@
+<!-- generated draft — needs validation -->
+# graphic-design / SVG.js
+
+SVG.js is a lightweight, dependency-free JavaScript library for building and serializing SVG with terse, readable syntax. On the OOTA path you author an imperative Node ESM script that builds an SVG DOM via `svgdom` (headless, no browser) and emit byte-stable `.svg` markup with `canvas.svg()`. Deterministic and diff-friendly — same script, same bytes.
+
+controls do
+  graphic-design.title: { label: "Title", type: "text" }
+  graphic-design.width: { label: "Width (px)", type: "text" }
+  graphic-design.height: { label: "Height (px)", type: "text" }
+  graphic-design.fill: { label: "Primary fill", type: "color" }
+end
+
+## Required reading
+- [SVG.js official documentation (v3.2)](https://svgjs.dev/docs/3.2/) — official, MIT (svgdotjs org / Wout Fierens)
+- [svg.js GitHub repository](https://github.com/svgdotjs/svg.js) — official, MIT (svgdotjs org)
+- [svgdom — headless DOM for SVG.js on Node.js](https://github.com/svgdotjs/svgdom) — official, MIT (svgdotjs org)
+
+## Render
+```bash
+npm install @svgdotjs/svg.js svgdom
+node --input-type=module -e "import {createSVGWindow} from 'svgdom'; import {SVG, registerWindow} from '@svgdotjs/svg.js'; import {writeFileSync} from 'fs'; const w=createSVGWindow(); registerWindow(w, w.document); const c=SVG(w.document.documentElement); c.size(200,200); c.rect(100,100).fill('#ffcc00').move(50,50); c.circle(60).fill('#3366ff').center(100,100); writeFileSync('out.svg', c.svg());"
+```
+
+## Failure modes
+- **Forgetting `registerWindow`**: SVG.js throws on DOM access — always `registerWindow(w, w.document)` before `SVG(...)`.
+- **Text geometry without fonts**: svgdom only ships Open Sans-Regular; bold/italic and text-on-path need explicit `config.setFontDir().setFontFamilyMappings({...}).preloadFonts()`. Keep text minimal for determinism.
+- **Selector gaps**: svgdom's `querySelector` supports only a subset of pseudo-classes/selectors.
+- **Version drift**: pin `@svgdotjs/svg.js@^3.2` and `svgdom@^0.1.23` to keep output byte-identical.
+- **Wrong root**: `SVG(w.document.documentElement)` binds to the `<svg>` root; calling `SVG()` with no arg creates a detached canvas that won't serialize the document.

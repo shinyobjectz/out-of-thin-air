@@ -1,0 +1,35 @@
+<!-- generated draft — needs validation -->
+# graphic-design / Cairo (pycairo / cairosvg)
+
+Cairo is a mature C 2D vector graphics library driven from Python two ways: pycairo (imperative — draw paths/text/gradients to a Surface, then write PNG/SVG/PDF) and CairoSVG (declarative — transcode an existing SVG to PNG/PDF/PS). Output is deterministic and fully headless: no display server needed. This wrapper renders an image (PNG) deliverable; the source script or SVG is the version-controllable artifact.
+
+controls do
+  graphic-design.title: { label: "Title", type: "text" }
+  graphic-design.mode: { label: "Mode", type: "select", options: ["pycairo", "cairosvg"] }
+  graphic-design.bg: { label: "Background", type: "color" }
+end
+
+## Required reading
+- pycairo official docs (pygobject / Christoph Reiter, LGPL-2.1/MPL-1.1) — https://pycairo.readthedocs.io/en/latest/
+- CairoSVG official docs (Kozea / CourtBouillon, LGPL-3.0-or-later) — https://cairosvg.org/documentation/
+- cairo graphics library docs (cairographics.org, LGPL-2.1/MPL-1.1) — https://www.cairographics.org/documentation/
+- No official Anthropic/Claude skill — drive the documented Python APIs directly.
+
+## Render
+```bash
+# native dep first (most common build failure is missing system cairo/FFI)
+brew install cairo pkg-config libffi
+pip install pycairo CairoSVG
+
+# pycairo (imperative): the .py is the source, the .png is the deliverable
+python3 draw.py            # surface.write_to_png('out.png')
+
+# cairosvg (declarative): author/generate the .svg, then transcode
+cairosvg in.svg -o out.png
+```
+
+## Failure modes
+- Missing system cairo / FFI headers at wheel build → `pip install pycairo` fails. Run `brew install cairo pkg-config libffi` first.
+- Text glyphs vary across machines (font-dependent). Pin fonts via fontconfig / bundle a `.ttf` and `fc-cache` for reproducible output.
+- pycairo raises on bad surface status — check exceptions; exit nonzero on cairo error.
+- CairoSVG only handles SVG 1.1; exotic SVG2 features may not render faithfully.

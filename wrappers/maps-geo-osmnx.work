@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# maps-geo / osmnx
+
+OSMnx downloads, models, and visualizes OpenStreetMap street networks (NetworkX + GeoPandas). The primary deliverable is a headless street-network image rendered via matplotlib's Agg backend — PNG by default, or SVG/PDF by filepath extension. OSM is a live dataset, so cache responses and commit a GraphML snapshot for reproducible output.
+
+controls do
+  maps-geo.place: { label: "Place query", type: "text" }
+  maps-geo.network_type: { label: "Network type", type: "select", options: ["drive", "walk", "bike", "all"] }
+  maps-geo.dpi: { label: "DPI", type: "range" }
+  maps-geo.bgcolor: { label: "Background color", type: "color" }
+end
+
+## Required reading
+- [OSMnx documentation (ReadTheDocs)](https://osmnx.readthedocs.io/en/stable/) — Geoff Boeing / gboeing, MIT
+- [osmnx-examples notebook gallery](https://github.com/gboeing/osmnx-examples) — Geoff Boeing, MIT
+- [OSMnx source repository](https://github.com/gboeing/osmnx) — Geoff Boeing, MIT
+- No official Anthropic/Claude skill exists for OSMnx (as of June 2026).
+
+## Render
+```bash
+python3 -m venv /tmp/oxv && /tmp/oxv/bin/pip install osmnx matplotlib
+MPLBACKEND=Agg /tmp/oxv/bin/python -c "import osmnx as ox; ox.settings.use_cache=True; G=ox.graph_from_place('Piedmont, California, USA', network_type='drive'); ox.plot_graph(G, show=False, close=True, save=True, filepath='out/map.png', dpi=150)"
+```
+
+## Failure modes
+- No network access → Overpass/Nominatim fetch fails. Data fetch needs the internet; only the render is offline.
+- Ambiguous place query → Nominatim resolves the wrong polygon. Use a precise "City, State, Country" string or a bbox.
+- PyPI install of geopandas deps fails on some platforms → use conda-forge (`conda install -c conda-forge osmnx`).
+- Pre-2.0 function names → pin `osmnx>=2,<3` and check the 2.x migration guide.
+- Non-deterministic geometry across runs → cache and commit a GraphML snapshot; plot from the saved graph.

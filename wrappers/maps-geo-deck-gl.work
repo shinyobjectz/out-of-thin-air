@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# maps-geo / deck.gl
+
+deck.gl renders large-scale geospatial data on the GPU (WebGL2 via luma.gl) in a
+browser. For deterministic headless output we author a `Deck` instance with a fixed
+`initialViewState` + static `layers`, render it in headless Chromium, wait for
+`onAfterRender`, and screenshot the canvas to a PNG. Freeze the view
+(`controller:false`), bundle all data, and skip basemap tiles to keep output
+byte-stable.
+
+controls do
+  maps-geo.title: { label: "Map title", type: "text" }
+  maps-geo.layer_spec: { label: "Layer spec (JS)", type: "textarea", file: "src/layers.js" }
+  maps-geo.longitude: { label: "Center longitude", type: "text" }
+  maps-geo.latitude: { label: "Center latitude", type: "text" }
+  maps-geo.zoom: { label: "Zoom", type: "range" }
+  maps-geo.width: { label: "Width (px)", type: "text" }
+  maps-geo.height: { label: "Height (px)", type: "text" }
+end
+
+## Required reading
+- deck.gl docs — https://deck.gl/docs (vis.gl / OpenJS, MIT)
+- Deck class API — https://deck.gl/docs/api-reference/core/deck (MIT)
+- SnapshotTestRunner headless render+capture — https://deck.gl/docs/api-reference/test-utils/snapshot-test-runner (MIT)
+- Capture canvas as image codepen — https://codepen.io/Pessimistress/pen/ExyyzjV (Xiaoji Chen, MIT)
+- No official Anthropic/Claude skill — https://github.com/anthropics/skills
+
+## Render
+```bash
+npm install @deck.gl/core @deck.gl/layers puppeteer
+# index.html builds a Deck with controller:false + onAfterRender → window.__done
+# render.js launches headless Chromium with swiftshader and screenshots the canvas
+node render.js   # writes out/map.png
+```
+
+## Failure modes
+- Empty/black canvas in headless macOS/CI: launch Chromium with `--use-gl=swiftshader` (no real GPU).
+- Non-deterministic output: a basemap (Mapbox/MapLibre/CARTO) fetches tiles + needs tokens — drop the basemap or pre-bundle static tiles.
+- Captured too early: screenshot before `onAfterRender` → blank frame. Always `waitForFunction('window.__done')`.
+- Animations/transitions on a layer break byte-stability — disable them and set `controller:false`.
+- No native Node-GL renderer; Node WebGL1 was dropped — you must use a real browser.

@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# advertising-creative / amphtml-ads
+
+AMPHTML ads (AMP4ADS) are a constrained, spec-defined HTML format for fast, secure ad creatives. Author a single deterministic `.html` document marked `⚡4ads`, loading the `amp4ads-v0.js` runtime, and verify it mechanically with the official `amphtml-validator` CLI. The artifact needs no build step; validation is a pure markup pass/fail check.
+
+controls do
+  advertising-creative.title: { label: "Headline", type: "text" }
+  advertising-creative.subtext: { label: "Body copy", type: "textarea" }
+  advertising-creative.accent: { label: "Accent color", type: "color" }
+  advertising-creative.width: { label: "Width (px)", type: "text" }
+  advertising-creative.height: { label: "Height (px)", type: "text" }
+end
+
+## Required reading
+
+- [Create an AMPHTML ad](https://amp.dev/documentation/guides-and-tutorials/start/create_amphtml_ad/) — The AMP Project / amp.dev (CC-BY-4.0)
+- [Intro to AMPHTML ads](https://amp.dev/documentation/guides-and-tutorials/learn/intro-to-amphtml-ads/) — The AMP Project (CC-BY-4.0)
+- [Hello World amp4ads example](https://amp.dev/documentation/examples/introduction/amphtml_ads_hello_world/) — The AMP Project (CC-BY-4.0)
+- [Validator README (ampproject/amphtml)](https://github.com/ampproject/amphtml/blob/main/validator/README.md) — Google / OpenJS Foundation (Apache-2.0)
+
+## Render
+
+```bash
+npm install -g amphtml-validator
+amphtml-validator --html_format AMP4ADS out/ad.html
+# expect: out/ad.html: PASS
+```
+
+## Failure modes
+
+- `<meta charset>` must be the FIRST child of `<head>` — anything before it fails validation.
+- Missing `<style amp4ads-boilerplate>body{visibility:hidden}</style>` is a hard error.
+- Only one `<style amp-custom>` block allowed; no external stylesheets, no inline `style=` attributes, no custom `<script>`.
+- Use AMP elements (`amp-img`, `amp-video`) instead of raw `<img>`/`<video>`; raw media tags fail.
+- First validator run needs network to fetch the AMP4ADS ruleset — pin `--validator_js` for offline/deterministic CI.
+- Use `--html_format AMP4ADS` (not the default `AMP`) or valid ads report as errors.

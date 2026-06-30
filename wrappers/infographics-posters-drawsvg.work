@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# infographics-posters / drawsvg
+
+drawsvg is a pure-Python library that emits deterministic, version-controllable
+SVG vector graphics — charts, infographics, posters, and diagrams. The same
+script always produces identical markup, with no browser, GPU, or native deps
+required for SVG output. This wrapper authors a thin Python build script and runs
+it to produce an `.svg` deliverable.
+
+controls do
+  infographics-posters.title: { label: "Title", type: "text" }
+end
+
+## Required reading
+- drawsvg source + docs (GitHub mirror, canonical): https://github.com/cduck/drawsvg
+- drawsvg on PyPI: https://pypi.org/project/drawsvg/
+- Anthropic Agent Skills (no official drawsvg skill): https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview
+- SVG Specialist (community, generic SVG, not drawsvg-specific): https://mcpmarket.com/tools/skills/svg-specialist
+- svg-drawing (community, SVG→PNG iteration): https://smithery.ai/skills/possumworx/svg-drawing
+
+## Render
+```bash
+python3 -m pip install "drawsvg~=2.0"
+python3 build.py   # builds Drawing(...), appends elements, d.save_svg('out.svg')
+```
+
+## Failure modes
+- **v1/v2 API drift**: v2.x uses snake_case (`save_svg`); v1.x used camelCase
+  (`saveSvg`). Pin `drawsvg~=2.0`.
+- **Nondeterminism**: avoid `time`/`random` in scripts; set explicit
+  width/height/origin so output is byte-stable and diff-friendly.
+- **Cairo coupling**: PNG/MP4/GIF needs `drawsvg[all]` + system Cairo
+  (`brew install cairo`). Keep the authoring path SVG-only; rasterize separately
+  (cairosvg/resvg) if raster output is needed.

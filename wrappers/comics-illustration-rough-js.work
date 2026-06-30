@@ -1,0 +1,31 @@
+<!-- generated draft — needs validation -->
+# comics-illustration / rough-js
+
+Render hand-drawn, sketchy SVG primitives with Rough.js. Uses the DOM-free `rough.generator()` +
+`generator.toPaths()` recipe to emit plain path data, stitched into a self-contained SVG document.
+A fixed integer `seed` is threaded through every shape so output is byte-stable and version-controllable.
+
+controls do
+  comics-illustration.title: { label: "Title", type: "text" }
+  comics-illustration.seed: { label: "Seed (fixed integer — required for determinism)", type: "text" }
+  comics-illustration.roughness: { label: "Roughness", type: "range" }
+  comics-illustration.fill: { label: "Fill color", type: "color" }
+  comics-illustration.fillStyle: { label: "Fill style", type: "select", options: ["hachure", "solid", "zigzag", "cross-hatch", "dots", "dashed", "zigzag-line", "sunburst"] }
+end
+
+## Required reading
+- Rough.js API + wiki (official, MIT, Preet Shihn / rough-stuff): https://github.com/rough-stuff/rough/wiki
+- Rough.js homepage + examples (official, MIT, Preet Shihn): https://roughjs.com/
+- svg2roughjs — sketchify existing SVGs (community, MIT, fskpf): https://github.com/fskpf/svg2roughjs
+
+## Render
+```bash
+npm install roughjs
+node --input-type=module -e "import rough from 'roughjs'; import {writeFileSync} from 'fs'; const g=rough.generator(); const r=g.rectangle(10,10,180,100,{seed:42,roughness:2,fill:'red'}); const body=g.toPaths(r).map(p=>'<path d=\"'+p.d+'\" stroke=\"'+p.stroke+'\" fill=\"'+p.fill+'\" stroke-width=\"'+p.strokeWidth+'\"/>').join(''); writeFileSync('out.svg','<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"200\" height=\"120\">'+body+'</svg>'); console.log('wrote out.svg');"
+```
+
+## Failure modes
+- No `seed` → geometry is randomized per call; SVG diffs break and artifacts are not reproducible. Always pass a fixed integer seed to every shape.
+- Expecting a full SVG document from rough.js — it only returns path fragments via `toPaths()`; you must wrap them in an `<svg xmlns width height>` root yourself.
+- Using `rough.svg()`/`rough.canvas()` in Node without a DOM — needs jsdom/node-canvas. Prefer `rough.generator()` for headless, dependency-free output.
+- `fillStyle` values dashed/sunburst/zigzag-line require rough.js >= 3.1.0.

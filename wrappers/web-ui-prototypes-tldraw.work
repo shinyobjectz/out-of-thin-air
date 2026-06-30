@@ -1,0 +1,29 @@
+<!-- generated draft — needs validation -->
+# web-ui-prototypes / tldraw
+
+tldraw is a React infinite-canvas SDK. The deterministic source-of-truth is a `.tldr` document — a JSON serialization of the tldraw store (shapes, pages, bindings) that is diffable and version-controllable. The headless deliverable is an SVG (or rasterized PNG) exported via `@kitschpatrol/tldraw-cli`, which serves a local tldraw instance and drives Puppeteer to invoke the SDK's export.
+
+controls do
+  web-ui-prototypes.title: { label: "Title", type: "text" }
+  web-ui-prototypes.format: { label: "Format", type: "select", options: ["svg", "png"] }
+  web-ui-prototypes.tldr: { label: "tldraw snapshot (.tldr)", type: "textarea", file: "src/drawing.tldr" }
+end
+
+## Required reading
+- tldraw llms.txt docs (official, tldraw.dev docs license): https://tldraw.dev/llms.txt — plus llms-docs.txt, llms-examples.txt, llms-releases.txt
+- Official Claude Code plugin tracking issue (official, MIT): https://github.com/tldraw/tldraw/issues/8107 — public plugin not yet shipped as of mid-2026
+- Tldraw SDK Documentation Writer (community, unstated license): https://mcpmarket.com/tools/skills/tldraw-sdk-documentation-writer
+- `@kitschpatrol/tldraw-cli` (MIT, by Eric Mika) — the headless export path
+
+## Render
+```bash
+npm i -g @kitschpatrol/tldraw-cli   # Node 18+, Chromium auto-downloaded by puppeteer
+npx @kitschpatrol/tldraw-cli export ./out/drawing.tldr --format svg -o ./out -n drawing
+# PNG variant: --format png  → writes ./out/drawing.png
+```
+
+## Failure modes
+- Headless rendering is NOT pure Node — tldraw export depends on a browser DOM. The CLI spins headless Chromium; ensure puppeteer's Chromium downloaded (~1-2s startup per export).
+- Custom shapes must implement a `toSvg` method or they will not appear in the SVG export.
+- `.tldr` schema is versioned (SDK 5.x, May 2026); a snapshot authored against a much older/newer schema may need migration before export.
+- `Editor.toImage()` / `getSvgElement()` from the SDK are unsuitable for this headless pipeline without the same browser dependency — use the CLI.

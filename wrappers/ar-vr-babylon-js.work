@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# ar-vr / Babylon.js (NullEngine)
+
+Babylon.js `NullEngine` is the headless Babylon engine: it builds a full scene
+graph (meshes, cameras, lights, materials) in Node with no canvas or WebGL context,
+then serializes deterministically to glTF/GLB via `@babylonjs/serializers`
+(`GLTF2Export`). The scene is authored in plain JS, so it is diff-able and
+reproducible. Geometry, transforms, hierarchy and image-buffer materials export
+reliably; procedural/baked textures fail (no GPU pixel readback). Output kind is
+model3d (`.glb` / `.gltf`).
+
+controls do
+  ar-vr.title: { label: "Model name", type: "text" }
+  ar-vr.primitive: { label: "Primitive", type: "select", options: ["sphere", "box", "torus", "cylinder"] }
+  ar-vr.scene_spec: { label: "Scene builder (JS)", type: "textarea", file: "src/scene.mjs" }
+  ar-vr.diameter: { label: "Size", type: "range" }
+  ar-vr.format: { label: "Format", type: "select", options: ["glb", "gltf"] }
+end
+
+## Required reading
+- Babylon.js Server-Side / NullEngine — https://doc.babylonjs.com/advanced_topics/serverSide (BabylonJS team, Apache-2.0 / docs CC-BY)
+- glTF Exporter docs — https://doc.babylonjs.com/features/featuresDeepDive/Exporters/glTFExporter (BabylonJS team, Apache-2.0)
+- NullEngine API reference (typedoc) — https://doc.babylonjs.com/typedoc/classes/BABYLON.NullEngine (BabylonJS team, Apache-2.0)
+- Headless specs with NullEngine — https://kmitov.com/posts/how-to-do-headless-specs-with-the-babylon-js-nullengine/ (Kiril Mitov, community)
+- NullEngine GLB export with textures workaround — https://forum.babylonjs.com/t/nullengine-glb-export-with-textures-workaround/62541 (Babylon.js forum, community)
+- No official Anthropic/Claude skill — https://github.com/anthropics/skills
+
+## Render
+```bash
+npm init -y && npm pkg set type=module
+npm install @babylonjs/core @babylonjs/serializers   # pin matched major/minor
+# scene.mjs: new NullEngine() -> new Scene(engine) -> add mesh/camera/light
+#            -> await GLTF2Export.GLBAsync(scene, name) -> write arrayBuffer to disk
+node scene.mjs   # writes out/model.glb
+```
+
+## Failure modes
+- "failed to read pixels": procedural/baked textures can't export — NullEngine has no WebGL context. Keep materials texture-light or pre-load image buffers before export.
+- Version mismatch between `@babylonjs/core` and `@babylonjs/serializers` breaks `GLTF2Export` — pin the same major/minor.
+- `GLBAsync` return shape varies by version: read the file via `glb.glTFFiles['name.glb'].arrayBuffer()`, then `Buffer.from(...)`.
+- Non-deterministic geometry: random seeds / variable mesh subdivisions change bytes — fix all `MeshBuilder` options.
+- Not a renderer: NullEngine emits no pixels. For images/video you need Babylon Native or a WebGL headless path (out of scope).

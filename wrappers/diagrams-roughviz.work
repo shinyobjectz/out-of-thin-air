@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# diagrams / roughViz
+
+roughViz renders sketchy, hand-drawn-styled charts (Bar, BarH, Donut, Pie, Line, Scatter, StackedBar) as an inline `<svg>` using D3 + rough.js. The version-controlled source is a small HTML config; the SVG deliverable is extracted by rendering that HTML in a headless browser. Note that rough.js jitter is unseeded, so raw SVG bytes are not bit-stable across runs — snapshot on structure (bar/path counts, labels), not bytes.
+
+controls do
+  diagrams.title: { label: "Title", type: "text" }
+  diagrams.type: { label: "Chart type", type: "select", options: ["bar", "barh", "donut", "pie", "line", "scatter", "stackedbar"] }
+  diagrams.labels: { label: "Labels (comma-separated)", type: "text" }
+  diagrams.values: { label: "Values (comma-separated)", type: "text" }
+  diagrams.roughness: { label: "Roughness", type: "range" }
+  diagrams.colors: { label: "Colors (comma-separated)", type: "text" }
+end
+
+## Required reading
+- roughViz repo (canonical README, MIT (c) 2019 Jared Wilber): https://github.com/jwilber/roughViz
+- roughViz.js Examples — Observable, author-maintained: https://observablehq.com/@jwilber/roughviz-examples
+- Community wrappers: react-roughviz (MIT, Chris927) https://github.com/Chris927/react-roughviz ; py-roughviz (MIT, Lvyn) https://github.com/Lvyn/py-roughviz
+- No official Anthropic/Claude skill exists for roughViz.
+
+## Render
+```bash
+npm init -y && npm install -D playwright && npx playwright install chromium
+# step script writes out/chart.html, then renders to out/chart.svg via headless Chromium:
+node - <<'EOF'
+import { chromium } from 'playwright';
+import { readFileSync, writeFileSync } from 'node:fs';
+const b = await chromium.launch();
+const p = await b.newPage();
+await p.setContent(readFileSync('out/chart.html','utf8'), { waitUntil: 'networkidle' });
+await p.waitForSelector('#viz svg');
+writeFileSync('out/chart.svg', await p.$eval('#viz svg', el => el.outerHTML));
+await b.close();
+EOF
+```
+
+## Failure modes
+- Bare Node can't render: roughViz needs a DOM (D3 + SVG). Use Playwright/Puppeteer or py-roughviz `to_html()` + headless render.
+- Non-determinism: rough.js stroke jitter is unseeded; roughViz 2.0.5 doesn't expose `seed`. SVG bytes differ run-to-run. Commit the HTML/JS source, or monkey-patch rough.js (`Math.random` override) for stable bytes.
+- Live CDN dependency: `unpkg.com/rough-viz@2.0.5` requires network at render time. Pin a local copy for reproducibility.
+- Fonts: defaults Gaegu/Indie Flower load from Google Fonts; inline/embed for offline determinism, else text falls back.

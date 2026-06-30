@@ -1,0 +1,37 @@
+<!-- generated draft — needs validation -->
+# games / Godot (GDScript)
+
+Author a Godot 4 game as plain-text source (`project.godot` + `*.gd` + `*.tscn`), then render a deterministic video via Movie Maker mode (`--write-movie` + `--fixed-fps` + `--quit-after`). The render needs a GPU context — never combine it with `--headless`.
+
+controls do
+  games.title: { label: "Title", type: "text" }
+  games.frames: { label: "Frames (--quit-after)", type: "range" }
+  games.fps: { label: "Fixed FPS", type: "range" }
+  games.resolution: { label: "Resolution", type: "select", options: ["640x480", "1280x720", "1920x1080"] }
+end
+
+## Required reading
+- [Godot Engine — Creating movies (Movie Maker / --write-movie / --fixed-fps)](https://docs.godotengine.org/en/stable/tutorials/animation/creating_movies.html) — Godot Engine project, CC-BY 3.0. Canonical driving doc.
+- [Randroids-Dojo/Godot-Claude-Skills](https://github.com/Randroids-Dojo/Godot-Claude-Skills) — community (MIT). Develop/test/build/deploy Godot 4.x; GdUnit4, PlayGodot, exports. (Repo DEPRECATED → Randroids Dojo marketplace.)
+- [htdt/godogen](https://github.com/htdt/godogen) — community. Autonomous Godot 4 / Bevy game-dev pipeline built on Claude Code skills.
+
+## Render
+```bash
+brew install --cask godot   # binary: /Applications/Godot.app/Contents/MacOS/Godot
+GODOT=/Applications/Godot.app/Contents/MacOS/Godot
+# Deterministic VIDEO — needs GPU, NOT --headless:
+"$GODOT" --path PROJECT --write-movie out.avi --fixed-fps 60 --quit-after 300 --resolution 1280x720
+# PNG image sequence + WAV instead of AVI: use a .png extension:
+"$GODOT" --path PROJECT --write-movie out.png --fixed-fps 60 --quit-after 300
+# Standard container if needed:
+ffmpeg -i out.avi out.mp4
+```
+
+## Failure modes
+- `--headless` disables ALL rendering — combined with `--write-movie` it writes NO frames. Biggest gotcha. Omit it for video.
+- Display-less CI needs real GPU access or a virtual display; otherwise run on a machine/VM with a GPU.
+- First invocation does a blocking asset-import pass.
+- macOS Gatekeeper may quarantine a downloaded build: `xattr -dr com.apple.quarantine Godot.app`.
+- `--export-release` needs matching export templates installed for the editor version.
+- Non-determinism: avoid wall-clock time (`Time.get_ticks`/OS), unseeded RNG, physics jitter. Use seeded `RandomNumberGenerator` + `--fixed-fps`.
+- `.ctex`/`.import` caches are generated — gitignore them.

@@ -1,0 +1,27 @@
+<!-- generated draft — needs validation -->
+# ar-vr / needle
+
+Needle Engine authors interactive 3D/AR/VR experiences as TypeScript + glTF and builds them, headlessly via Vite, into a self-contained static HTML bundle that runs in any WebXR-capable browser. This wrapper drives the standalone npm/Vite path — scaffold, edit the scene source, then `npm run build` to produce a deterministic, version-controllable `dist/` deliverable.
+
+controls do
+  ar-vr.title: { label: "Title", type: "text" }
+  ar-vr.scene: { label: "Scene source", type: "textarea", file: "src/main.ts" }
+end
+
+## Required reading
+- Needle Engine AI Skill (official, GitHub `needle-tools/ai`) — https://engine.needle.tools/docs/ai/ — install `npx skills add needle-tools/ai`; auto-installs via the Vite plugin. Attribution: Needle Tools GmbH.
+- Needle MCP Server (official) — https://engine.needle.tools/docs/ai/ — live scene inspection + doc search via the Needle Inspector.
+- LLM docs (official) — https://cloud.needle.tools/llms.txt (full: https://cloud.needle.tools/llms-full.txt)
+
+## Render
+```bash
+npm create needle@latest oota-needle-smoke -- --template three
+cd oota-needle-smoke && npm install
+npm run build   # headless Vite production build -> dist/index.html + hashed JS/wasm
+```
+
+## Failure modes
+- `three` version drift: the engine forks three.js — let the template pick the matching three version; pin both `@needle-tools/engine` and `three` in `package.json` for reproducible builds.
+- Treating `dist/` as source: commit `src/` + assets, not `dist/` (regenerate it).
+- Expecting an image/video file: Needle is a runtime, not a frame renderer. The headless deliverable is the HTML bundle. Pixel capture requires an extra Playwright/puppeteer pass, which is non-trivial for WebXR content.
+- Reaching for Unity/Blender: those editor integrations need a GUI and are not headless/CI-friendly — skip them here.

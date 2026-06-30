@@ -1,0 +1,33 @@
+<!-- generated draft — needs validation -->
+# graphic-design / nannou
+
+Nannou is a Rust creative-coding framework (built on wgpu, and Bevy as of 0.19.x) that renders deterministic raster images from code. The OOTA deliverable is a single captured frame: a sketch draws shapes, calls `app.main_window().capture_frame(path)`, and writes a PNG. Same code + seeded randomness yields identical pixels, so the source is fully version-controllable.
+
+controls do
+  graphic-design.title: { label: "Title", type: "text" }
+  graphic-design.size: { label: "Size (px, square)", type: "text" }
+  graphic-design.bg: { label: "Background", type: "color" }
+  graphic-design.fg: { label: "Shape color", type: "color" }
+  graphic-design.src: { label: "Sketch source", type: "textarea", file: "src/main.rs" }
+end
+
+## Required reading
+- Official guide — https://guide.nannou.cc (nannou-org, MIT OR Apache-2.0)
+- Capture examples — https://github.com/nannou-org/nannou/tree/master/examples/draw (`draw_capture.rs`, `draw_capture_hi_res.rs`)
+- No official/community Claude skill exists; rely on the guide + in-repo examples.
+
+## Render
+```bash
+rustup toolchain install stable
+cargo new nannou_smoke && cd nannou_smoke
+cargo add nannou
+# place sketch in src/main.rs (capture one frame, then quit)
+cargo run --release
+# out.png is written under the project dir
+```
+
+## Failure modes
+- Not truly headless on macOS: nannou opens a winit window and renders via wgpu/Metal, needing a display context. In a no-display CI runner capture may not complete; use a real desktop or virtual display.
+- `capture_frame` can fail to flush under certain LoopModes (GitHub #525, #830) — capture on the first `view`, then quit, and verify the file landed.
+- No native SVG/vector output — raster only.
+- No native video mux — render a numbered PNG sequence and post-process with ffmpeg.

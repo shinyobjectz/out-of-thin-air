@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# advertising-creative / mjml
+
+MJML transpiles semantic `<mj-*>` XML into responsive, cross-client HTML email
+(nested tables + inline CSS, Outlook ghost-tables). Deterministic and headless —
+identical `.mjml` source compiles to identical `.html` with no browser or network.
+The deliverable is a self-contained inline-CSS HTML email file.
+
+controls do
+  advertising-creative.title: { label: "Email title", type: "text" }
+  advertising-creative.headline: { label: "Hero headline", type: "text" }
+  advertising-creative.cta: { label: "Button text", type: "text" }
+  advertising-creative.source: { label: "MJML source", type: "textarea", file: "src/email.mjml" }
+end
+
+## Required reading
+- [MJML Official Documentation](https://documentation.mjml.io/) — Mailjet / mjmlio (official): components, CLI options, Node API.
+- [mjmlio/mjml](https://github.com/mjmlio/mjml) — Mailjet / mjmlio (official, MIT): canonical source repository.
+- [skill-email-html-mjml](https://github.com/framix-team/skill-email-html-mjml) — framix-team (community): cross-client, Outlook-safe, Gmail-optimized, WCAG 2.1 AA email generation.
+
+## Render
+```bash
+# Node CLI (canonical/reference implementation) — pin for determinism
+npx -y mjml@5.4.0 src/email.mjml -o out/email.html
+# or pipe via stdin/stdout:  npx -y mjml@5.4.0 -i < src/email.mjml > out/email.html
+# zero-Node fallback (MRML port, component subset):
+#   pip install mjml && python -c "from mjml import mjml_to_html; open('out/email.html','w').write(mjml_to_html(open('src/email.mjml').read()))"
+```
+
+## Failure modes
+- MJML emits parse/validation warnings to stderr WITHOUT failing (exit 0) — surface them; the HTML may still be wrong.
+- Python/Rust MRML port supports only a subset of components vs the JS reference — verify component parity for advanced templates.
+- Unpinned `mjml` version drifts output across machines — pin `mjml@5.4.0` for reproducible builds.
+- Email clients (esp. Outlook) ignore most modern CSS — author with `mj-*` components, never raw HTML/CSS, to keep ghost-table/VML fallbacks intact.

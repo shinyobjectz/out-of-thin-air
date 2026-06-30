@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# 3d-shaders / glslviewer
+
+glslViewer is a console-based, BSD-3-Clause OpenGL sandbox that loads a GLSL fragment shader and renders it headlessly to a PNG. The authored artifact is the `.frag` source; the deterministic deliverable is the PNG. Pin `u_time` via a fixed capture time and fix the dimensions so identical source yields identical pixels.
+
+controls do
+  3d-shaders.title: { label: "Title", type: "text" }
+  3d-shaders.width: { label: "Width (px)", type: "range", min: 64, max: 2048, step: 64 }
+  3d-shaders.height: { label: "Height (px)", type: "range", min: 64, max: 2048, step: 64 }
+  3d-shaders.time: { label: "Capture time (s)", type: "range", min: 0, max: 30, step: 1 }
+  3d-shaders.shader: { label: "Fragment shader", type: "textarea", file: "src/shader.frag" }
+end
+
+## Required reading
+- [glslViewer Wiki — Using GlslViewer](https://github.com/patriciogonzalezvivo/glslViewer/wiki/Using-GlslViewer) — community, BSD-3-Clause, Patricio Gonzalez Vivo
+- [glslViewer README](https://github.com/patriciogonzalezvivo/glslViewer/blob/main/README.md) — community, BSD-3-Clause, Patricio Gonzalez Vivo
+
+## Render
+```bash
+# install (build from source — no official homebrew formula)
+git clone --recursive https://github.com/patriciogonzalezvivo/glslViewer.git
+brew install pkg-config cmake ncurses
+(cd glslViewer && mkdir -p build && cd build && cmake .. && make -j && sudo make install)
+
+# render shader source to a deterministic PNG
+glslViewer src/shader.frag -w 1024 -h 1024 --headless -s 1 -o out/shader.png
+file out/shader.png   # -> PNG image data, 1024 x 1024
+```
+
+## Failure modes
+- Headless GL on macOS may need an active GPU/display context; if `--headless` fails, drop the flag to confirm the binary works, then retry.
+- Non-determinism: shaders using random seeds or wall-clock time produce different pixels each run. Pin `u_time` via `-s <fixed seconds>` and fix `-w`/`-h`.
+- `git clone` without `--recursive` omits submodules and the build fails.
+- For motion, export a PNG sequence and pipe to ffmpeg — glslViewer itself emits frames, not video.

@@ -1,0 +1,46 @@
+<!-- generated draft — needs validation -->
+# social-formats / resvg-js
+
+Render deterministic SVG markup into a fixed-size PNG with no browser, using the Rust-based resvg engine bound to JS. Author the SVG as version-controllable source, embed fonts explicitly for byte-stable output, and rasterize headlessly to a social card / OG image.
+
+controls do
+  social-formats.title: { label: "Title", type: "text" }
+  social-formats.svg: { label: "SVG source", type: "textarea", file: "src/card.svg" }
+  social-formats.background: { label: "Background color", type: "color" }
+  social-formats.fit_mode: { label: "Fit mode", type: "select", options: ["width", "height", "zoom", "original"] }
+  social-formats.fit_value: { label: "Fit value (px or zoom)", type: "range", min: 1, max: 4000, value: 1200 }
+  social-formats.load_system_fonts: { label: "Load system fonts (off = deterministic)", type: "toggle" }
+end
+
+## Required reading
+- resvg-js README + docs (official, MPL-2.0, yisibl / resvg-js contributors): https://github.com/yisibl/resvg-js
+- @resvg/resvg-js npm package (official, MPL-2.0, yisibl): https://www.npmjs.com/package/@resvg/resvg-js
+- resvg upstream Rust engine (official, MPL-2.0, RazrFalcon / Linebender): https://github.com/linebender/resvg
+
+## Render
+```bash
+# install
+npm i @resvg/resvg-js
+
+# render src/card.svg -> out/card.png (Node ESM)
+node --input-type=module <<'EOF'
+import { Resvg } from '@resvg/resvg-js';
+import { readFileSync, writeFileSync } from 'node:fs';
+const svg = readFileSync('src/card.svg');
+const r = new Resvg(svg, {
+  fitTo: { mode: 'width', value: 1200 },
+  font: { loadSystemFonts: false }   // deterministic: ship explicit fontFiles
+});
+writeFileSync('out/card.png', r.render().asPng());
+EOF
+
+file out/card.png   # -> PNG image data, ...
+```
+
+## Failure modes
+- Static SVG subset only: SMIL/CSS animation, embedded `<script>`, and many filters are ignored or unsupported — silently produces a still frame, not motion.
+- System-font reliance breaks determinism across machines; set `loadSystemFonts: false` and pass explicit `fontFiles`.
+- External stylesheets are not applied — use presentation attributes / inline `style`.
+- External bitmap refs by path may not resolve; embed as data URIs for a self-contained input.
+- Output is PNG only; for JPEG/WebP/resize pipe the buffer through `sharp`.
+- On edge/sandbox runtimes without native addons, the napi binding fails — use `@resvg/resvg-wasm` with `initWasm()` instead.

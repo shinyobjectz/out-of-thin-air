@@ -1,0 +1,44 @@
+<!-- generated draft — needs validation -->
+# 3d-shaders / povray
+
+POV-Ray is a free, open-source CPU ray tracer driven by its own deterministic Scene Description Language (SDL). You author a plain-text `.pov` scene — camera, lights, geometry, CSG, textures, finishes, pigments, normals (its "shaders") — and render it headlessly to a raster image with the `povray` CLI. The source is version-controllable text and output is byte-deterministic for a given scene + seed.
+
+controls do
+  3d-shaders.title: { label: "Scene name", type: "text" }
+  3d-shaders.width: { label: "Width (px)", type: "range", min: 64, max: 1920, step: 16 }
+  3d-shaders.height: { label: "Height (px)", type: "range", min: 64, max: 1080, step: 16 }
+  3d-shaders.antialias: { label: "Antialias threshold (+A)", type: "range", min: 0, max: 1, step: 0.05 }
+  3d-shaders.format: { label: "Output format", type: "select", options: "png, tga, ppm, jpeg, exr, hdr" }
+  3d-shaders.source: { label: "Scene source (.pov SDL)", type: "textarea", file: "src/scene.pov" }
+end
+
+## Required reading
+- POV-Ray official documentation — SDL + CLI reference (POV-Ray project) — https://www.povray.org/documentation/
+- POV-Ray command-line options reference (POV-Ray project) — https://www.povray.org/documentation/view/3.6.1/759/
+- POV-Wiki (community) — https://wiki.povray.org/
+- POV-Ray source repo (AGPL-3.0-or-later) — https://github.com/POV-Ray/povray
+- vapory community Python binding (Zulko, MIT) — https://github.com/Zulko/vapory
+
+## Render
+```bash
+# install (macOS)
+brew install povray
+povray --version
+
+# render headless, deterministic
+povray +Isrc/scene.pov +Oout/scene.png +W800 +H600 -D +A0.3
+
+# explicit PNG output format flag
+povray +Isrc/scene.pov +Oout/scene.png +W800 +H600 -D +A0.3 +FN
+
+# Python-driven (community binding)
+# brew install povray && pip install vapory
+```
+
+## Failure modes
+- Always pass `-D` (no display) for headless rendering; without it POV-Ray may try to open a preview window.
+- Pass an explicit `+A` value (e.g. `+A0.3`) for repeatable antialiasing — adaptive AA defaults can vary output.
+- macOS gets the Unix/console build via Homebrew (official binaries are Windows-only); pin the version (3.7.0.10) since Homebrew tracks maintenance releases.
+- AGPL-3.0-or-later: distributing a modified `povray` binary triggers source-availability obligations — driving the unmodified CLI and authoring SDL does not.
+- "Shaders" here are CPU SDL texture/finish/pigment/normal blocks, not GPU GLSL; large scenes render slowly (single-machine CPU) but reproducibly.
+- Missing `#version` or `assumed_gamma` can shift colors between releases — set both at the top of every scene.

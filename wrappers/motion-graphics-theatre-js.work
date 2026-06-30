@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# motion-graphics / Theatre.js
+
+Theatre.js drives values over a timeline; it does not render pixels. The deterministic, git-trackable artifact is the exported project **state JSON**, re-run identically via `getProject(name, {state})`. To produce a video, a renderer (THREE.js / Canvas / DOM) is bound to core, the sequence is stepped frame-by-frame (`seq.position = f/fps`), each frame is captured headlessly with Puppeteer, and ffmpeg encodes to mp4. Only `@theatre/core` (Apache-2.0) ships; `@theatre/studio` (AGPL-3.0) is design-time only and excluded from the render bundle.
+
+controls do
+  motion-graphics.title: { label: "Title", type: "text" }
+  motion-graphics.fps: { label: "FPS", type: "range" }
+  motion-graphics.duration: { label: "Duration (s)", type: "text" }
+  motion-graphics.state: { label: "Theatre state JSON", type: "textarea", file: "src/state.json" }
+end
+
+## Required reading
+- Theatre.js Official Docs (manual + API reference) — official, code Apache-2.0 — Theatre.js / Aria Minaei: https://www.theatrejs.com/docs/latest
+- chadpowers-superbowl-theatrejs-cinematics — community (unverified license) — shyamsridhar123 via LobeHub: https://lobehub.com/skills/shyamsridhar123-chadpowers-superbowl-theatrejs-cinematics
+
+## Render
+```bash
+mkdir -p tjs && cd tjs && npm init -y
+npm i @theatre/core three && npm i -D puppeteer
+command -v ffmpeg >/dev/null || brew install ffmpeg
+# 1. render page imports @theatre/core, builds renderer, getProject('Proj',{state}), exposes window.__seq
+# 2. node driver steps window.__seq.position = f/fps per frame (NOT seq.play()) and screenshots frame_%d.png
+node capture.js
+ffmpeg -framerate 30 -i frame_%d.png -pix_fmt yuv420p out.mp4
+```
+
+## Failure modes
+- Using `sequence.play()` for capture: real-time / wall-clock driven → non-deterministic frames. Step `seq.position = f/fps` instead.
+- Shipping `@theatre/studio` (AGPL-3.0) in the render bundle. Only `@theatre/core` (Apache-2.0) is needed at render time.
+- Expecting Theatre.js to render pixels: it only drives values via `onValuesChange`; you must wire a renderer.
+- `attachAudio()` is for real-time playback only; for frame-stepped capture, mux the audio track at ffmpeg encode time.
+- Forgetting `-pix_fmt yuv420p` → mp4 that won't play in some players.
+- Editing state JSON by hand and drifting from studio; regenerate from the editor when possible.

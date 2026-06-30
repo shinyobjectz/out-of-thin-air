@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# maps-geo / prettymapp
+
+prettymapp renders beautiful stylized maps from OpenStreetMap data via osmnx + geopandas + matplotlib + shapely. Pick an address (or lat/lon), a fetch radius, and a built-in style; the render is written headlessly with matplotlib's savefig. The deliverable is an image — raster (PNG/JPG) or vector (SVG/PDF) depending on the file extension.
+
+controls do
+  maps-geo.address: { label: "Address", type: "text" }
+  maps-geo.radius: { label: "Radius (m)", type: "range" }
+  maps-geo.style: { label: "Style", type: "select", options: ["Peach", "Auburn", "Citrus", "Flannel"] }
+  maps-geo.rectangular: { label: "Rectangular AOI", type: "toggle" }
+  maps-geo.format: { label: "Format", type: "select", options: ["png", "jpg", "svg", "pdf"] }
+end
+
+## Required reading
+- [prettymapp (repo, MIT)](https://github.com/chrieke/prettymapp) — Christoph Rieke (chrieke); rewrite of prettymaps by Marcelo Prates
+- [prettymapp (PyPI, MIT)](https://pypi.org/project/prettymapp/) — chrieke
+- [prettymaps (upstream original, AGPL-3.0)](https://github.com/marceloprates/prettymaps) — Marcelo Prates; prettymapp is the MIT-friendly fork OOTA prefers
+
+## Render
+```bash
+python3 -m venv /tmp/pmapp && /tmp/pmapp/bin/pip install prettymapp
+MPLBACKEND=Agg /tmp/pmapp/bin/python -c "from prettymapp.geo import get_aoi; from prettymapp.osm import get_osm_geometries; from prettymapp.plotting import Plot; from prettymapp.settings import STYLES; aoi=get_aoi(address='Praça Ferreira do Amaral, Macau', radius=1100, rectangular=False); df=get_osm_geometries(aoi=aoi); fig=Plot(df=df, aoi_bounds=aoi.bounds, draw_settings=STYLES['Peach']).plot_all(); fig.savefig('/tmp/pmapp/map.png', dpi=150)"
+```
+
+## Failure modes
+- No CLI ships — must drive from Python (argparse/JSON config -> savefig).
+- Headless: force `MPLBACKEND=Agg` or `matplotlib.use('Agg')` or render hangs/errors on a server.
+- Runtime network dependency on Nominatim geocoding + Overpass/OSM data; rate-limited and non-deterministic. Add retries and a cached-geometries mode.
+- Output is only reproducible when inputs AND OSM responses are stable — snapshot the fetched GeoDataFrame to parquet/pickle and replot for true determinism.
+- Heavy install (GEOS/PROJ via osmnx/geopandas wheels) — pin versions in a lockfile.

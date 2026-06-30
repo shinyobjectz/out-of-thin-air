@@ -1,0 +1,40 @@
+<!-- generated draft — needs validation -->
+# motion-graphics / lottie
+
+Render a Lottie/Bodymovin animation JSON into a deterministic MP4 (or GIF / PNG sequence) by driving headless Chromium through `puppeteer-lottie-cli`. The design lives in version-controllable JSON; the renderer just plays it frame-by-frame and muxes the result. Output kind is chosen purely by the output file extension.
+
+controls do
+  motion-graphics.title: { label: "Title", type: "text" }
+  motion-graphics.width: { label: "Width (px)", type: "range" }
+  motion-graphics.height: { label: "Height (px)", type: "range" }
+  motion-graphics.background: { label: "Background", type: "color" }
+  motion-graphics.format: { label: "Output format", type: "select", options: ["mp4", "gif", "png"] }
+  motion-graphics.source: { label: "Animation JSON", type: "textarea", file: "src/anim.json" }
+end
+
+## Required reading
+
+- puppeteer-lottie-cli (canonical CLI repo + README, de-facto skill doc) — Travis Fischer, MIT: https://github.com/transitive-bullshit/puppeteer-lottie-cli
+- puppeteer-lottie (companion Node library) — MIT: https://github.com/transitive-bullshit/puppeteer-lottie
+- Lottie format spec (input JSON authoring reference) — Lottie Animation Community / LottieFiles, open spec: https://lottie.github.io/lottie-spec/
+- LottieFiles developer docs: https://developers.lottiefiles.com/
+
+## Render
+
+```bash
+# install
+npm install -g puppeteer-lottie-cli
+brew install ffmpeg gifski   # ffmpeg for MP4, gifski for GIF
+
+# render (output kind = file extension)
+puppeteer-lottie -i src/anim.json -o out/animation.mp4 --width 512 --height 512 -b '#ffffff'
+# GIF:            -o out/animation.gif
+# image sequence: -o 'out/frame-%d.png'
+```
+
+## Failure modes
+
+- Package is ~5 years stale and bundles an old Puppeteer/Chromium. On Apple Silicon / recent macOS you may need `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1` + `PUPPETEER_EXECUTABLE_PATH` pointing at a system Chrome, or fork-bump puppeteer.
+- MP4 requires `ffmpeg` on PATH; GIF requires `gifski` on PATH — both runtime-resolved. Preflight-check before rendering.
+- Output kind is selected only by the `-o` extension; a wrong extension silently changes the deliverable type.
+- For long-term reliability consider a Playwright-based or `@lottiefiles/lottie` renderer behind the same JSON contract.

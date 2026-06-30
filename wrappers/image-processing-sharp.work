@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# image-processing / sharp
+
+`sharp` is the fastest Node.js image-processing module — a libvips binding that reads JPEG/PNG/WebP/AVIF/GIF/TIFF/SVG and writes raster image files. In OOTA it authors a raster **image** deliverable deterministically and headlessly: build a pixel buffer (or load an input), resize/recolor/composite/format-convert, and write it via `.toFile()`. Prebuilt binaries ship for macOS arm64+x64, so no system libvips is needed.
+
+controls do
+  image-processing.title: { label: "Title", type: "text" }
+  image-processing.width: { label: "Width (px)", type: "range" }
+  image-processing.height: { label: "Height (px)", type: "range" }
+  image-processing.format: { label: "Output format", type: "select", options: ["png", "jpeg", "webp", "avif"] }
+  image-processing.background: { label: "Background", type: "color" }
+end
+
+## Required reading
+
+- sharp official docs (pixelplumbing, Apache-2.0, Lovell Fuller & contributors): https://sharp.pixelplumbing.com/
+- anthropics/skills (official Agent Skills repo, Anthropic — no dedicated sharp skill): https://github.com/anthropics/skills
+- travisvn/awesome-claude-skills (community list): https://github.com/travisvn/awesome-claude-skills
+
+## Render
+
+```bash
+# install (local — never via global NODE_PATH)
+mkdir -p out && npm init -y >/dev/null 2>&1 && npm install sharp
+
+# generate the image
+node gen.mjs   # calls sharp(...).<format>().toFile('out/image.<ext>')
+```
+
+## Failure modes
+
+- ESM `ERR_MODULE_NOT_FOUND`: install sharp locally in the project; do not resolve a global install via `NODE_PATH`.
+- `./package.json` export is blocked — read the version another way, not via `require('sharp/package.json')`.
+- Operations are async (Promise-based) — `await .toFile()` before reading metadata.
+- Codec defaults shift across libvips versions — pin compression effort/quality explicitly for reproducible builds.
+- Requires Node `^18.17.0` or `>=20.3.0` (Node-API v9).

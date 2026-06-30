@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# ar-vr / model-viewer
+
+Google's `<model-viewer>` renders interactive 3D models (glTF/GLB) in any evergreen
+browser via three.js. The deterministic deliverable is the declarative HTML markup
+itself; a headless Chromium driver waits for `modelViewer.loaded===true` then screenshots
+the loaded element to emit a reproducible PNG poster.
+
+controls do
+  ar-vr.title: { label: "Title", type: "text" }
+  ar-vr.src: { label: "Model src (.glb/.gltf URL or path)", type: "text" }
+  ar-vr.camera_orbit: { label: "Camera orbit (pinned pose)", type: "text" }
+  ar-vr.exposure: { label: "Exposure", type: "range" }
+  ar-vr.background: { label: "Background", type: "color" }
+end
+
+## Required reading
+- Official docs — attributes, properties, events: https://modelviewer.dev/docs (Google Inc., Apache-2.0)
+- google/model-viewer — source + render-fidelity-tools headless pipeline: https://github.com/google/model-viewer (Google Inc., Apache-2.0)
+- No official Anthropic skill exists (checked 2026-06): https://github.com/anthropics/skills
+
+## Render
+```bash
+# install
+mkdir -p /tmp/mv && cd /tmp/mv && npm init -y && npm install puppeteer
+curl -sL -o astronaut.glb https://modelviewer.dev/shared-assets/models/Astronaut.glb
+
+# render (headless Chromium → deterministic PNG)
+node shoot.mjs   # puppeteer: goto file://scene.html, waitForFunction mv.loaded===true, el.screenshot()
+file out.png      # expect: PNG image, 1200x1200 @ deviceScaleFactor 2
+```
+
+## Failure modes
+- Waiting on `DOMContentLoaded` instead of `modelViewer.loaded===true` → blank/partial frame (three.js decode is async).
+- Unpinned `camera-orbit`/`exposure`/`auto-rotate`/`interaction-prompt` → non-reproducible pose.
+- GPU rasterization drift between machines → use perceptual/threshold diffing (ImageMagick), not exact hashes.
+- Expecting a CLI — none exists; the headless-browser harness is mandatory for non-interactive renders.
+- Unpinned `environment-image`/`skybox-image`/`shadow-intensity` → lighting changes break byte-stable output.

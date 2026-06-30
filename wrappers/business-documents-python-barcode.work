@@ -1,0 +1,32 @@
+<!-- generated draft — needs validation -->
+# business-documents / python-barcode
+
+Generate standard 1D barcodes (EAN, UPC, Code128, Code39, ITF, ISBN, Codabar, …) as deterministic, dependency-free SVG using the pure-Python `python-barcode` library. SVG is the default writer: pure text, diffable, version-controllable, zero binary/font dependencies. Raster PNG is available via the optional Pillow ImageWriter.
+
+controls do
+  business-documents.data: { label: "Barcode data", type: "text" }
+  business-documents.type: { label: "Barcode type", type: "select", options: ["ean13", "ean8", "upca", "code128", "code39", "isbn13", "itf", "codabar"] }
+  business-documents.module_height: { label: "Module height (mm)", type: "range" }
+  business-documents.write_text: { label: "Render human-readable text", type: "toggle" }
+end
+
+## Required reading
+- python-barcode docs (project, no usage restriction): https://python-barcode.readthedocs.io/
+- Source / API (MIT): https://github.com/Whic/python-barcode
+- No official Anthropic/Claude skill and no notable community skill exists (as of 2026-06); author directly against the upstream docs.
+
+## Render
+```bash
+# SVG only (zero deps):
+pip install "python-barcode==0.16.1"
+# For PNG/raster add Pillow:
+# pip install "python-barcode[images]==0.16.1"
+bash tools/steps/business-documents-python-barcode.sh "$SESSION" "$OUT"
+```
+
+## Failure modes
+- `save()` appends the extension automatically — pass the path WITHOUT an extension or you get e.g. `out.svg.svg`.
+- EAN/UPC require an exact-length numeric data string; the writer auto-computes the trailing check digit, so supply data WITHOUT the final check digit.
+- PNG/raster output needs the `[images]` extra (Pillow) and `writer=ImageWriter()`; SVGWriter cannot emit PNG.
+- Pin version 0.16.1: glyph/font rendering of the human-readable text varies across releases, breaking deterministic diffs.
+- Code128/Code39 accept alphanumeric data; numeric-only types (EAN/UPC/ITF) reject letters.

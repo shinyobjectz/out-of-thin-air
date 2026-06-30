@@ -1,0 +1,32 @@
+<!-- generated draft — needs validation -->
+# business-documents / segno
+
+Segno is a pure-Python QR / Micro QR encoder (ISO/IEC 18004:2015(E)) with zero dependencies. It emits deterministic, diffable SVG (preferred OOTA kind) and built-in PNG, so a fixed (data, error, mask, scale, border) always renders byte-identical output — ideal for version control.
+
+controls do
+  business-documents.title: { label: "Data / payload", type: "textarea" }
+  business-documents.error: { label: "Error correction", type: "select", options: ["l", "m", "q", "h"] }
+  business-documents.scale: { label: "Scale", type: "range" }
+  business-documents.border: { label: "Quiet-zone border", type: "range" }
+  business-documents.dark: { label: "Dark color", type: "color" }
+  business-documents.light: { label: "Light color", type: "color" }
+end
+
+## Required reading
+- [heuer/segno](https://github.com/heuer/segno) — canonical source + docs, Lars Heuer, BSD-3-Clause.
+- [Segno documentation](https://segno.readthedocs.io/) — official docs, BSD-3-Clause.
+
+## Render
+```bash
+python3 -m venv /tmp/segno-env && /tmp/segno-env/bin/pip install segno
+/tmp/segno-env/bin/segno 'https://oota.example' -o out/qr.svg --scale 8 --border 4 --error m
+# raster fallback:
+/tmp/segno-env/bin/segno 'https://oota.example' -o out/qr.png --scale 8 --border 4 --error m
+```
+
+## Failure modes
+- Forgetting to pin `--error` (and optionally mask) breaks byte-reproducibility across versions of intent — always set them explicitly.
+- Over-long payloads silently bump the QR version up; fix `error` and check the resulting version if you need stable dimensions.
+- Avoid interactive/animated outputs — they are non-deterministic and not valid OOTA deliverables.
+- Color codes via `dark=`/`light=` are fine, but low dark/light contrast yields unscannable codes.
+- File format is inferred from the extension; a wrong extension produces the wrong serializer.

@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# data-visualization / Plotly (Kaleido)
+
+Plotly defines figures as declarative, version-controllable Python (or JSON) specs; Kaleido renders them headlessly to deterministic PNG/SVG/PDF. The `.py` source is the component, the rendered image is the build artifact. As of Kaleido v1, Chrome is no longer bundled — `plotly_get_chrome` must run once before any export.
+
+controls do
+  data-visualization.title: { label: "Chart title", type: "text" }
+end
+
+## Required reading
+- [Official Plotly Python docs — Static Image Export](https://plotly.com/python/static-image-export/) — official; canonical `write_image` / Kaleido / `plotly_get_chrome` reference (Plotly Technologies, MIT-licensed library).
+- [Plotly skill (k-dense-ai)](https://www.skillsdirectory.com/skills/k-dense-ai-plotly) — community; Express vs Graph Objects, 40+ chart types.
+- [Anthropic 'data' plugin](https://www.claudepluginhub.com/plugins/anthropics-data-data) — official; Plotly charts in the secure Python sandbox.
+- [claude-scientific-skills (ricable)](https://deepwiki.com/ricable/claude-scientific-skills/7-visualization-skills) — community; scientific viz helpers.
+
+## Render
+```bash
+python3 -m venv /tmp/plv
+/tmp/plv/bin/pip install --upgrade "plotly>=6.1.1" "kaleido>=1.0"
+/tmp/plv/bin/plotly_get_chrome -y   # Kaleido v1 does NOT bundle Chrome
+/tmp/plv/bin/python -c "import plotly.express as px; px.bar(x=['a','b','c'], y=[1,3,2], title='OOTA smoke').write_image('/tmp/oota_plotly.png', width=600, height=400, scale=2)"
+file /tmp/oota_plotly.png   # -> PNG image data, 1200 x 800
+```
+
+## Failure modes
+- **Chrome missing** (#1): Kaleido v1 dropped the bundled browser — run `plotly_get_chrome` (or `pio.get_chrome()`) once or every export hangs/errors.
+- **Deprecated paths**: Orca and Kaleido v0 are removed after Sept 2025 — do not use `plotly.io.orca` or kaleido<1.0.
+- **Non-deterministic renders**: always set explicit `width`/`height`/`scale`; defaults vary across machines.
+- **Slow batch**: Chrome startup dominates — use `pio.write_images([...])` or `kaleido.Kaleido(n=4)` context manager for multiple figures.
+- **Wrong artifact**: extension picks format — `.png/.jpg/.webp` -> image, `.svg` -> svg, `.pdf` -> pdf, `.html` (use `write_html`) -> html.

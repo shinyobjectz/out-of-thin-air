@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# business-documents / Typst invoice-maker
+
+Render a beautiful, reproducible PDF invoice from a declarative data record using the official Typst Universe `invoice-maker` template (Adrian Sieber, ISC). Text-in / PDF-out: edit the data, recompile, get a byte-stable invoice. Supports taxes, discounts, cancellations, EN/DE, and custom banners/colors/fonts.
+
+controls do
+  business-documents.title: { label: "Invoice title", type: "text" }
+  business-documents.invoice_id: { label: "Invoice ID", type: "text" }
+  business-documents.biller: { label: "Biller name", type: "text" }
+  business-documents.recipient: { label: "Recipient name", type: "text" }
+  business-documents.item_description: { label: "Line item", type: "text" }
+  business-documents.hourly_rate: { label: "Hourly rate", type: "range" }
+  business-documents.source: { label: "invoice.typ", type: "textarea", file: "src/invoice.typ" }
+end
+
+## Required reading
+- invoice-maker package (the template, ISC): https://typst.app/universe/package/invoice-maker/
+- Typst official docs (language + reference): https://typst.app/docs/
+- Typst LLM/agent skill file thread: https://forum.typst.app/t/llm-skill-file-for-claude-code-codex-etc/8397
+- typst-claude-skill (ChanMeng666, community): https://github.com/ChanMeng666/typst-claude-skill
+- claude-skill-typst (lucifer1004, community): https://github.com/lucifer1004/claude-skill-typst
+
+## Render
+```bash
+# install (native binary, Apache-2.0)
+brew install typst   # or: cargo install --locked typst-cli
+
+# compile (first run fetches @preview/invoice-maker from the registry)
+typst compile src/invoice.typ out/invoice.pdf
+```
+
+## Failure modes
+- Field name/shape mismatch: keys must match the package record (biller, recipient, items, rates, taxes). Adjust per the Universe README if compile errors.
+- Version drift: README example pins `invoice-maker:1.0.0`; current is `1.1.0`. Pin `1.1.0` for reproducibility.
+- Airgap: first compile needs network to fetch the `@preview` package. Pre-warm `~/.cache/typst` or vendor the package for offline CI.
+- Missing fonts: custom fonts must be on the system or passed via `--font-path`; otherwise Typst falls back silently.

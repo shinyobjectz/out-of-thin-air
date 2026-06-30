@@ -1,0 +1,29 @@
+<!-- generated draft — needs validation -->
+# games / phaser
+
+Phaser is a free, open-source (MIT) 2D HTML5 game framework rendering via Canvas and WebGL. This wrapper emits a self-contained `index.html` that loads Phaser from a pinned CDN and boots a single scene drawing a rectangle and title text — a deterministic, committable source you can extend into a full game. For a fixed image, drive the page with a headless browser and snapshot a frame.
+
+controls do
+  games.title: { label: "Game title", type: "text" }
+  games.cdn: { label: "Phaser CDN pin", type: "text" }
+end
+
+## Required reading
+- Official Phaser API + docs (MIT, Phaser Studio Inc.) — https://docs.phaser.io/api-documentation/api-documentation
+- phaser (game-creator collection, community, opusgamelabs) — https://crossaitools.com/skills/opusgamelabs/game-creator/phaser
+- phaser-gamedev (community, pmarashian/cursor-agent-skills) — https://lobehub.com/skills/pmarashian-cursor-agent-skills-phaser-gamedev
+- Phaser Game Development (community Claude Code skill, MCP Market) — https://mcpmarket.com/tools/skills/phaser-game-development
+
+## Render
+```bash
+# The index.html is the deliverable; open it in any browser.
+# For a deterministic PNG snapshot of the canvas:
+npx playwright install chromium
+node -e "const{chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage();await p.goto('file://'+process.cwd()+'/out/index.html');await p.waitForTimeout(1000);await p.screenshot({path:'out/out.png'});await b.close();})()"
+```
+
+## Failure modes
+- `type: Phaser.HEADLESS` runs game logic but produces NO pixels — use `Phaser.AUTO`/`Phaser.CANVAS` when an image is the goal.
+- The jsdom + node-canvas server path is version-fragile and has no WebGL; prefer real headless Chromium for fidelity.
+- Snapshotting before the scene's first tick yields a blank canvas — wait for at least one frame.
+- Pin Phaser (`phaser@4.2.1`) and the browser version for reproducible output.

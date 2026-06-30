@@ -1,0 +1,40 @@
+<!-- generated draft — needs validation -->
+# motion-graphics / motion-canvas
+
+Motion Canvas is an MIT TypeScript library + web editor for programmatic vector animation. Scenes are authored as deterministic generator functions (`makeScene2D(function* (view){...})`) using `@motion-canvas/2d` primitives, and time advances only through `yield*` flow helpers — so identical source produces identical frames (git-friendly). The deliverable is **video**: an MP4 via the official `@motion-canvas/ffmpeg` exporter, or a PNG image sequence. CAVEAT: there is no official headless CLI render — rendering is triggered from the Vite-served editor UI (RENDER button). Unattended macOS rendering needs a community headless-browser driver (Puppeteer/Playwright) pointed at the editor.
+
+controls do
+  motion-graphics.title: { label: "Title", type: "text" }
+  motion-graphics.duration: { label: "Duration (s)", type: "range", min: "1", max: "30", step: "1" }
+  motion-graphics.fps: { label: "Frame rate", type: "select", options: "24,30,60" }
+  motion-graphics.bg: { label: "Background color", type: "color" }
+  motion-graphics.width: { label: "Width", type: "range", min: "256", max: "1920", step: "16" }
+  motion-graphics.height: { label: "Height", type: "range", min: "256", max: "1080", step: "16" }
+  motion-graphics.color: { label: "Shape color", type: "color" }
+  motion-graphics.source: { label: "Scene (TSX)", type: "textarea", file: "src/scenes/example.tsx" }
+end
+
+## Required reading
+- Motion Canvas official docs (quickstart, rendering, FFmpeg exporter) — https://motioncanvas.io/docs/ — official, MIT — motioncanvas.io
+- Motion Canvas source — https://github.com/motion-canvas/motion-canvas — official, MIT
+- Exporters repo + FFmpeg pkg — https://github.com/motion-canvas/exporters , https://www.npmjs.com/package/@motion-canvas/ffmpeg — official, MIT
+- motion-canvas-skills (Claude Code skill) — https://github.com/apoorvlathey/motion-canvas-skills — community, MIT — apoorvlathey (`npx add-skill apoorvlathey/motion-canvas-skills`)
+- Headless render tracking: GH issues #415, #1218 (no official CLI render yet)
+
+## Render
+```bash
+# scaffold + deps (one-time)
+npm create @motion-canvas@latest my-anim -- --template typescript
+cd my-anim && npm install && npm install --save @motion-canvas/ffmpeg
+# add ffmpeg() to plugins in vite.config.ts, then:
+npm start                       # serves editor at localhost:9000 → RENDER from Video Settings (FFmpeg exporter)
+# headless (community, no official CLI): drive the editor with Puppeteer/Playwright to click RENDER
+# → MP4 (H.264) written to ./output/project.mp4   (image-sequence exporter writes PNG frames instead)
+```
+
+## Failure modes
+- No MP4, only PNGs: FFmpeg exporter not selected/configured — add `ffmpeg()` to `plugins` in `vite.config.ts` and pick the FFmpeg exporter in Video Settings.
+- "render hangs in CI": there is NO official headless CLI render (GH #415/#1218) — a bare `npm start` will not produce a file unattended; you must script a headless browser to click RENDER.
+- Non-determinism: avoid `Math.random()` / `Date.now()` in scenes; drive everything through `yield*`/`waitFor`/`spring` so frames are reproducible.
+- ffmpeg not found: `@motion-canvas/ffmpeg` bundles `ffmpeg-static` — install that package, do NOT rely on a system ffmpeg.
+- Scene shows nothing: ensure the scene is registered in the project meta and the generator actually `view.add(...)`s nodes before yielding.

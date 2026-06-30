@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# diagrams / Excalidraw (@excalidraw/utils)
+
+Excalidraw stores diagrams as a deterministic, version-controllable `.excalidraw` JSON document —
+a flat `elements[]` array of hand-drawn-style shapes plus an `appState`. This wrapper authors that
+JSON and renders it to SVG headlessly via the community `@swiftlysingh/excalidraw-cli` (MIT), which
+bundles fonts and a DOM shim so it runs on macOS with no browser. Pin `seed`/`versionNonce` for
+byte-stable output.
+
+controls do
+  diagrams.title: { label: "Title", type: "text" }
+end
+
+## Required reading
+- [Excalidraw Export Utilities — developer docs](https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/utils/export) (official, MIT — Excalidraw)
+- [`@excalidraw/utils` — npm](https://www.npmjs.com/package/@excalidraw/utils) (official, MIT — Excalidraw / excalidraw GitHub org)
+- [excalidraw-render-mcp](https://github.com/bassimeledath/excalidraw-render-mcp) (community — bassimeledath)
+- No official Anthropic/Claude skill exists for Excalidraw as of 2026-06.
+
+## Render
+```bash
+npm install -g @swiftlysingh/excalidraw-cli
+# author diagram.excalidraw, then:
+excalidraw-cli convert diagram.excalidraw --format svg --output diagram.svg
+# raster: excalidraw-cli convert diagram.excalidraw --format png --scale 2 --output diagram.png
+```
+
+## Failure modes
+- Calling `@excalidraw/utils` directly in raw Node fails — it assumes a browser DOM and needs
+  jsdom + node-canvas shims. Use the CLI wrapper instead.
+- Unpinned `seed`/`versionNonce` produce non-deterministic rough.js jitter — diffs become noisy.
+- Missing/wrong element fields (no `seed`, `isDeleted`, `version`) can break rendering — emit the
+  full element shape.
+- Node < 20.19 not supported by the CLI.

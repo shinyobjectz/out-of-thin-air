@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# web-ui-prototypes / Playwright (HTML → screenshot)
+
+Author HTML/CSS as version-controlled source, then render it deterministically to a PNG with a headless Chromium driven by Playwright. The HTML is the source of truth; the screenshot is a regenerable build artifact. Pin viewport, deviceScaleFactor, and disable animations for reproducible pixels.
+
+controls do
+  web-ui-prototypes.title: { label: "Title", type: "text" }
+  web-ui-prototypes.width: { label: "Viewport width (px)", type: "range" }
+  web-ui-prototypes.height: { label: "Viewport height (px)", type: "range" }
+  web-ui-prototypes.full_page: { label: "Full-page capture", type: "toggle" }
+end
+
+## Required reading
+
+- [Playwright docs — Screenshots](https://playwright.dev/docs/screenshots) — Microsoft, Apache-2.0; `page.screenshot` / `locator.screenshot`, `fullPage`, `clip`.
+- [webapp-testing skill](https://github.com/anthropics/skills) — Anthropic official Agent Skills repo; runs Playwright headlessly and captures screenshots.
+- [Playwright Plugin (Claude)](https://claude.com/plugins/playwright) — Anthropic official plugin: navigate/click/fill/screenshot/PDF.
+- [playwright-skill](https://github.com/lackeyjb/playwright-skill) — community (MIT-style) Claude Code skill; writes + executes Playwright on-the-fly.
+
+## Render
+
+```bash
+# install (one-time; browser binary is a prerequisite, not bundled)
+npm i -D playwright && npx playwright install chromium
+
+# render the committed HTML source to a PNG
+node -e "const{chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:800,height:600},deviceScaleFactor:1});await p.goto('file://'+process.cwd()+'/out/page.html');await p.screenshot({path:'out/page.png',animations:'disabled'});await b.close();})()"
+
+file out/page.png   # -> PNG image data, 800 x 600
+```
+
+## Failure modes
+
+- Forgetting `npx playwright install chromium` — `chromium.launch()` fails with a missing-executable error. The browser binary is separate from the npm/pip package.
+- System-font fallback drifts pixels across machines — embed/bundle fonts in the HTML.
+- Animations/transitions cause non-deterministic captures — set `animations:'disabled'` and avoid time-based CSS.
+- Unpinned Playwright/Chromium version changes rendering — freeze via package-lock for reproducibility.
+- `fullPage:true` ignores the fixed viewport height and captures the whole document — pick one based on intent.

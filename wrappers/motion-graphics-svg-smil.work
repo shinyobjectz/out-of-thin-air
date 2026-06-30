@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# motion-graphics / SVG SMIL animation
+
+Declarative animation embedded directly in SVG markup via `animate`, `animateTransform`, `animateMotion`, and `set` elements. The deliverable is a single deterministic, version-controllable `.svg` — animation logic lives inside the markup with no external CSS/JS, so it plays even as an `<img>` or CSS background. Render two ways: a static t=0 frame (rsvg/resvg, fast validation + poster) or the actual animated timeline via a headless-Chromium pipeline to mp4.
+
+controls do
+  motion-graphics.title: { label: "Title", type: "text" }
+  motion-graphics.width: { label: "Width (px)", type: "range" }
+  motion-graphics.height: { label: "Height (px)", type: "range" }
+  motion-graphics.fill: { label: "Shape color", type: "color" }
+  motion-graphics.dur: { label: "Duration (e.g. 2s)", type: "text" }
+  motion-graphics.svg: { label: "SVG source", type: "textarea", file: "src/anim.svg" }
+end
+
+## Required reading
+- MDN — SVG animation with SMIL (official, CC-BY-SA): <https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_animation_with_SMIL>
+- W3C SVG Animations spec (official, W3C Document License): <https://svgwg.org/specs/animations/>
+- svg-animations skill — supermemoryai/skills (community, license unknown): <https://github.com/supermemoryai/skills/blob/main/svg-animations/SKILL.md>
+- svg-creator-skill — upbrew-tech (community, see repo LICENSE): <https://github.com/upbrew-tech/svg-creator-skill>
+
+## Render
+```bash
+# install
+brew install librsvg ffmpeg && npm install -g svg-video   # svg-video needs Node 22+
+
+# STATIC frame (validates well-formedness + initial composition; IGNORES SMIL timeline)
+rsvg-convert -o frame.png anim.svg
+
+# ANIMATED video (headless Chromium plays the SMIL clock, encodes mp4)
+svg-video anim.svg anim.mp4
+```
+
+## Failure modes
+- Using rsvg/resvg to "verify the animation" — they are static-subset renderers and only ever show t=0. They never animate.
+- Expecting svg-video without Node 22+ or ffmpeg installed — both are hard requirements.
+- Relying on svg-video's real-time screen recording for frame-exact output — it can drop/duplicate frames. For deterministic capture, step `svg.setCurrentTime(t)` per frame in a Puppeteer loop + screenshot + ffmpeg.
+- `<animateColor>` is deprecated — use `<animate attributeName="fill">`.
+- Forgetting `fill="freeze"` — animation snaps back to start instead of holding final value.

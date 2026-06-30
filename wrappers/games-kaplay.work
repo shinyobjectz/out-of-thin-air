@@ -1,0 +1,41 @@
+# games / kaplay
+
+<!-- generated draft — needs validation -->
+
+KAPLAY (formerly Kaboom.js) is an MIT-licensed, fun-first 2D HTML5 game library for JS/TS. Its OOTA deliverable is a self-contained HTML game bundle: version-controlled source (`main.js` + `index.html` shell) bundled deterministically with esbuild/Vite into static HTML+JS. Runtime is canvas+WebGL inside the browser, so a reproducible image requires a headless-Chromium capture step against a pinned RNG seed.
+
+controls do
+  games.title: { label: "Scene text", type: "text" }
+  games.width: { label: "Canvas width", type: "range" }
+  games.height: { label: "Canvas height", type: "range" }
+  games.seed: { label: "RNG seed", type: "text" }
+  games.source: { label: "Game source", type: "textarea", file: "src/main.js" }
+end
+
+## Required reading
+
+- KAPLAY docs (API reference + guides) — https://kaplayjs.com/docs/ — official, MIT, KAPLAY team (kaplayjs)
+- kaplayjs/kaplay source repo — https://github.com/kaplayjs/kaplay — official, MIT
+- create-kaplay scaffolder — https://github.com/kaplayjs/create-kaplay — official, MIT
+
+## Render
+
+```bash
+mkdir -p kp && cd kp
+npm init -y
+npm install kaplay esbuild
+# write main.js (import kaplay; k.add([...])) and index.html (<canvas> + game.js)
+npx esbuild main.js --bundle --format=iife --outfile=game.js
+# deterministic deliverable = index.html + game.js
+# optional PNG proof (headless Chromium):
+npm install -D playwright && npx playwright install chromium
+node -e "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage();await p.goto('file://'+process.cwd()+'/index.html');await p.waitForTimeout(500);await p.screenshot({path:'frame.png'});await b.close();})()"
+```
+
+## Failure modes
+
+- No native headless/CLI renderer — `screenshot()`/`download()` only work inside a live browser context; OOTA image/video kinds need a Playwright/Puppeteer wrapper.
+- Version drift: 4000.x is alpha (API may shift); pin to 3001.x stable for reproducibility, or pin the exact alpha tag.
+- Animated output is non-deterministic across frames — pin the RNG seed and capture a fixed frame.
+- No official Claude skill / llms.txt; this wrapper carries its own usage prompts.
+- CDN no-build path loads a global `kaplay()` on `window` — works but is not version-locked unless you pin the unpkg version.

@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# image-processing / G'MIC
+
+G'MIC (GREYC's Magic for Image Computing) is an open-source image-processing framework exposing 4000+ filters through its own scriptable language. A chained pipeline string transforms input images and emits output files headlessly and deterministically. The recipe (`.gmic` pipeline) is the version-controllable artifact; the rendered raster **image** is the deliverable. This wrapper drives the `gmic` CLI — the most reliable headless driver (the Python binding's wheels lag behind current Python).
+
+controls do
+  image-processing.title: { label: "Title", type: "text" }
+  image-processing.pipeline: { label: "Pipeline", type: "textarea", file: "src/recipe.gmic" }
+  image-processing.seed: { label: "Seed (srand)", type: "text" }
+  image-processing.bg: { label: "Background", type: "color" }
+end
+
+## Required reading
+- G'MIC official reference / list of commands (GREYC Lab / D. Tschumperlé, CeCILL) — https://gmic.eu/reference/list_of_commands.html
+- gmic-py docs (binding usage; NumPy/PIL/scikit-image interop, GreycLab / myselfhimself, CeCILL) — https://gmic-py.readthedocs.io/
+- anthropics/skills (no G'MIC skill present) — https://github.com/anthropics/skills
+- No official Anthropic/Claude skill — drive the documented CLI / G'MIC language directly.
+
+## Render
+```bash
+# install the CLI (preferred headless driver)
+brew install gmic
+
+# from scratch (no input): synthesize a 64x64 RGB image
+gmic 64,64,1,3 fill_color 255,128,0 -o out.png
+
+# transform an input image with a chained pipeline (the recipe)
+gmic input.png -blur 3 -o output.png
+
+# reproducible stochastic filters: inject a seed first
+gmic input.png srand 42 fx_freaky_details 2,10,1,11,0,32,0 -o output.png
+
+# verify the deliverable
+file out.png   # -> PNG image data, 64 x 64
+```
+
+## Failure modes
+- Stochastic filters (noise, sketch, freaky_details) are non-deterministic without `srand <seed>` — always inject a fixed seed for reproducible output.
+- Output is only byte-stable across runs if the gmic version is pinned — pin via brew / check `gmic version`.
+- Python binding (`pip install gmic`) wheels lag behind current Python / macOS arm64 — prefer the CLI for headless CI; fall back to the binding only when wheels exist.
+- Pipeline syntax errors abort with a nonzero exit — validate output existence + format (`file`) after every render.
+- The CLI can emit video frames / `.obj` meshes too, but this wrapper targets the raster image kind.

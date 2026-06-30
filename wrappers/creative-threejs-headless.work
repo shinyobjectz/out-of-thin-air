@@ -1,0 +1,44 @@
+<!-- generated draft — needs validation -->
+# creative / three.js (headless render)
+
+three.js driven headlessly renders a deterministic scene graph to a PNG on the server. The
+default path uses the `gl` package (windowless WebGL 1.0.3) with a pinned older three that still
+ships the WebGL1 renderer; pixels are read back and encoded with pngjs. Author a Scene + Camera +
+Meshes/Materials/Lights in JS, call `renderer.render`, and get reproducible bytes.
+
+controls do
+  creative.title: { label: "Title", type: "text" }
+  creative.width: { label: "Width (px)", type: "range" }
+  creative.height: { label: "Height (px)", type: "range" }
+  creative.path: { label: "Render path", type: "select", options: ["headless-gl", "puppeteer"] }
+  creative.scene: { label: "Scene builder (JS)", type: "textarea", file: "src/scene.js" }
+  creative.background: { label: "Background", type: "color" }
+end
+
+## Required reading
+- [three.js Manual & Docs](https://threejs.org/manual/) — official, MIT (three.js authors / mrdoob)
+- [mrdoob/three.js repo](https://github.com/mrdoob/three.js) — official, MIT (three.js authors)
+- [stackgl/headless-gl (`gl`)](https://github.com/stackgl/headless-gl) — community, BSD-2-Clause (stackgl contributors)
+- [bldrs-ai/headless-three](https://github.com/bldrs-ai/headless-three) — community, AGPL-3.0 (bldrs.ai)
+
+## Render
+```bash
+# headless-gl path (default, WebGL1, deterministic)
+mkdir -p /tmp/three-headless && cd /tmp/three-headless && npm init -y
+npm install three@0.124.0 gl@^8 pngjs
+node render.js   # builds scene, renderer.render, gl.readPixels, flip rows, pngjs encode -> out.png
+
+# puppeteer path (current three.js / WebGL2 / WebGPU)
+npm install three puppeteer
+node render-puppeteer.js   # load HTML page, render scene, page.screenshot the canvas
+
+# video extension (secondary): render numbered PNG sequence then
+ffmpeg -framerate 30 -i frame_%04d.png -c:v libx264 -pix_fmt yuv420p out.mp4
+```
+
+## Failure modes
+- **Black/empty frame** — modern three (r163+) dropped the WebGL1 renderer; `gl` only does WebGL 1.0.3. Pin `three@0.124.0` on the headless-gl path, or switch to puppeteer.
+- **Upside-down image** — WebGL framebuffer origin is bottom-left; vertically flip rows when copying readPixels output into the PNG.
+- **Nondeterministic output** — avoid `Math.random`, `Date`, and wall-clock animation time; drive animation by an explicit frame index and pin three + gl versions.
+- **GPU-dependent bytes** — software rasterization differs from GPU output; force the SwiftShader/software path for headless determinism, do not rely on the host GPU.
+- **Puppeteer black frames** — headless Chrome GPU accel is flaky; use the SwiftShader software path.

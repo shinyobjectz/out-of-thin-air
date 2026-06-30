@@ -1,0 +1,32 @@
+<!-- generated draft — needs validation -->
+# image-processing / gegl
+
+GEGL is GIMP's graph-based, non-destructive image engine. Author a deterministic operation graph as a one-line gegl-chain (ops after `--`) or an XML composition, then render it headlessly to a raster file with the `gegl` CLI. The graph is the version-controllable artifact; rendering is reproducible for a fixed input + op params.
+
+controls do
+  image-processing.title: { label: "Title", type: "text" }
+  image-processing.chain: { label: "gegl-chain ops", type: "textarea", file: "src/graph.gegl" }
+  image-processing.format: { label: "Output format", type: "select", options: ["png", "jpg", "tif"] }
+end
+
+## Required reading
+- GEGL project site: https://gegl.org/ (GNOME, official)
+- Operation reference: https://gegl.org/operations/ (official) — or `gegl --list-all` / `gegl --info <op>`
+- License: mixed LGPL-3.0/GPL-3.0/BSD-3/MIT (Homebrew formula); GPL matters when redistributing binaries.
+
+## Render
+```bash
+brew install gegl
+# chain pipeline from the .gegl source (ops live after `--`):
+gegl -o out/graph.png -- $(cat src/graph.gegl)
+# or render an XML composition:
+# gegl src/graph.xml -o out/graph.png
+file out/graph.png
+```
+
+## Failure modes
+- Pin `gegl` + `babl` versions — op default property values can shift across releases, changing output for the same spec.
+- Output encoder is chosen by the `-o` extension; a missing/wrong extension yields the wrong format or an error.
+- Chain ops use `property=value` syntax; color literals need quoting, e.g. `color1='rgb(0,0,0)'`.
+- Unknown op names fail silently-ish; verify against `gegl --list-all`.
+- Python/GIR path needs the typelib on `GI_TYPELIB_PATH` — prefer the CLI for reproducibility.

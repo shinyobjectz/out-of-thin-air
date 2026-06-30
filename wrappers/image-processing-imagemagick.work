@@ -1,0 +1,47 @@
+<!-- generated draft — needs validation -->
+
+# image-processing / ImageMagick (MSL)
+
+ImageMagick renders a deterministic raster image (PNG/JPG/WebP/TIFF) from a
+version-controlled `magick` CLI pipeline. MSL (XML markup) is the aspirational
+declarative surface, but it is broken on current IM7 Homebrew builds, so this
+wrapper drives the `magick` CLI directly and falls back to a hint when the
+binary is missing.
+
+controls do
+  image-processing.title: { label: "Title", type: "text" }
+  image-processing.size: { label: "Canvas size (WxH)", type: "text" }
+  image-processing.bg: { label: "Background", type: "color" }
+  image-processing.format: { label: "Output format", type: "select", options: ["png", "jpg", "webp", "tiff"] }
+end
+
+## Required reading
+
+- Official ImageMagick docs — conjure / MSL (ImageMagick Studio LLC, Apache-2.0-compatible): https://imagemagick.org/script/conjure.php
+- anthropics/skills (Anthropic, official): https://github.com/anthropics/skills
+- oaustegard/claude-skills — processing-images (community, MIT-style): https://github.com/oaustegard/claude-skills/blob/main/processing-images/SKILL.md
+- jezweb/claude-skills — design-assets/image-processing (community): https://github.com/jezweb/claude-skills/blob/main/plugins/design-assets/skills/image-processing/SKILL.md
+
+## Render
+
+```bash
+# install
+brew install imagemagick && magick --version
+
+# render (deterministic CLI pipeline; -strip for byte-stable output)
+magick -size 200x100 gradient:navy-white \
+  -draw "fill red circle 100,50 100,20" -strip out/image.png
+magick identify out/image.png
+```
+
+## Failure modes
+
+- `convert` is deprecated in IM7 — use `magick`.
+- MSL (`conjure script.msl` / `magick msl:script.msl out`) ERRORS on Homebrew
+  7.1.2-13 (`must specify image size` / `MSLStartElement 7054`). Use the CLI
+  pipeline; only use `.msl` on a build where the probe passes (or IM6 conjure).
+- Text rendering (`-annotate`/`-draw text`) needs freetype/ghostscript — absent
+  from the default Homebrew delegate set. Install `imagemagick-full` (keg-only)
+  or freetype+ghostscript.
+- Omitting `-strip`/pinned `-define` yields timestamp-driven byte differences —
+  artifacts will not hash stably under version control.

@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# data-visualization / echarts
+
+Apache ECharts (Apache 2.0) renders a JSON `option` spec to a deterministic,
+animation-free SVG via built-in server-side rendering (ECharts 5.3.0+). No
+browser, no Chromium, zero native dependencies — `init(null, null, {renderer:'svg',
+ssr:true, width, height})` then `renderToSVGString()`. The `option` object is the
+version-controllable source of truth; the SVG is diff-friendly text output.
+
+controls do
+  data-visualization.title: { label: "Chart title", type: "text" }
+  data-visualization.type: { label: "Series type", type: "select", options: ["bar", "line", "pie", "scatter"] }
+  data-visualization.width: { label: "Width (px)", type: "range" }
+  data-visualization.height: { label: "Height (px)", type: "range" }
+  data-visualization.option: { label: "ECharts option JSON", type: "textarea", file: "src/option.json" }
+end
+
+## Required reading
+- ECharts Handbook — Server Side Rendering (official, Apache ECharts / apache/echarts, Apache-2.0): https://apache.github.io/echarts-handbook/en/how-to/cross-platform/server/
+- hustcc/mcp-echarts (community MCP server, MIT — reference only): https://github.com/hustcc/mcp-echarts
+- echarts community Claude Code skill (vamseeachanta, unspecified license — reference only): https://crossaitools.com/skills/vamseeachanta/workspace-hub/echarts
+
+## Render
+```bash
+# deterministic SVG (canonical, zero native deps)
+npm install echarts   # pin >=5.3.0 for SSR
+node -e "const e=require('echarts');const c=e.init(null,null,{renderer:'svg',ssr:true,width:600,height:400});c.setOption(require('./src/option.json'));require('fs').writeFileSync('out/chart.svg',c.renderToSVGString());c.dispose();"
+
+# optional: rasterize SVG -> PNG without node-canvas native build
+npm install @resvg/resvg-js
+node -e "const{Resvg}=require('@resvg/resvg-js');const fs=require('fs');const png=new Resvg(fs.readFileSync('out/chart.svg')).render().asPng();fs.writeFileSync('out/chart.png',png);"
+```
+
+## Failure modes
+- Width/height MUST be set explicitly in SSR — there is no DOM to measure; omitting them yields an empty/zero-size SVG.
+- ECharts < 5.3.0 has no `renderToSVGString` — pin `>=5.3.0`.
+- Without `ssr:true` the output includes animation state and is non-deterministic; always set `ssr:true`.
+- node-canvas (`canvas`) PNG path needs native libs (`brew install pkg-config cairo pango libpng jpeg giflib librsvg`); prefer `@resvg/resvg-js` to avoid the cairo build friction.
+- `option` JSON must be valid; invalid specs render blank rather than erroring loudly.

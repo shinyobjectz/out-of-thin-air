@@ -1,0 +1,29 @@
+<!-- generated draft — needs validation -->
+# games / arcade
+
+Python Arcade is a Python 3 framework for 2D games built on pyglet/OpenGL. In OOTA we use it headlessly: set `ARCADE_HEADLESS=true` before importing arcade, draw to a framebuffer, and dump a single deterministic PNG frame via `arcade.get_image().save()`. The documented headless backend is Linux/EGL only — macOS has no EGL headless path, so target a Linux container for reproducible renders.
+
+controls do
+  games.title: { label: "Frame label", type: "text" }
+end
+
+## Required reading
+- [Python Arcade docs — Headless guide](https://api.arcade.academy/en/latest/programming_guide/headless.html) — The Python Arcade Library, MIT (official)
+- [pythonarcade/arcade source repo](https://github.com/pythonarcade/arcade) — Paul Vincent Craven & contributors, MIT (official)
+- [arcade on PyPI](https://pypi.org/project/arcade/) — Python Arcade maintainers, MIT (official)
+
+## Render
+```bash
+python3 -m venv venv && source venv/bin/activate
+pip install 'arcade==3.3.*'
+ARCADE_HEADLESS=true python3 scene.py   # writes out.png (100x100 PNG)
+# verify:
+test -f out.png && python3 -c "from PIL import Image; print(Image.open('out.png').size)"
+```
+
+## Failure modes
+- macOS has NO EGL headless backend: `ARCADE_HEADLESS=true` fails on macOS. Headless determinism requires a Linux container with libegl; treat macOS as dev-only with a visible window.
+- `ARCADE_HEADLESS` must be set BEFORE `import arcade` — setting it after import has no effect.
+- API churn: 3.0- used `arcade.draw_rectangle_filled(...)`; 3.3.x uses `arcade.draw_rect_filled(arcade.rect.XYWH(...))`. Pin `arcade==3.3.*` to keep render code stable.
+- For reproducibility, avoid wall-clock `on_update` timing and RNG — drive frames with a fixed counter, fixed seed, and fixed dt.
+- No native video encoder: for video, render numbered PNGs then `ffmpeg -framerate 30 -i frame_%04d.png out.mp4`.

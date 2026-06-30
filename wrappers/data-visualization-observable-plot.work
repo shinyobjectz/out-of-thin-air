@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# data-visualization / observable-plot
+
+Observable Plot renders a layered grammar of graphics (marks, scales, transforms) deterministically to SVG headless in Node via JSDOM. Pass a JSDOM document to `Plot.plot({document})`, serialize with `outerHTML`, add `xmlns` attributes, and you get a version-controllable standalone SVG. ISC license, ESM only.
+
+controls do
+  data-visualization.title: { label: "Title", type: "text" }
+end
+
+## Required reading
+- [Observable Plot official docs](https://observablehq.com/plot/) — official (Observable HQ), ISC
+- [observablehq/plot repo](https://github.com/observablehq/plot) — official (Observable HQ), ISC
+- [Observable Plot Visualization skill](https://mcpmarket.com/tools/skills/observable-plot-visualization) — community listing (not Anthropic/Observable), license unspecified
+
+## Render
+```bash
+mkdir -p /tmp/plot-smoke && cd /tmp/plot-smoke
+npm init -y >/dev/null 2>&1
+npm install @observablehq/plot d3 jsdom
+# write your spec script (see step script) then:
+node plot.mjs > out.svg
+# raster (optional, deterministic): npx @resvg/resvg-js out.svg out.png
+```
+
+## Failure modes
+- Calling `Plot.plot()` without the `document` option throws in Node — there is no `window.document`.
+- Standalone SVG is invalid without manually setting `xmlns`/`xmlns:xlink` via `setAttributeNS`.
+- `Plot.plot()` may return an HTML `<figure>` (not bare `<svg>`) when legends/titles are present — avoid color legends/titles or extract the inner SVG for a clean artifact.
+- JSDOM has no layout engine; text metrics come from Plot's estimator, so tick/label spacing differs slightly from browser rendering.
+- For raster, prefer resvg-js/sharp over Puppeteer — headless Chrome adds nondeterminism. Pin `@observablehq/plot` and `d3` versions for reproducible diffs.

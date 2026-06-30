@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# image-processing / pillow
+
+Pillow (PIL Fork) is the de-facto Python imaging library — deterministic, scriptable
+image creation and manipulation driven entirely from Python code. A `.py` script
+renders headlessly to a raster image file (PNG/JPEG/WebP/...) with no GUI or display
+dependency, which makes it a clean fit for OOTA's version-controllable authoring model.
+
+controls do
+  image-processing.title: { label: "Title", type: "text" }
+  image-processing.width: { label: "Width (px)", type: "range" }
+  image-processing.height: { label: "Height (px)", type: "range" }
+  image-processing.bg: { label: "Background", type: "color" }
+  image-processing.fg: { label: "Foreground", type: "color" }
+end
+
+## Required reading
+- [Pillow official documentation](https://pillow.readthedocs.io/en/stable/) — python-pillow project; canonical API reference and handbook/tutorial. License: MIT-CMU (HPND/PIL).
+- [image-processing skill (jezweb/claude-skills)](https://github.com/jezweb/claude-skills/blob/main/plugins/design-assets/skills/image-processing/SKILL.md) — community plugin; ships an `img-process` CLI plus Pillow-script generation for resize/crop/convert/thumbnail/OG-card/watermark workflows.
+- [Claude Cookbook — image crop tool (multimodal)](https://platform.claude.com/cookbook/multimodal-crop-tool) — Anthropic official cookbook; Pillow-backed crop tool for better image analysis.
+
+## Render
+```bash
+pip install pillow
+python render.py
+# verify
+file out.png   # -> PNG image data, ... 8-bit/color RGB, non-interlaced
+```
+
+## Failure modes
+- Output bytes drift across Pillow/libjpeg/freetype versions — pin `pillow==12.2.0`
+  for byte-stable renders.
+- System fonts are non-deterministic — bundle a TTF/OTF in-repo and load via
+  `ImageFont.truetype`, not the default `ImageFont.load_default`.
+- Pillow emits raster only — no SVG/vector output. Use a different tool for scalable
+  markup.
+- Prefer PNG as the canonical artifact (lossless, deterministic); JPEG/WebP encoders
+  may vary by build.
+- No `Image.show()` / display calls in the render script — keep it headless.

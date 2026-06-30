@@ -1,0 +1,52 @@
+<!-- generated draft — needs validation -->
+# 3d-shaders / OpenUSD (usdrecord)
+
+Author a deterministic OpenUSD stage as human-readable ASCII (`.usda`) and render it
+headlessly to a PNG via `usdrecord` and Hydra's Storm delegate (Metal on macOS). The
+`.usda` text is the version-controllable source; the PNG is the pixel deliverable.
+Note: `pip install usd-core` provides Python authoring only — it does NOT ship the
+`usdrecord` binary. A full OpenUSD build (`build_usd.py` with imaging+Hydra) or a
+vendored prebuilt is required to render.
+
+controls do
+  openusd.title: { label: "Title", type: "text" }
+  openusd.scene: { label: "Scene (.usda)", type: "textarea", file: "src/scene.usda" }
+  openusd.imageWidth: { label: "Image width (px)", type: "range" }
+  openusd.renderer: { label: "Render delegate", type: "select", options: ["Storm", "Embree"] }
+  openusd.complexity: { label: "Complexity", type: "select", options: ["low", "medium", "high", "veryhigh"] }
+  openusd.camera: { label: "Camera prim path", type: "text" }
+end
+
+## Required reading
+- OpenUSD official toolset docs (usdrecord) — Pixar / AOUSD, Apache-2.0 (mod, TOST):
+  https://openusd.org/release/toolset.html
+- NVIDIA Learn OpenUSD (install + Python authoring) — NVIDIA, vendor docs:
+  https://docs.nvidia.com/learn-openusd/latest/usdview-install-instructions.html
+- No OpenUSD-specific Anthropic skill exists: https://github.com/anthropics/skills
+
+## Render
+```bash
+# Full OpenUSD build with imaging (one-time, ~30-60min; needs Xcode CLT + cmake):
+git clone https://github.com/PixarAnimationStudios/OpenUSD
+python OpenUSD/build_scripts/build_usd.py --no-tests /opt/openusd
+export PATH=/opt/openusd/bin:$PATH
+export PYTHONPATH=/opt/openusd/lib/python:$PYTHONPATH
+
+# Verify the render binary exists BEFORE claiming render capability:
+which usdrecord
+
+# Render the stage to a PNG (Storm/Metal on macOS — no X server needed):
+usdrecord --imageWidth 512 --renderer Storm src/scene.usda out/scene.png
+file out/scene.png   # => PNG image data
+```
+
+## Failure modes
+- `usdrecord: command not found` after `pip install usd-core` — expected; usd-core is
+  authoring-only. Do a full `build_usd.py` (imaging enabled) or use a prebuilt.
+- Blank / black PNG — no light or camera in the stage; add a `DistantLight` and ensure
+  a default camera or pass `--camera`.
+- Linux headless errors (Qt/GLFW/EGL) — set offscreen GL (EGL) or use `--disableGpu`
+  with a CPU delegate; macOS Storm avoids this via Metal.
+- Embree/RenderMan output is non-byte-deterministic (sampling noise) — prefer Storm
+  raster for visual-regression stability.
+- Prefer `.usda` (diffable ASCII) over `.usdc` (binary) in version control.

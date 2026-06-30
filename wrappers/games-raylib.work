@@ -1,0 +1,29 @@
+<!-- generated draft — needs validation -->
+# games / raylib
+
+raylib is a zlib-licensed C99 library for videogame graphics. In OOTA we use it headlessly: draw into an offscreen RenderTexture, read it back, and export a single deterministic PNG frame. The Python/pyray driver is lowest friction (pip-only, no compile step).
+
+controls do
+  games.title: { label: "Frame text", type: "text" }
+end
+
+## Required reading
+- [raylib cheatsheet (official API)](https://www.raylib.com/cheatsheet/cheatsheet.html) — raysan5/raylib, zlib/libpng
+- [raylib examples: render-texture + textures-to-image](https://www.raylib.com/examples.html) — raysan5/raylib, zlib/libpng
+- [BINDINGS.md (official binding registry)](https://github.com/raysan5/raylib/blob/master/BINDINGS.md) — raysan5/raylib, zlib/libpng
+- [raylib-python-cffi / pyray docs](https://electronstudio.github.io/raylib-python-cffi/pyray.html) — electronstudio, EPL-2.0 (community)
+- [raylib-go-headless](https://github.com/icodealot/raylib-go-headless) — icodealot, zlib (community)
+
+## Render
+```bash
+pip install raylib   # or: pip install raylib-software  (CPU, no-display)
+python3 scene.py     # writes out.png (320x240 PNG)
+# verify:
+test -f out.png && python3 -c "from PIL import Image; print(Image.open('out.png').size)"
+```
+
+## Failure modes
+- RenderTexture FBOs are y-flipped — always `ImageFlipVertical` after `LoadImageFromTexture`, or the frame is upside down.
+- `FLAG_WINDOW_HIDDEN` hides the window but still needs a desktop GL context on macOS; pure no-display CI fails. Use `raylib-software` (CPU rasterizer) for headless boxes.
+- Do NOT `pip install pyray` separately — the `raylib` wheel exposes both modules. Installing pyray alone breaks imports.
+- For reproducibility, avoid `GetFrameTime()`-driven physics / RNG; step with a fixed dt and a fixed frame counter.

@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# video / revideo
+
+Full **Revideo** (headless Motion Canvas fork) — agent writes all scenes in
+`out/src/`. The step script scaffolds project config and copies voice assets; it
+never overwrites existing `src/`. Render is fully headless via `renderVideo()` /
+`npm run render` — no browser-UI click needed.
+
+controls do
+  video.title: { label: "Project id", type: "text" }
+  video.duration: { label: "Duration hint (seconds)", type: "text" }
+  video.fps: { label: "FPS hint", type: "select", options: "24, 30, 60" }
+end
+
+## Required reading
+
+- [Revideo docs](https://docs.re.video/) — official docs (llms reference)
+- [midrender/revideo](https://github.com/midrender/revideo) — MIT source + examples
+- Authoring API is largely shared with Motion Canvas (`makeScene2D`, `makeProject`, signals, tweening)
+
+## Voiceover
+
+Chain `audio/tts-local` first. WAV lands in `public/voice/voice.wav`; sync via the
+`Audio` tag in your scene.
+
+## Render
+
+```bash
+# scaffold once (step script does this), then write src/project.ts + scenes
+npm install
+node render.mjs            # headless: renderVideo({projectFile:'./src/project.ts'})
+# or:
+npm run render             # CLI render
+```
+
+## Failure modes
+
+- **ffmpeg missing** — `brew install ffmpeg` if the bundled binary isn't used
+- **Chromium not fetched** — puppeteer downloads it on `npm install`; re-run install if absent
+- **Empty src/** — agent must write `src/project.ts` + scenes; see `out/REVIDEO.md`
+- **Re-run preserves src/** — step will not clobber agent-authored TS
+- **Telemetry** — set `DISABLE_TELEMETRY=true` in agent/CI envs

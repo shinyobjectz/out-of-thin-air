@@ -1,0 +1,34 @@
+<!-- generated draft — needs validation -->
+# ar-vr / usd-from-gltf
+
+usd_from_gltf (UFG) is Google's native C++ CLI that converts a deterministic, version-controllable glTF 2.0 source (`.gltf` text + assets, or `.glb`) into a single `.usdz` (artifact kind **model3d**) for iOS AR Quick Look. The glTF is the source you edit and diff; UFG is a pure transform. Upstream is archived (read-only, not officially supported), so the reliable headless macOS path is the community Docker image `leon/usd-from-gltf`. Pair with `usdcat` to dump `.usda` text for snapshot diffing and `usdchecker` for AR validation.
+
+controls do
+  ar-vr.title: { label: "Title", type: "text" }
+  ar-vr.source: { label: "glTF 2.0 source", type: "textarea", file: "src/model.gltf" }
+  ar-vr.output_format: { label: "Output format", type: "select", options: ["usdz", "usda"] }
+end
+
+## Required reading
+- [google/usd_from_gltf](https://github.com/google/usd_from_gltf) — official README + tools, Apache-2.0, Google (archived 2024-06-06; not an officially supported Google product).
+- [leon/docker-gltf-to-udsz](https://github.com/leon/docker-gltf-to-udsz) — community Docker wrapper (image `leon/usd-from-gltf`), MIT, Leon Radley. Headless macOS path.
+- [marlon360/gltf-to-usdz-service](https://github.com/marlon360/gltf-to-usdz-service) — community Docker service wrapper, MIT.
+- [pablode/guc](https://github.com/pablode/guc) — actively-maintained alternate glTF→USD converter (MaterialX), Apache-2.0; fallback if archived UFG blocks you.
+
+## Render
+```bash
+# Headless conversion via Docker (recommended on macOS)
+docker pull leon/usd-from-gltf:latest
+docker run --rm -v "$PWD":/usr/app leon/usd-from-gltf:latest model.glb model.usdz
+
+# Inspect / version-control the result as USD text
+usdcat model.usdz > model.usda          # if Pixar USD tools present
+usdchecker model.usdz                    # AR-compatibility validation
+```
+
+## Failure modes
+- Native macOS build is heavy/brittle — it requires compiling Pixar USD from source (NASM, Pillow, `ufginstall.py`). Prefer Docker.
+- UFG **warns rather than fails** on unsupported glTF extensions — a clean exit code does not mean full fidelity; parse stderr warnings.
+- Upstream repo is archived (2024-06-06) and unsupported — pin the Docker image digest for determinism; consider `guc` or Apple `usdzconvert` if blocked.
+- Native binary needs `PXR_PLUGINPATH_NAME` + `(DY)LD_LIBRARY_PATH` pointing at the USD and UFG lib dirs, or plugin discovery fails.
+- `.usdz` is an *uncompressed* zip container — do not re-zip with compression or AR Quick Look rejects it.

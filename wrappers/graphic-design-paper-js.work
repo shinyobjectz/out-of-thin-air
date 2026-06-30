@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# graphic-design / Paper.js
+
+Paper.js is a code-driven vector graphics framework built on HTML5 Canvas. Run headless via `paper-jsdom`: a JS scene script builds geometry (paths, beziers, boolean ops, blend modes) and exports a deterministic, version-controllable SVG file with no browser required.
+
+controls do
+  graphic-design.title: { label: "Title", type: "text" }
+  graphic-design.width: { label: "Width", type: "range", min: 100, max: 2000, default: 400 }
+  graphic-design.height: { label: "Height", type: "range", min: 100, max: 2000, default: 400 }
+  graphic-design.fill: { label: "Fill color", type: "color", default: "#ff6347" }
+  graphic-design.script: { label: "Scene script", type: "textarea", file: "src/scene.js" }
+end
+
+## Required reading
+- Paper.js Reference (official docs, MIT) — https://paperjs.org/reference/global/
+- paperjs/paper.js source repo (MIT, Lehni & Puckey) — https://github.com/paperjs/paper.js
+- No official Anthropic/Claude skill exists for Paper.js as of 2026-06.
+
+## Render
+```bash
+mkdir -p paperjs && cd paperjs && npm init -y && npm install paper-jsdom@0.12.18
+node -e "const paper=require('paper-jsdom');paper.setup(new paper.Size(200,200));new paper.Path.Circle({center:[100,100],radius:80,fillColor:'tomato'});require('fs').writeFileSync('out.svg',paper.project.exportSVG({asString:true}));"
+```
+
+## Failure modes
+- Requiring `'paper'` instead of `'paper-jsdom'` in Node — no DOM, `exportSVG` throws. Always use `paper-jsdom` for headless.
+- Forgetting `paper.setup(size)` before building geometry — items have no project to attach to.
+- Peer-version mismatch — pin `paper-jsdom` and `paper` to identical 0.12.x versions.
+- Reaching for `paper-jsdom-canvas` (raster PNG) drags in native Cairo/Pango build deps; stay on SVG unless raster is truly required.
+- Non-determinism if the script uses `Math.random` — seed or avoid for byte-stable output.

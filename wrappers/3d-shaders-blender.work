@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# 3d-shaders / blender
+
+Build a 3D scene deterministically in Python with Blender's `bpy` API — geometry, a shader/material node graph, camera and lights — then render headlessly with EEVEE or Cycles to a PNG. Scripts are plain text and version-controllable; renders are reproducible given a fixed seed and sample count.
+
+controls do
+  3d-shaders.title: { label: "Title", type: "text" }
+  3d-shaders.engine: { label: "Render engine", type: select, options: ["BLENDER_EEVEE_NEXT", "CYCLES"] }
+  3d-shaders.samples: { label: "Cycles samples", type: range }
+  3d-shaders.color: { label: "Base color", type: color }
+  3d-shaders.resolution: { label: "Resolution (WxH)", type: text }
+  scene: { label: "Scene script", type: textarea, file: "src/scene.py" }
+end
+
+## Required reading
+- Blender Python API Reference (official, Blender Foundation, GPL/CC docs): https://docs.blender.org/api/current/
+- Blender as a Python Module (official build handbook, Blender Foundation, GPL-2.0+): https://developer.blender.org/docs/handbook/building_blender/python_module/
+- blenderless — community headless-render wrapper (Oqton, MIT): https://github.com/oqton/blenderless
+- No official Anthropic/Claude Blender skill exists — see Agent Skills overview: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview
+
+## Render
+```bash
+# install (app mode, recommended)
+brew install --cask blender
+
+# render headless; --factory-startup keeps user prefs/addons from perturbing determinism
+/Applications/Blender.app/Contents/MacOS/Blender --background --factory-startup --python src/scene.py
+
+# module mode alternative (brittle: venv CPython minor must match the bpy wheel exactly)
+# python3.11 -m venv .venv && .venv/bin/pip install bpy && .venv/bin/python src/scene.py
+```
+
+## Failure modes
+- bpy MODULE mode: venv CPython minor must EXACTLY match the bpy wheel (bpy 5.x ↔ 3.11/3.12). Mismatch => "no install candidate". Prefer APP mode.
+- `bpy` imports only once per process — a long-running service must subprocess per render.
+- macOS headless: Cycles GPU (Metal) may be unavailable under `--background`; default to CPU Cycles (slow) or EEVEE (fast) for CI.
+- EEVEE engine id is `BLENDER_EEVEE_NEXT` on 4.2+ (not `BLENDER_EEVEE`); use `CYCLES` for path-traced shaders.
+- Non-determinism: fix the Cycles seed and sample count. Without `--factory-startup`, user addons/prefs can alter output.
+- Forgetting `bpy.context.scene.camera = ...` or `write_still=True` yields no output file.

@@ -1,0 +1,44 @@
+<!-- generated draft — needs validation -->
+# advertising-creative / react-email
+
+React Email (by Resend) authors responsive HTML emails as React/TypeScript
+components, rendering deterministically and headlessly to email-client-safe HTML via
+the `@react-email/render` `render()` utility. Deliverables are version-controllable
+JSX/TSX source that compile to a single self-contained HTML artifact with no runtime,
+network, or browser dependency.
+
+controls do
+  advertising-creative.title: { label: "Title / preview", type: "text" }
+  advertising-creative.body: { label: "Body copy", type: "textarea" }
+  advertising-creative.cta_label: { label: "Button label", type: "text" }
+  advertising-creative.cta_href: { label: "Button link", type: "text" }
+  advertising-creative.source: { label: "Template source", type: "textarea", file: "src/email.tsx" }
+end
+
+## Required reading
+
+- React Email docs & repo — https://github.com/resend/react-email (Resend, MIT).
+- `render()` API — `@react-email/render` (async; `{ pretty }`, `{ plainText }`).
+- Components — `@react-email/components` (Html, Head, Body, Container, Section, Row,
+  Column, Button, Text, Heading, Img, Hr, Link, Preview, Tailwind).
+- No official Anthropic/Claude skill exists; agents drive the API/CLI directly.
+
+## Render
+
+```bash
+npm install -E @react-email/render @react-email/components react react-dom tsx
+# render the template to a single HTML file
+npx tsx render.tsx   # await render(<Email/>, { pretty: true }) -> out/email.html
+# or CLI static export
+npx email export --outDir out --pretty
+```
+
+## Failure modes
+
+- `render()` is **async** — forgetting `await` writes `[object Promise]`.
+- Browser execution needs `web-streams-polyfill`; Node/Bun/Deno do not.
+- Use inline-style / table-safe primitives; raw CSS in `<style>` is stripped by many
+  email clients (Gmail/Outlook). Prefer the provided components and Tailwind compile.
+- Pass data via props, not string templating, to keep output deterministic/diff-able.
+- `email export` scans `./emails` — single-file/props-driven output is easier via the
+  tsx entry script.

@@ -1,0 +1,47 @@
+<!-- generated draft — needs validation -->
+# games / defold
+
+Defold is a free, source-available, cross-platform game engine. Games are authored as
+plain-text protobuf scenes plus Lua 5.1 scripts, and built headlessly by the JVM-based
+`bob.jar` ("Bob") command-line builder — no editor required. The OOTA deliverable is an
+HTML5/WASM bundle (platform `wasm-web`): `bob.jar build bundle` emits a self-contained
+`index.html` + `.wasm`/`.js`/data archive that renders deterministically in a browser.
+
+controls do
+  games.title: { label: "Game title", type: "text" }
+  games.script: { label: "Main Lua script", type: "textarea", file: "src/main/main.script" }
+  games.variant: { label: "Build variant", type: "select", options: ["debug", "release", "headless"] }
+end
+
+## Required reading
+- Defold Bob (command-line builder) manual — https://defold.com/manuals/bob/
+- Defold project / collection / game object formats — https://defold.com/manuals/project-setup/
+- HTML5/wasm-web bundling — https://defold.com/manuals/html5/
+- Defold releases (pin a `bob.jar`) — https://github.com/defold/defold/releases
+- Community wrapper: Insality/defold-deployer (MIT) — https://github.com/Insality/defold-deployer
+- Community wrapper: TheKing0x9/defold-builder — https://github.com/TheKing0x9/defold-builder
+- No official Anthropic/Claude skill exists (searched https://github.com/anthropics/skills).
+
+## Render
+```bash
+# 1. Toolchain: OpenJDK 25 + pinned bob.jar
+brew install --cask temurin@25
+curl -L -o /tmp/bob.jar https://github.com/defold/defold/releases/latest/download/bob.jar
+java -jar /tmp/bob.jar --version
+
+# 2. Build HTML5/wasm-web bundle from an existing Defold project dir
+cd /path/to/defold-project
+java -jar /tmp/bob.jar --archive --platform wasm-web --variant debug resolve distclean build bundle
+
+# 3. Artifact: build/default/<ProjectName>/index.html (+ .wasm / .js / data archive)
+ls build/default/*/index.html
+```
+
+## Failure modes
+- `bob.jar` requires **OpenJDK 25** — older JDKs fail to launch it.
+- There is **no CLI "new project" command** — `game.project` + a main collection/script must
+  already exist before `bob.jar` can build. The step script writes a minimal skeleton.
+- `'latest'` release drifts — pin a specific `bob.jar` version asset for reproducible builds.
+- `resolve` needs network access to fetch dependencies; `distclean` forces a clean rebuild.
+- Serving the bundle from `file://` may break WASM/XHR loads — serve over HTTP for verification.
+- For state-assertion CI (not visuals), use `--variant headless` on a native platform.

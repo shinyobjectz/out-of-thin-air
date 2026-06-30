@@ -1,0 +1,31 @@
+<!-- generated draft — needs validation -->
+# advertising-creative / maizzle
+
+Maizzle is an open-source (MIT) framework for building production-ready, cross-client HTML emails. The Node-only `maizzle` CLI compiles templates to deterministic, email-safe HTML with inlined CSS and Outlook fallbacks — a headless, version-controllable fit for OOTA. The deliverable is a self-contained `.html` email document.
+
+controls do
+  advertising-creative.title: { label: "Subject / Heading", type: "text" }
+  advertising-creative.preheader: { label: "Preheader (preview text)", type: "text" }
+  advertising-creative.body: { label: "Body copy", type: "textarea" }
+  advertising-creative.cta: { label: "CTA label", type: "text" }
+end
+
+## Required reading
+- Maizzle docs (canonical, no packaged skill exists): <https://maizzle.com/docs> — MIT.
+- Community HTML-email skills (MJML-based, not Maizzle): <https://github.com/coreyhaines31/marketingskills> — closest analog only.
+
+## Render
+```bash
+# scaffold + install (one-time)
+npx maizzle new maizzle/maizzle my-emails --install && cd my-emails
+# build production HTML (headless, no browser)
+npx maizzle build production
+# verify output
+ls build_production/**/*.html
+```
+
+## Failure modes
+- Requires Node.js (LTS, v18+); no other runtime drives it.
+- Pin the Maizzle major version: v5 = Vue SFC + Tailwind + Vite; v3/v4 = PostHTML. Templates and wrapper logic are NOT interchangeable across that boundary.
+- `maizzle serve` is preview-only (local HTTP) — do not use it in the headless render pipeline; use `maizzle build`.
+- Build output dir defaults to `build_production/` — confirm the env name matches your config (`build <env>`).

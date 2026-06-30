@@ -1,0 +1,32 @@
+<!-- generated draft — needs validation -->
+# documents / basil.js (InDesign)
+
+basil.js ports the spirit of Processing/p5.js to Adobe InDesign — a creative-coding wrapper over InDesign's ExtendScript DOM for scripting generative and data-driven layouts, exported primarily to PDF. The script is plain `.jsx` text and fully version-controllable, but rendering hard-requires a licensed, installed Adobe InDesign (macOS/Windows GUI app). There is NO genuine headless/CI renderer — `-noui -run` still boots the full licensed app. OOTA suitability is LOW; prefer Typst/LaTeX/WeasyPrint for deterministic headless code-to-PDF.
+
+controls do
+  documents.title: { label: "Title", type: "text" }
+end
+
+## Required reading
+- [basil.js official site / tutorials](https://basiljs.ch) — official, MIT, basil.js team
+- [basil.js dev docs (b-less syntax)](https://basiljs2.netlify.app/) — official, MIT, basil.js team
+- [basiljs/basil.js source + wiki + examples](https://github.com/basiljs/basil.js) — official, MIT, basiljs org
+- [vladysolonyi/indesign-scripts](https://github.com/vladysolonyi/indesign-scripts) — community, see repo
+
+## Render
+```bash
+# Requires a licensed Adobe InDesign install (macOS/Windows, proprietary — no free/headless substitute).
+# 1. Copy basil.js + the generated script.jsx into InDesign's Scripts Panel folder:
+#    ~/Library/Preferences/Adobe InDesign/<ver>/<locale>/Scripts/Scripts Panel/
+# 2. Run via the Scripts panel (double-click), OR launch the app binary in batch mode:
+"/Applications/Adobe InDesign 2025/Adobe InDesign 2025.app/Contents/MacOS/Adobe InDesign 2025" \
+  -noui -run /path/to/script.jsx
+# -> writes basil-smoke.pdf to ~/Desktop
+```
+
+## Failure modes
+- No InDesign installed/licensed → nothing renders; basil.js cannot run standalone.
+- `-noui -run` still launches the full GUI app — it will NOT run in a clean CI container or sandbox.
+- Output reproducibility depends on the exact InDesign version (ExtendScript is ES3-era).
+- `package.json` in the repo is dev tooling only, NOT an npm-runnable renderer.
+- For deterministic headless PDFs, use Typst/LaTeX/Paged.js/WeasyPrint instead.

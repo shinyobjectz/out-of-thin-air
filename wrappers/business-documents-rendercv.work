@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# business-documents / rendercv
+
+RenderCV compiles a structured YAML file into a professionally typeset PDF resume/CV
+via the bundled Typst engine. The YAML is the version-controlled source of truth and
+diffs cleanly in git; the PDF (plus optional PNG/HTML/Markdown) is a deterministic,
+reproducible build artifact — same YAML + same rendercv version yields a byte-stable PDF.
+
+controls do
+  business-documents.title: { label: "Candidate Name", type: "text" }
+  business-documents.theme: { label: "Theme", type: select, options: ["classic", "sb2nov", "engineeringresumes", "engineeringclasses", "moderncv"] }
+  business-documents.cv: { label: "CV YAML source", type: textarea, file: "src/cv.yaml" }
+end
+
+## Required reading
+- Official agent skill (MIT, rendercv org): https://github.com/rendercv/rendercv-skill — `npx skills add rendercv/rendercv-skill`
+- Official docs + bundled JSON Schema (MIT): https://docs.rendercv.com/ — grounds YAML autocompletion and validation
+
+## Render
+```bash
+python3 -m venv /tmp/rcv && /tmp/rcv/bin/pip install "rendercv[full]"
+/tmp/rcv/bin/rendercv render cv.yaml --output-folder-name out
+# -> out/<name>.pdf (+ .png pages, .html, .md)
+```
+
+## Failure modes
+- Requires CPython >= 3.12; older interpreters fail the install.
+- Use the `[full]` extra to get PNG/HTML/Markdown renderers, not just PDF.
+- Pin `rendercv` to an exact version — output is only byte-stable within a version.
+- YAML must have top-level `cv` and `design` keys; validate against the bundled JSON Schema before render or `rendercv render` errors out.

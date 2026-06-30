@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# business-documents / weasyprint
+
+WeasyPrint renders version-controlled HTML+CSS into deterministic PDFs — no JavaScript, no headless browser. Edit the document source and controls below, then render. CSS Paged Media (`@page`, running headers/footers, page counters) drives professional business-document layout for invoices, reports, statements, and certificates.
+
+controls do
+  business-documents.title: { label: "Title", type: "text" }
+  business-documents.body: { label: "Body HTML", type: "textarea", file: "src/document.html" }
+  business-documents.page_size: { label: "Page size", type: "select", options: ["A4", "Letter", "Legal"] }
+  business-documents.accent: { label: "Accent color", type: "color" }
+end
+
+## Required reading
+
+- [WeasyPrint official docs (CourtBouillon)](https://doc.courtbouillon.org/weasyprint/stable/) — official, BSD-3-Clause. Install + First Steps + API/CLI reference for v69.0.
+- [anthropics/skills — document skills](https://github.com/anthropics/skills) — official Anthropic Agent Skills; HTML-to-PDF path uses WeasyPrint + Jinja2.
+- Community pattern (varies, often MIT): Jinja2 injects data into an HTML template, WeasyPrint renders to PDF. Verify per-repo license before reuse.
+
+## Render
+
+```bash
+# install (macOS — native Pango/cairo deps required)
+brew install python3 cairo pango gdk-pixbuf libffi
+python3 -m venv venv && source venv/bin/activate
+pip install 'weasyprint==69.*'
+
+# render
+weasyprint src/document.html out/document.pdf
+# or Python API:
+# python3 -c "from weasyprint import HTML; HTML('src/document.html').write_pdf('out/document.pdf')"
+```
+
+## Failure modes
+
+- `weasyprint --info` errors on libgobject/libpango → Homebrew dylibs not discoverable; put `brew --prefix` libs on the library path (DYLD).
+- Font rendering shifts across Pango versions → vendor fonts via local `@font-face` and pin the toolchain in CI/Docker for byte-stable output.
+- Expecting JS-driven content → WeasyPrint runs no JavaScript; bake dynamic data into HTML before rendering (Jinja2 templating layer).
+- Unpinned `weasyprint` → output drift; pin `weasyprint==69.*` and the native libs.

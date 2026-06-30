@@ -1,0 +1,38 @@
+<!-- generated draft — needs validation -->
+# data-visualization / Vega-Lite (vl-convert)
+
+Author a statistical chart as a declarative Vega-Lite JSON spec and render it headlessly to PNG/SVG/PDF with vl-convert — no browser, no Node.js, no network. The spec is the source artifact: small, diffable, version-controllable. Pin `$schema` and `--vl-version` for deterministic renders.
+
+controls do
+  data-visualization.title: { label: "Chart title", type: "text" }
+  data-visualization.spec: { label: "Vega-Lite spec (JSON)", type: "textarea", file: "src/chart.vl.json" }
+  data-visualization.vl_version: { label: "Vega-Lite version", type: "text" }
+  data-visualization.kind: { label: "Output kind", type: "select", options: ["png", "svg", "pdf", "jpeg"] }
+  data-visualization.scale: { label: "Raster scale (hi-DPI)", type: "range" }
+  data-visualization.theme: { label: "Theme", type: "select", options: ["default", "dark", "excel", "ggplot2", "quartz", "vox"] }
+end
+
+## Required reading
+- charting-vega-lite (Claude built-in skill, Anthropic terms) — https://code.claude.com/docs/en/skills
+- anthropics/skills (Anthropic, public Agent Skills repo) — https://github.com/anthropics/skills
+- Vega-Lite official docs / grammar reference (UW IDL, BSD-3-Clause) — https://vega.github.io/vega-lite/
+- Vega-Lite Chart Explorer (community, MCP Market, unverified license) — https://mcpmarket.com/tools/skills/vega-lite-chart-explorer
+
+## Render
+```bash
+# install (pick one)
+cargo install vl-convert --locked
+# OR: pip install vl-convert-python
+
+# render the spec to the chosen kind (CLI path)
+vl-convert vl2png -i src/chart.vl.json -o out/chart.png --vl-version 5.20 --scale 2
+# svg:  vl-convert vl2svg -i src/chart.vl.json -o out/chart.svg --vl-version 5.20
+# pdf:  vl-convert vl2pdf -i src/chart.vl.json -o out/chart.pdf --vl-version 5.20
+```
+
+## Failure modes
+- Forgetting `--vl-version` (or letting it drift) makes renders non-reproducible across vl-convert releases. Pin it, and match `$schema` to the same major version.
+- Using `data.url` requires network and breaks determinism/offline rendering. Inline data under `data.values`.
+- SVG text layout depends on embedded/available fonts; missing fonts shift glyph metrics. PDF path embeds fonts via svg2pdf.
+- `vl2html` produces interactive output (kind=html) but is non-deterministic — don't use it for the canonical image artifact.
+- Invalid JSON or schema-mismatched specs fail at compile; validate against the pinned `$schema`.

@@ -1,0 +1,33 @@
+<!-- generated draft — needs validation -->
+# data-visualization / matplotlib
+
+Matplotlib is the canonical Python plotting library. A plot script is
+deterministic, version-controllable code that renders headlessly to a file via
+the non-interactive Agg backend (`matplotlib.use('Agg')` + `plt.savefig`). The
+primary deliverable is a PNG image; the same code retargets to SVG or PDF by
+changing the savefig extension.
+
+controls do
+  data-visualization.title: { label: "Title", type: "text" }
+  data-visualization.ext: { label: "Output format", type: select, options: ["png", "svg", "pdf"] }
+  data-visualization.script: { label: "Plot script", type: textarea, file: "src/plot.py" }
+end
+
+## Required reading
+- [Anthropic data-visualization skill](https://github.com/anthropics/skills) — official, Apache-2.0. Chart-type selection, matplotlib/seaborn/plotly patterns, colorblind-accessible palettes.
+- [Matplotlib docs — Backends + savefig](https://matplotlib.org/stable/) — official, Matplotlib license (PSF-style, BSD-compatible). Authoritative headless rendering guidance.
+- [Pirat83/claude-code-skills](https://github.com/Pirat83/claude-code-skills) — community matplotlib visualization skill (check repo for license).
+
+## Render
+```bash
+python3 -m pip install -U 'matplotlib==3.11.0'
+# headless render — Agg forced so it never opens a window
+MPLBACKEND=Agg python3 src/plot.py
+file out/plot.png   # expect: PNG image data
+```
+
+## Failure modes
+- Forgetting headless backend: set `MPLBACKEND=Agg` (or `matplotlib.use('Agg')` before importing pyplot) or it tries to open a GUI window and fails on headless machines.
+- `plt.show()` in the script blocks / no file written — always `savefig` to an explicit path instead.
+- Byte-diffs across machines: pin `matplotlib==3.11.0`, set fixed rcParams font (DejaVu Sans), fixed dpi/figsize, and `metadata={'CreationDate': None}` on PDF/SVG to strip embedded timestamps.
+- Empty/zero-byte output: validate with `file` and size > 0 after render.

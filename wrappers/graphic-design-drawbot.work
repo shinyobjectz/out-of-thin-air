@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# graphic-design / drawbot
+
+DrawBot is a Python 2D-graphics scripting environment: deterministic Python that
+calls drawing primitives (rects, ovals, bezier paths, OpenType/variable-font text,
+transparency) and exports to PDF, SVG, PNG, GIF, or MP4. OOTA standardizes on
+`drawbot-skia` (Apache-2.0, pure-Python, headless CLI) for portable macOS/Linux
+rendering — `drawbot script.py out.pdf` runs the script with no GUI and no explicit
+saveImage(). The deliverable is a single diffable `.py` script.
+
+controls do
+  graphic-design.title: { label: "Title", type: "text" }
+  graphic-design.source: { label: "DrawBot script", type: "textarea", file: "src/scene.py" }
+end
+
+## Required reading
+- DrawBot canonical API reference (original): https://www.drawbot.com/ — no official Anthropic/Claude skill exists.
+- drawbot-skia (recommended runtime, Apache-2.0, SUBSET of the API): https://github.com/justvanrossum/drawbot-skia
+- Community generative-art skills (structural template only, target p5.js NOT DrawBot): https://github.com/travisvn/awesome-claude-skills
+
+## Render
+```bash
+pip install drawbot-skia
+drawbot src/scene.py out/scene.pdf   # extension selects emitter: pdf|svg|png|mp4
+```
+
+## Failure modes
+- drawbot-skia implements only a SUBSET of the full drawbot.com API — validate
+  scripts against the supported function set, not the full reference.
+- Non-determinism: any `random()` must be seeded.
+- Text layout depends on the exact font files present — vendor fonts into the repo
+  and reference by path, not by installed family name.
+- MP4 / advanced OpenType features require the macOS-only original `drawBot`
+  module, not drawbot-skia.
+- The CLI runs the script as if Run was pressed — do NOT call `saveImage()` in a
+  CLI-rendered script; the output path/extension drives the emitter.

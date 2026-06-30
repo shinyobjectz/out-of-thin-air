@@ -1,0 +1,51 @@
+<!-- generated draft — needs validation -->
+# advertising-creative / HTMLCSStoImage
+
+Render deterministic, version-controllable HTML + CSS into a high-quality PNG/JPG/WebP
+ad creative via the hosted HCTI API (Chrome rendering engine). You author the markup;
+the cloud renders the pixels. Note: this is a SaaS, not a local headless renderer — it
+needs HCTI credentials and a network round-trip.
+
+controls do
+  advertising-creative.title: { label: "Title", type: "text" }
+  advertising-creative.html: { label: "HTML fragment", type: "textarea" }
+  advertising-creative.css: { label: "CSS", type: "textarea" }
+  advertising-creative.format: { label: "Output format", type: "select", options: ["png", "jpg", "webp", "pdf"] }
+end
+
+## Required reading
+
+- HCTI API docs (official, proprietary): https://docs.htmlcsstoimage.com/
+- HCTI MCP server (official): https://docs.htmlcsstoimage.com/integrations/mcp/
+  — `claude mcp add hcti --transport http https://mcp.hcti.io`
+- Docs source repo: https://github.com/htmlcsstoimage/docs
+- Community curl examples (unverified license, reference only): https://docs.htmlcsstoimage.com/integrations/
+
+## Render
+
+```bash
+# Requires an hcti.io account (free tier 50 imgs/mo). Network call, NOT local.
+export HCTI_USER=... HCTI_KEY=...   # from hcti.io dashboard
+
+ID=$(curl -s -X POST https://hcti.io/v1/image -u "$HCTI_USER:$HCTI_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{"html":"<div class=card>OOTA</div>","css":".card{font-family:sans-serif;font-size:48px;padding:40px;background:#111;color:#fff}"}' \
+  | python3 -c 'import sys,json;print(json.load(sys.stdin)["id"])')
+
+curl -s "https://hcti.io/v1/image/$ID.png" -o out/creative.png
+file out/creative.png   # expect: PNG image data
+```
+
+## Failure modes
+
+- **Not local/headless:** rendering happens on hcti.io servers. No credentials or no
+  network means no render — the step writes source only and degrades gracefully.
+- **Free-tier cap:** 50 images/mo; over the cap returns a billing/rate error, not an image.
+- **Auth:** uses HTTP Basic `USER_ID:API_KEY` (not a bearer token); wrong order or missing
+  key returns 401/403.
+- **Nondeterministic pixels:** pin `google_fonts`, `viewport_width`/`viewport_height`, and
+  `device_scale` or output drifts between renders.
+- **CDN URL, not a file:** the POST returns `.url`/`.id`; you must GET `{id}.png` (or `.jpg`/
+  `.webp`/`.pdf`) to materialize a local file.
+- **Determinism boundary:** if OOTA needs fully-local deterministic image-from-markup, use
+  Chromium/Playwright or wkhtmltoimage instead of HCTI.

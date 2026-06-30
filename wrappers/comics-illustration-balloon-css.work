@@ -1,0 +1,39 @@
+<!-- generated draft — needs validation -->
+# comics-illustration / CSS Grid + balloon.css
+
+Author deterministic, version-controllable comic-style boards: native CSS Grid
+lays out the panels and balloon.css overlays speech-bubble tooltips on any cell
+via `aria-label` + `data-balloon-pos`, with zero JavaScript. For headless
+captures, tooltips are forced open with `data-balloon-visible` and stabilized
+with `data-balloon-blunt`. The deliverable is a self-contained `.html` file.
+
+controls do
+  comics-illustration.title: { label: "Board title", type: "text" }
+  comics-illustration.columns: { label: "Grid columns", type: "range" }
+  comics-illustration.balloon_color: { label: "Balloon color", type: "color" }
+end
+
+## Required reading
+- balloon.css (MIT, kazzkiq / Claudio Holanda) — https://github.com/kazzkiq/balloon.css
+- balloon.css docs/demo — https://kazzkiq.github.io/balloon.css/
+- CSS Grid Layout (MDN / W3C, CC-BY-SA docs) — https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout
+
+## Render
+```bash
+# vendor the stylesheet next to the html for an offline, self-contained artifact
+curl -sL https://unpkg.com/balloon-css/balloon.min.css -o out/balloon.min.css
+# the .html file IS the deliverable; open it in any browser
+# optional raster to png (only if an image/pdf kind is required):
+npm install -D playwright && npx playwright install chromium
+npx playwright screenshot --full-page out/board.html out/board.png
+```
+
+## Failure modes
+- Tooltips invisible in headless capture: add `data-balloon-visible` to every
+  element whose bubble must show — `:hover` never fires in a static render.
+- Flaky screenshots from the fade-in: add `data-balloon-blunt` to disable the
+  entrance animation.
+- Broken offline / non-reproducible: inline or vendor `balloon.min.css` rather
+  than linking a live CDN.
+- Empty tooltip: text must live in `aria-label`, not in element content.
+- Overflowing bubble text: set `data-balloon-length=small|medium|large|fit`.

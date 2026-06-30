@@ -1,0 +1,42 @@
+<!-- generated draft — needs validation -->
+# games / bevy
+
+Bevy is a free, open-source, data-driven game engine built in Rust around an Entity Component System (ECS). Game code, scenes, and the render pipeline are all authored as plain Rust/Cargo source — there is no separate scripting language. For OOTA the canonical headless deliverable is a single rendered PNG frame, produced via Bevy's official `headless_renderer` pattern: a camera renders to a GPU image, a render-graph node copies it to a CPU buffer, and the main world saves a PNG with `WinitPlugin` disabled and `ScheduleRunnerPlugin` driving frames — no window or display server. On macOS this runs on the Metal/wgpu backend with no extra system deps.
+
+controls do
+  games.title: { label: "Project name", type: "text" }
+  games.bevy_version: { label: "Bevy crate version", type: "text" }
+  games.width: { label: "Width (px)", type: "range", min: 64, max: 1920, step: 16 }
+  games.height: { label: "Height (px)", type: "range", min: 64, max: 1080, step: 16 }
+  games.source: { label: "Scene source (Rust)", type: "textarea", file: "src/main.rs" }
+end
+
+## Required reading
+- Official Bevy repo + examples (MIT OR Apache-2.0; Bevy Engine project) — https://github.com/bevyengine/bevy
+- Headless renderer example (camera → GPU image → buffer → channel → PNG) — https://github.com/bevyengine/bevy/blob/main/examples/app/headless_renderer.rs
+- Bevy docs (official) — https://bevy.org and https://docs.rs/bevy
+- bevy-game-engine Claude skill — community, MIT, by Lauri Gates — https://github.com/laurigates/claude-plugins/blob/main/bevy-plugin/skills/bevy-game-engine/skill.md
+
+## Render
+```bash
+# install Rust (macOS / Linux)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh && source $HOME/.cargo/env
+
+# run the OOTA-scaffolded project (headless: WinitPlugin disabled + ScheduleRunnerPlugin)
+cargo run --release    # writes out/000.png and exits
+
+# or run Bevy's bundled canonical example from a clone of the repo
+git clone --depth 1 https://github.com/bevyengine/bevy && cd bevy
+cargo run --example headless_renderer   # writes ./test_images/000.png
+
+# assemble multi-frame PNGs into video
+ffmpeg -framerate 30 -i out/%03d.png -pix_fmt yuv420p out/scene.mp4
+```
+
+## Failure modes
+- Pin the `bevy` crate version in Cargo.toml — Bevy ships breaking API changes every ~3 months, so the headless_renderer pattern drifts between releases.
+- Disable `WinitPlugin` and add `ScheduleRunnerPlugin`, or the app tries to open a window and never exits headlessly.
+- First build is slow (Rust + large engine); cache the `target/` dir or builds time out.
+- GPU rasterization output can vary slightly across drivers/hardware — pixel-exact reproducibility across machines is NOT guaranteed; only the Rust scene source is fully deterministic.
+- The GPU→CPU copy is asynchronous: render several pre-roll frames before reading the buffer, or the saved PNG is blank/partial.
+- macOS uses Metal via wgpu (no X server needed); on headless Linux ensure a working Vulkan/GL driver for wgpu.

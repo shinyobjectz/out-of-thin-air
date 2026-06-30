@@ -1,0 +1,51 @@
+<!-- generated draft — needs validation -->
+# games / pyxel
+
+Pyxel is an open-source (MIT) retro game engine for Python by Takashi Kitao. A
+Rust core with Python bindings, constrained to a 16-color palette and 4 sound
+channels for pixel-art / chiptune games. You write a game as deterministic,
+version-controllable Python — `pyxel.init(w, h)` + `pyxel.run(update, draw)` —
+and capture gameplay from code with `pyxel.screencast()` (animated GIF, the
+primary deliverable) or `pyxel.screenshot()` (PNG fallback). For headless,
+deterministic capture the official `pyxel-mcp` server runs N frames in
+subprocess isolation and emits snapshots without a visible window.
+
+controls do
+  games.title: { label: "Title text", type: "text" }
+  games.width: { label: "Canvas width", type: "range", min: 16, max: 256, step: 8 }
+  games.height: { label: "Canvas height", type: "range", min: 16, max: 256, step: 8 }
+  games.capture_scale: { label: "Capture scale", type: "select", options: "1, 2, 3, 4" }
+  games.capture_sec: { label: "GIF buffer seconds", type: "range", min: 1, max: 30, step: 1 }
+  games.frames: { label: "Frames before capture", type: "range", min: 1, max: 600, step: 1 }
+  games.main: { label: "game.py", type: "textarea", file: "src/game.py" }
+end
+
+## Required reading
+- Pyxel User Guide / API Reference — official, MIT, Takashi Kitao (kitao): https://kitao.github.io/pyxel/web/api-reference/
+- Pyxel repository + examples — official, MIT, Takashi Kitao (kitao): https://github.com/kitao/pyxel
+- pyxel-mcp — official headless MCP server, MIT, Takashi Kitao (kitao): https://github.com/kitao/pyxel-mcp
+
+## Render
+```bash
+# install
+pip install pyxel        # or: uv pip install pyxel
+# run a game (opens an SDL window on desktop)
+pyxel run out/src/game.py    # or: python out/src/game.py
+# the game runs N frames then writes out/out.gif (screencast) or out/out.png (screenshot)
+
+# headless / deterministic capture (recommended on macOS / CI)
+uvx pyxel-mcp            # then call its `run` tool with the script + frame count → PNG snapshot
+```
+
+## Failure modes
+- Not cleanly headless: plain Pyxel renders via SDL2 and opens a native window.
+  On macOS there is no Xvfb; `SDL_VIDEODRIVER=dummy` is unverified and may blank
+  the framebuffer. Use the official `pyxel-mcp` `run` tool for windowless capture.
+- Nondeterminism: seed any RNG and avoid wall-clock / live input, or frames will
+  differ between runs.
+- Must trigger `screencast`/`screenshot` then `pyxel.quit()` from `update`, or
+  the loop runs forever and never writes a file.
+- GIF buffer: `pyxel.screencast()` only emits the rolling buffer sized by
+  `capture_sec` — set it large enough to cover the captured gameplay.
+- `.pyxres` asset files are binary; prefer code-drawn graphics (`cls`/`rect`/
+  `text`/`blt`) for text-diffable, reviewable source.

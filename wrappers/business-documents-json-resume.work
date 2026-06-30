@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# business-documents / json-resume
+
+JSON Resume renders one deterministic, version-controllable `resume.json` (JSON Schema Draft-04) through a pinned community theme to HTML or PDF. Same JSON + same theme version = same output, so the artifact is fully reproducible. Author the JSON, validate it against the schema as a build gate, then render headlessly with the `resumed` CLI.
+
+controls do
+  business-documents.title: { label: "Title", type: "text" }
+  business-documents.name: { label: "Full name", type: "text" }
+  business-documents.theme: { label: "Theme (pinned npm pkg)", type: "select", options: ["jsonresume-theme-even", "jsonresume-theme-actual", "@jsonresume/jsonresume-theme-class"] }
+  business-documents.format: { label: "Output format", type: "select", options: ["html", "pdf"] }
+  business-documents.resume_json: { label: "resume.json", type: "textarea", file: "src/resume.json" }
+end
+
+## Required reading
+- JSON Resume schema (Draft-04): https://jsonresume.org/schema
+- Docs: https://docs.jsonresume.org
+- `resumed` CLI (MIT, recommended): https://github.com/rbardini/resumed
+- No official Anthropic/Claude skill exists for JSON Resume (as of 2026-06) — integrate directly via the schema + CLI docs above.
+
+## Render
+```bash
+npm install -g resumed && npm install jsonresume-theme-even
+resumed validate resume.json
+# HTML (zero browser deps):
+resumed render resume.json --theme jsonresume-theme-even --output resume.html
+# PDF (downloads headless Chromium on first run):
+npm install puppeteer
+resumed render resume.json --theme jsonresume-theme-even --format pdf --output resume.pdf
+```
+
+## Failure modes
+- Unpinned theme version: layout shifts across releases break determinism — pin the theme in `package.json`.
+- Invalid JSON or schema violations: `resumed render` may silently drop sections — always gate on `resumed validate` first.
+- PDF render pulls a ~150MB Chromium on first run; in CI set `PUPPETEER_EXECUTABLE_PATH` at a system Chrome to skip the download.
+- Only `basics` is required; missing it produces an empty render. Dates must be ISO-8601 strings.
+- `resume-cli` (the original) bundles puppeteer so PDF works out of the box but is heavier — use it if you don't want to manage puppeteer yourself.

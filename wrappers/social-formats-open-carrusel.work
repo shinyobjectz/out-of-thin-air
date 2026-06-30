@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# social-formats / open-carrusel
+
+Author an Instagram carousel slide as deterministic body-level HTML/CSS and render it headlessly to a PNG at exact Instagram pixel dimensions (1:1 1080×1080, 4:5 1080×1350, 9:16 1080×1920). Backed by Open Carrusel (`Hainrixz/open-carrusel`, MIT) — slide markup → Puppeteer screenshot → PNG. Fully local, nothing leaves the machine.
+
+controls do
+  social-formats.title: { label: "Title", type: "text" }
+  social-formats.ratio: { label: "Aspect ratio", type: "select", options: ["1:1", "4:5", "9:16"] }
+  social-formats.bg: { label: "Background", type: "color" }
+  social-formats.body: { label: "Slide HTML/CSS (body-level)", type: "textarea", file: "src/slide.html" }
+end
+
+## Required reading
+- Open Carrusel repo (MIT, tododeia / Enrique Rocha): https://github.com/Hainrixz/open-carrusel
+- Built-in Claude Code slash commands `/start /stop /reset /doctor` (community, not an Anthropic skill) — same repo.
+- `wrapSlideHtml()` in `src/lib/slide-html.ts` wraps body-level HTML into a full document before screenshot.
+
+## Render
+```bash
+# Option A — full app
+git clone https://github.com/Hainrixz/open-carrusel.git && cd open-carrusel && npm run setup
+npm run dev   # http://localhost:3000 — seed a slide, one-click export
+
+# Option B — direct headless render (Node 20+, Puppeteer bundles Chromium)
+# wrap body-level slide HTML, screenshot at chosen Instagram dimension to PNG
+node render-slide.mjs   # see step script: wraps src/slide.html, screenshots 1080xH
+
+# verify exact pixel dimensions
+sips -g pixelWidth -g pixelHeight out/slide.png   # expect 1080 x 1080 for 1:1
+```
+
+## Failure modes
+- Puppeteer Chromium not downloaded → re-run `npm run setup` (or `npx puppeteer browsers install chrome`).
+- Slide markup includes `<html>`/`<head>` tags → breaks `wrapSlideHtml`; supply body-level HTML only.
+- Wrong viewport → PNG not at exact Instagram dims; set viewport AND `deviceScaleFactor: 1`, screenshot the full slide element.
+- Node < 20 → setup/build fails (Next.js 16 / React 19 require Node 20+).

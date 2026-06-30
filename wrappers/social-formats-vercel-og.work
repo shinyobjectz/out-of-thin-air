@@ -1,0 +1,32 @@
+<!-- generated draft — needs validation -->
+# social-formats / @vercel/og
+
+Render a dynamic Open Graph / social card PNG from version-controllable JSX + a CSS subset. `@vercel/og` wraps Satori (HTML/CSS → SVG) and Resvg (SVG → PNG) behind an `ImageResponse` class that extends the web `Response`, so a plain Node script can call `.arrayBuffer()` and write a `.png` headlessly — no Chromium. Recommended canvas is 1200×630. Supply fonts explicitly for deterministic, byte-stable output.
+
+controls do
+  social-formats.title: { label: "Title", type: "text" }
+  social-formats.subtitle: { label: "Subtitle", type: "text" }
+  social-formats.bg: { label: "Background", type: "color" }
+  social-formats.fg: { label: "Text color", type: "color" }
+  social-formats.card: { label: "Card source", type: "textarea", file: "src/card.mjs" }
+end
+
+## Required reading
+- [vercel/og docs](https://vercel.com/docs/og-image-generation) — official (Vercel Inc.)
+- [og-image API reference](https://vercel.com/docs/og-image-generation/og-image-api) — official (Vercel Inc.)
+- [vercel/satori](https://github.com/vercel/satori) — official, MPL-2.0 (Vercel Inc.) — the HTML/CSS→SVG engine + supported CSS subset
+- [@vercel/og on npm](https://www.npmjs.com/package/@vercel/og) — official, Apache-2.0 (Vercel Inc.)
+
+## Render
+```bash
+npm i @vercel/og react
+node src/card.mjs   # writes out/card.png (1200x630)
+file out/card.png   # -> PNG image data, 1200 x 630
+```
+
+## Failure modes
+- **Unsupported CSS** — only the Satori subset renders. Use `display:flex` (no `grid`), absolute positioning, flexbox. Any flex container with >1 child needs an explicit `display:flex`.
+- **Network font fetch** — with no `fonts[]` entry @vercel/og fetches a default font at runtime; offline/deterministic runs must pass a local ttf/otf.
+- **Next.js Pages Router + Node runtime** — does not support returning `ImageResponse`; use Edge runtime or the standalone Node script.
+- **Bundle limit** — keep JSX+CSS+fonts+images under ~500KB if deploying to Vercel functions (no limit for local script).
+- **Tailwind `tw` prop** is experimental — prefer inline style objects for determinism.

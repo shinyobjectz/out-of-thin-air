@@ -1,0 +1,40 @@
+<!-- generated draft — needs validation -->
+# motion-graphics / gsap
+
+GSAP (GreenSock Animation Platform) authored as a version-controllable HTML/JS scene with a single global timeline. The timeline is scrubbed frame-by-frame in headless Chrome and encoded to a deterministic MP4 — reproducible because frames are stepped by progress value, not the wall clock. GSAP and all former Club plugins are 100% free, including commercial use, since April 2025.
+
+controls do
+  motion-graphics.title: { label: "Title", type: "text" }
+  motion-graphics.duration: { label: "Duration (s)", type: "range" }
+  motion-graphics.fps: { label: "FPS", type: "select", options: ["30", "60"] }
+  motion-graphics.source: { label: "Scene HTML", type: "textarea", file: "src/scene.html" }
+end
+
+## Required reading
+
+- [greensock/gsap-skills](https://github.com/greensock/gsap-skills) — official AI skills (GreenSock/Webflow). Install: `npx skills add https://github.com/greensock/gsap-skills`. llms.txt index + core API, timelines, ScrollTrigger, plugins, React, performance modules.
+- [GSAP docs v3](https://gsap.com/docs/v3/) — GreenSock. License now 100% free: https://gsap.com/pricing/
+- [Webflow: GSAP becomes free](https://webflow.com/blog/gsap-becomes-free) — confirms free incl. commercial use since April 2025.
+
+## Render
+
+```bash
+# install renderer + encoder
+npm install -g gsap-video-export
+command -v ffmpeg >/dev/null || brew install ffmpeg
+
+# scene.html must load a pinned gsap version and build ONE global timeline.
+# Frame-step the timeline in headless Chrome and encode to MP4.
+gsap-video-export ./src/scene.html --output out/scene.mp4
+
+# verify
+ffprobe out/scene.mp4
+```
+
+## Failure modes
+
+- Animation driven by the wall clock (autoplaying tween with no global timeline) → renderer cannot scrub; expose a single `gsap.globalTimeline` or named timeline export.
+- Unpinned gsap version (floating CDN) → non-reproducible renders; pin the version.
+- `random()` / `Date.now()` / unseeded jitter → byte-unstable output; seed or remove.
+- ScrollTrigger is scroll-driven — for video, convert scroll progress to a tween the renderer can scrub.
+- Missing FFmpeg or headless Chrome → no MP4; install both before rendering.

@@ -1,0 +1,36 @@
+<!-- generated draft — needs validation -->
+# data-visualization / gnuplot
+
+gnuplot renders 2D/3D plots from plain-text `.gp` scripts, fully headless in batch
+mode. The deliverable is a deterministic, version-controllable script plus its data;
+the same script + data + gnuplot version produces byte-stable vector SVG/PDF output.
+
+controls do
+  data-visualization.title: { label: "Title", type: "text" }
+end
+
+## Required reading
+
+- Official gnuplot docs (gnuplot project, gnuplot license): https://gnuplot.readthedocs.io/en/latest/
+- gnuplotting.org output-terminal recipes (community): http://gnuplotting.org/output-terminals/index.html
+- gnuplot source repo (gnuplot dev team, gnuplot license): https://github.com/gnuplot/gnuplot
+- No official Anthropic/Claude skill exists — community resources only: https://github.com/anthropics/skills
+
+## Render
+
+```bash
+brew install gnuplot && gnuplot --version
+# author plot.gp beginning with `set terminal svg size W,H` + `set output 'out.svg'`
+gnuplot plot.gp
+# PDF: use pdfcairo terminal; PNG: use pngcairo terminal
+```
+
+## Failure modes
+
+- Using an interactive terminal (`qt`/`x11`/`wxt`) in a headless pipeline — requires a
+  DISPLAY and pops/blocks. Always `set terminal svg`/`pdfcairo`/`pngcairo` to a file.
+- Forgetting `set output 'file'` — output goes to stdout / never written.
+- Time/date auto-stamps or unpinned fonts break byte-stable reproducibility.
+- Terminal defaults shift across gnuplot majors — pin 6.0.x in the toolchain manifest.
+- pdfcairo/svg embed font names, not glyphs — non-portable if the font is missing on
+  the reader's machine; stick to common fonts or use cairolatex/epslatex + a LaTeX step.

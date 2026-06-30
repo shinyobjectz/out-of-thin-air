@@ -1,0 +1,30 @@
+<!-- generated draft — needs validation -->
+# ar-vr / A-Frame
+
+A-Frame builds 3D/AR/VR (WebXR) scenes as plain declarative HTML on top of three.js. The deliverable is a single self-contained `.html` file referencing a version-pinned CDN script — fully deterministic, diffable, and renderable in any WebXR/WebGL browser.
+
+controls do
+  ar-vr.title: { label: "Title", type: "text" }
+  ar-vr.box_color: { label: "Box color", type: "color" }
+  ar-vr.sphere_color: { label: "Sphere color", type: "color" }
+  ar-vr.sky_color: { label: "Sky color", type: "color" }
+end
+
+## Required reading
+- [A-Frame Official Documentation 1.8.0](https://aframe.io/docs/1.8.0/introduction/) — official (aframevr), framework MIT / docs CC. Canonical HTML markup, components, registry.
+- [claudedesignskills — A-Frame WebXR skill](https://github.com/freshtechbro/claudedesignskills) — community (freshtechbro), MIT-style collection; includes `scene_generator.py` for scene boilerplate.
+- [XR Immersive Developer skills](https://mcpmarket.com/tools/skills/xr-immersive-developer) — community WebXR skills (A-Frame, three.js, Babylon.js).
+
+## Render
+```bash
+# The .html IS the deliverable — author it, open in any WebXR/WebGL browser.
+# Optional still-frame PNG via headless Chromium:
+npm install puppeteer
+node -e "const p=require('puppeteer');(async()=>{const b=await p.launch({headless:'new',args:['--use-gl=angle','--enable-webgl','--ignore-gpu-blocklist']});const pg=await b.newPage();await pg.setViewport({width:800,height:600});await pg.goto('file://'+process.cwd()+'/scene.html');await pg.waitForFunction(()=>document.querySelector('a-scene')&&document.querySelector('a-scene').hasLoaded);await new Promise(r=>setTimeout(r,800));await pg.screenshot({path:'out.png'});await b.close();})()"
+```
+
+## Failure modes
+- Using CDN `latest` breaks determinism — pin `1.8.0`.
+- Headless WebGL canvas capture on macOS produces blank frames without `--use-gl=angle` / `--ignore-gpu-blocklist` and a short render delay after `a-scene` `hasLoaded`.
+- A-Frame has no native headless renderer — all image output goes through a browser engine (Puppeteer/Chromium).
+- Remote assets break offline hermetic rendering — bundle assets locally or inline data-URIs.

@@ -1,0 +1,46 @@
+<!-- generated draft — needs validation -->
+# business-documents / ZPL (Labelary)
+
+Author a thermal-printer label as deterministic ZPL markup, then render it headlessly to a PNG (or PDF) via the free Labelary REST API or the offline `labelize` Rust engine. ZPL is plain text (`^XA…^XZ`), fully diffable; pin dpmm and physical inches so renders are byte-stable.
+
+controls do
+  business-documents.title: { label: "Label text", type: "text" }
+  business-documents.dpmm: { label: "Density (dpmm)", type: "select", options: ["6", "8", "12", "24"] }
+  business-documents.width: { label: "Width (in)", type: "text" }
+  business-documents.height: { label: "Height (in)", type: "text" }
+  business-documents.format: { label: "Output format", type: "select", options: ["png", "pdf"] }
+  business-documents.source: { label: "ZPL source", type: "textarea", file: "src/label.zpl" }
+end
+
+## Required reading
+- [Labelary ZPL Label API — service docs](https://labelary.com/service.html) (official, Labelary; free API, no key, 3 req/s & 5000/day)
+- [An Introduction to ZPL](https://labelary.com/zpl.html) (official primer, Labelary)
+- [Justintime50/labelary](https://github.com/Justintime50/labelary) — Node CLI (MIT, Justin Paulin)
+- [labelize](https://github.com/GOODBOY008/labelize) — offline Rust renderer (GOODBOY008)
+- [rjocoleman/labelary](https://github.com/rjocoleman/labelary) — Ruby gem (MIT, Robert Coleman)
+- [zpl-labelary-preview](https://github.com/DmytroVasin/zpl-labelary-preview) — VS Code live preview (MIT, Dmytro Vasin)
+
+## Render
+```bash
+# Hosted API (zero install; curl ships with macOS). 8dpmm = 203dpi, 4x6in.
+curl --silent --request POST \
+  'http://api.labelary.com/v1/printers/8dpmm/labels/4x6/0/' \
+  --data-binary @src/label.zpl --output out/label.png
+
+# PDF (multi-label): omit the index, set Accept header
+curl --silent --request POST \
+  'http://api.labelary.com/v1/printers/8dpmm/labels/4x6/' \
+  --header 'Accept: application/pdf' \
+  --data-binary @src/label.zpl --output out/label.pdf
+
+# Offline / hermetic alternative (no network):
+#   cargo install --git https://github.com/GOODBOY008/labelize
+#   labelize render src/label.zpl -o out/label.png
+```
+
+## Failure modes
+- **dpmm mismatch** — output pixel dims = dpmm × inches; changing dpmm silently rescales. Pin it.
+- **Index vs PDF** — PNG renders one label (base-0 index in path); omit the index + use `Accept: application/pdf` for multi-label.
+- **Rate limits** — hosted API is 3 req/s, 5000/day; non-hermetic for strict CI. Use `labelize` offline for reproducible builds.
+- **Invalid ZPL** — missing `^XA`/`^XZ` or malformed `^FO`/`^FD` yields a blank/garbage label. Validate via the `X-Linter` header or `labelize` parse errors before render.
+- **HTTP scheme** — the API is plain `http://api.labelary.com`; some networks block it. Confirm reachability before assuming a markup bug.

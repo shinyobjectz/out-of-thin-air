@@ -1,0 +1,46 @@
+<!-- generated draft — needs validation -->
+# 3d-shaders / Shadertoy GLSL
+
+Author a single-file GLSL ES fragment shader using the Shadertoy uniform
+convention (`iResolution`, `iTime`, `iFrame`, `iMouse`, ...) and render one
+deterministic frame to a PNG. The headless path on macOS is the Python
+`wgpu-shadertoy` library, which renders offscreen via wgpu's Metal backend — no
+display needed. Pin `iTime`/`iFrame` and avoid `iDate`/`iMouse` to keep renders
+byte-reproducible.
+
+controls do
+  shadertoy.title: { label: "Title", type: "text" }
+  shadertoy.source: { label: "Shader (GLSL ES)", type: "textarea", file: "src/shader.glsl" }
+  shadertoy.width: { label: "Width", type: "range", min: 64, max: 1920, default: 640 }
+  shadertoy.height: { label: "Height", type: "range", min: 64, max: 1080, default: 360 }
+  shadertoy.time: { label: "iTime (pinned)", type: "text", default: "1.0" }
+  shadertoy.frame: { label: "iFrame (pinned)", type: "text", default: "60" }
+end
+
+## Required reading
+
+- Shadertoy Shader Development (community Claude skill) — https://mcpmarket.com/zh/tools/skills/shadertoy-shader-development
+- Shader Development Toolkit: GLSL & VFX (community) — https://mcpmarket.com/tools/skills/shader-development-toolkit
+- GLSL Shader Development (community) — https://mcpmarket.com/tools/skills/glsl-shader-development
+- wgpu-shadertoy (BSD-2-Clause) — https://github.com/pygfx/shadertoy
+- No official Anthropic shader skill — https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills
+
+## Render
+
+```bash
+# install (one time)
+python3 -m venv /tmp/stv && /tmp/stv/bin/pip install wgpu-shadertoy pillow numpy
+
+# render one deterministic frame to PNG
+/tmp/stv/bin/python -c "from wgpu_shadertoy import Shadertoy; import numpy as np; from PIL import Image; code=open('src/shader.glsl').read(); s=Shadertoy(code, resolution=(640,360), offscreen=True); f=s.snapshot(time_float=1.0, frame=60); Image.fromarray(np.asarray(f)).save('out.png'); print('ok')"
+
+# video kind (secondary): sweep frames -> ffmpeg, or use shady/glsl-to-mp4
+```
+
+## Failure modes
+
+- Using `iDate` or `iMouse` breaks single-frame determinism — exclude them.
+- `mainImage` signature must be `void mainImage(out vec4 fragColor, in vec2 fragCoord)`.
+- Multi-buffer shaders (Buffer A-D) need FBO support — plain wgpu-shadertoy single-pass won't render them; use `shady` or scrygl.
+- OpenGL-based tools (shadertoy-render, glsl-to-mp4) may need an offscreen GL context on macOS; prefer wgpu/Metal for the image kind.
+- Video kind needs ffmpeg: `brew install ffmpeg`.

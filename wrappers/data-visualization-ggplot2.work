@@ -1,0 +1,41 @@
+<!-- generated draft — needs validation -->
+# data-visualization / ggplot2
+
+ggplot2 is the R grammar-of-graphics plotting package. Author a plot as
+deterministic R code and render it headlessly to an image file with `ggsave()`,
+which picks the output device from the file extension (PNG raster by default;
+PDF/SVG vector). No display server is required — `Rscript` runs the whole thing
+headless on macOS.
+
+controls do
+  data-visualization.title: { label: "Title", type: "text" }
+  data-visualization.ext: { label: "Format", type: select, options: ["png", "pdf", "svg"] }
+  data-visualization.dpi: { label: "DPI", type: select, options: ["72", "150", "300", "320"] }
+  data-visualization.code: { label: "R plot script", type: textarea, file: "src/plot.R" }
+end
+
+## Required reading
+
+- ggsave() reference (official, tidyverse/Posit, MIT): https://ggplot2.tidyverse.org/reference/ggsave.html
+- llm-r-skills ggplot2 skill (community, jsperger, MIT — verify repo LICENSE): https://github.com/jsperger/llm-r-skills
+- posit-dev/skills alt-text (official-adjacent, Posit PBC, MIT): https://github.com/posit-dev/skills
+
+## Render
+
+```bash
+# install (once)
+brew install r && Rscript -e 'install.packages(c("ggplot2","svglite"), repos="https://cloud.r-project.org")'
+# render
+Rscript src/plot.R
+```
+
+## Failure modes
+
+- R not on PATH → `brew install r`; confirm with `Rscript --version`.
+- SVG output looks off → install `svglite` (cleaner than base `svg` device).
+- Non-deterministic output → fix `set.seed()` and pin data; pin package
+  versions with `renv` (4.0.0 changed defaults, S3->S7 rewrite).
+- Empty/zero-byte file → check the script actually calls `ggsave()` and the
+  extension matches the intended device.
+- Wrong size/resolution → set explicit `width`, `height`, `units`, `dpi` in
+  `ggsave()` (presets: retina=320, print=300, screen=72).

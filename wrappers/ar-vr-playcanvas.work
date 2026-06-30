@@ -1,0 +1,33 @@
+<!-- generated draft — needs validation -->
+# ar-vr / PlayCanvas
+
+PlayCanvas is an open-source (MIT) JavaScript 3D/WebXR engine. For OOTA it authors a deterministic, version-controllable WebGL scene that ships as a self-contained HTML page booting a `pc.AppBase` on a canvas. The engine renders only in a browser — there is no native headless file output — so visual validation goes through headless Chromium (SwiftShader software WebGL) screenshotting the page.
+
+controls do
+  ar-vr.title: { label: "Title", type: "text" }
+  ar-vr.clear_color: { label: "Clear color", type: "color" }
+end
+
+## Required reading
+- Engine (MIT) — https://github.com/playcanvas/engine
+- User manual — https://developer.playcanvas.com
+- API reference — https://api.playcanvas.com
+- Running in Node.js (headless logic only, NullGraphicsDevice) — https://developer.playcanvas.com/user-manual/engine/running-in-node/
+- PlayCanvas Editor MCP Server (official, MIT — authoring, NOT deterministic render) — https://github.com/playcanvas/editor-mcp-server
+
+## Render
+```bash
+# author + bundle: edit index.html (loads playcanvas via CDN), then capture headless
+mkdir -p pc-smoke && cd pc-smoke && npm init -y
+npm i -D playwright && npx playwright install chromium
+# headless screenshot via SwiftShader software WebGL:
+#   chromium.launch({ args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader'] })
+#   page.goto('file://.../index.html'); wait ~500ms; page.screenshot({path:'out.png'})
+```
+
+## Failure modes
+- Node.js + jsdom uses `NullGraphicsDevice` — produces NO pixels; logic/asset/test only, never frames.
+- Engine has no built-in render-to-file; emitting an image/video REQUIRES the Playwright/headless-Chrome harness.
+- Pixel determinism not guaranteed across GPUs — pin SwiftShader (`--use-gl=swiftshader`) for reproducible captures.
+- Forgetting `app.start()` or capturing before the render loop runs yields a blank/clear-color-only PNG.
+- Editor MCP Server automates the interactive cloud Editor — not a deterministic code->file pipeline.
